@@ -137,9 +137,12 @@ void DriveByWireNode::Initialize() {
     is_ready_ = false;
 
     // Initialize the time references for the health checks.
-    last_engine_speed_time_ = get_clock()->now();
-    last_odometry_time_ = get_clock()->now();
-    last_heartbeat_time_ = get_clock()->now();
+    last_engine_speed_time_ =
+        get_clock()->now() - rclcpp::Duration(health_check_period_, 0);
+    last_odometry_time_ =
+        get_clock()->now() - rclcpp::Duration(health_check_period_, 0);
+    last_heartbeat_time_ =
+        get_clock()->now() - rclcpp::Duration(health_check_period_, 0);
 }
 
 void DriveByWireNode::Activate() {
@@ -583,24 +586,20 @@ void DriveByWireNode::Disconnect() {
 void DriveByWireNode::HealthCheckCallback() {
     auto current_time = get_clock()->now();
 
-    if(is_connected_) {
-        has_engine_speed_ = (current_time - last_engine_speed_time_).seconds() >
-                health_check_period_
-            ? false
-            : true;
+    has_engine_speed_ = (current_time - last_engine_speed_time_).seconds() >=
+            health_check_period_
+        ? false
+        : true;
 
-        has_odometry_ = (current_time - last_odometry_time_).seconds() >
-                health_check_period_
-            ? false
-            : true;
+    has_odometry_ =
+        (current_time - last_odometry_time_).seconds() >= health_check_period_
+        ? false
+        : true;
 
-        has_heartbeat_ = (current_time - last_heartbeat_time_).seconds() >
-                health_check_period_
-            ? false
-            : true;
-    } else {
-        is_ready_ = false;
-    }
+    has_heartbeat_ =
+        (current_time - last_heartbeat_time_).seconds() >= health_check_period_
+        ? false
+        : true;
 
     auto diagnostic_array_message =
         std::make_shared<diagnostic_msgs::msg::DiagnosticArray>();
@@ -687,13 +686,11 @@ void DriveByWireNode::OdometryCallback(
     }
 }
 
-bool DriveByWireNode::IsReady() { return is_ready_; }
-
 void DriveByWireNode::CycleIgnition(
     const std::shared_ptr<std_srvs::srv::Trigger::Request> request,
     std::shared_ptr<std_srvs::srv::Trigger::Response> response) {
     (void)request;
-    if(!IsReady()) {
+    if(!is_ready_) {
         SetResponseFailError<std_srvs::srv::Trigger::Response>(
             response,
             "The drive-by-wire is not ready to receive a cycle ignition "
@@ -1047,7 +1044,8 @@ void DriveByWireNode::ExecuteShiftGearAction(
 
             if(mean_vehicle_speed >= minimum_vehicle_speed) {
                 {
-                    std::unique_lock<std::shared_mutex> setpoint_lock(setpoint_mutex_);
+                    std::unique_lock<std::shared_mutex> setpoint_lock(
+                        setpoint_mutex_);
                     drive_by_wire_setpoint_->SetBrake(1.0);
                     drive_by_wire_setpoint_->SetThrottle(0.0);
                 }
@@ -1065,7 +1063,8 @@ void DriveByWireNode::ExecuteShiftGearAction(
                 Smoothstep(elapsed_time.seconds(), 0.0, duration.seconds());
 
             {
-                std::unique_lock<std::shared_mutex> setpoint_lock(setpoint_mutex_);
+                std::unique_lock<std::shared_mutex> setpoint_lock(
+                    setpoint_mutex_);
                 drive_by_wire_setpoint_->SetBrake(0.0);
                 drive_by_wire_setpoint_->SetThrottle(throttle);
             }
@@ -1161,7 +1160,7 @@ void DriveByWireNode::GetEngineSpeedDiagnostics(
     diagnostic_msgs::msg::DiagnosticArray::SharedPtr diagnostic_array_message) {
     auto diagnostic_status =
         std::make_shared<diagnostic_msgs::msg::DiagnosticStatus>();
-    diagnostic_status->level = is_ready_
+    diagnostic_status->level = has_engine_speed_
         ? diagnostic_msgs::msg::DiagnosticStatus::OK
         : diagnostic_msgs::msg::DiagnosticStatus::ERROR;
     diagnostic_status->name = "olav/drive-by-wire/engine_speed";

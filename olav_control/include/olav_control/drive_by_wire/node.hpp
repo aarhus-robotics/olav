@@ -342,14 +342,6 @@ class DriveByWireNode : public rclcpp::Node {
 
     double health_check_period_;
 
-    /**
-     * @brief Check whether the interface is ready to receive commands.
-     *
-     * @return true The interface is ready to receive and execute commands.
-     * @return false The interface is not ready and will ignore issued commands.
-     */
-    bool IsReady();
-
     // ------------
 
     // Thread safety

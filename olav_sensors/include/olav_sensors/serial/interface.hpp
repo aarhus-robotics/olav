@@ -39,7 +39,7 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #include <olav_sensors/serial/crc32.hpp>
 #include <serial/serial.h>
 
-#include <olav_sensors/serial/serial_device_status_message.hpp>
+#include <olav_sensors/serial/status_message.hpp>
 
 namespace OLAV {
 namespace ROS {

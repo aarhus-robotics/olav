@@ -32,7 +32,7 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 #pragma once
 
-#include <olav_sensors/serial/serial_device_interface.hpp>
+#include <olav_sensors/serial/interface.hpp>
 
 namespace OLAV {
 namespace ROS {

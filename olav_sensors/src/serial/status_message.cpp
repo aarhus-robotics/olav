@@ -30,7 +30,7 @@ IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
 CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 
-#include <olav_sensors/serial/serial_device_status_message.hpp>
+#include <olav_sensors/serial/status_message.hpp>
 
 namespace OLAV {
 namespace ROS {

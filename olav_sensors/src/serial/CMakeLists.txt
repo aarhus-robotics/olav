@@ -15,7 +15,6 @@ message(STATUS "Building the serial device interface library ...")
 
 # > Find external packages
 # ------------------------
-find_package(diagnostic_msgs REQUIRED)
 find_package(nav_msgs REQUIRED)
 find_package(nlohmann_json REQUIRED)
 find_package(olav_interfaces REQUIRED)
@@ -36,9 +35,8 @@ target_include_directories(
 
 # > Link external dependencies
 # ----------------------------
-ament_target_dependencies(
-  ${PROJECT_NAME}_serial_device_interface_library diagnostic_msgs
-  olav_interfaces nav_msgs rclcpp serial)
+ament_target_dependencies(${PROJECT_NAME}_serial_device_interface_library
+                          olav_interfaces nav_msgs rclcpp serial)
 target_link_libraries(${PROJECT_NAME}_serial_device_interface_library
                       nlohmann_json::nlohmann_json)
 

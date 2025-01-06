@@ -32,7 +32,7 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 #include <rclcpp/rclcpp.hpp>
 
-#include <olav_sensors/powertrain/powertrain_interface_node.hpp>
+#include <olav_sensors/powertrain/node.hpp>
 
 int main(int argc, char** argv) {
     rclcpp::init(argc, argv);

@@ -40,7 +40,7 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 #include <serial/serial.h>
 
-#include <olav_sensors/powertrain/powertrain_interface_exceptions.hpp>
+#include <olav_sensors/powertrain/exceptions.hpp>
 
 namespace OLAV {
 namespace Interfaces {

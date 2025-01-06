@@ -44,8 +44,8 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #include <rclcpp_action/rclcpp_action.hpp>
 
 #include <olav_interfaces/msg/setpoint_stamped.hpp>
-#include <olav_sensors/powertrain/powertrain_interface.hpp>
-#include <olav_sensors/powertrain/powertrain_interface_exceptions.hpp>
+#include <olav_sensors/powertrain/exceptions.hpp>
+#include <olav_sensors/powertrain/interface.hpp>
 
 namespace OLAV {
 namespace ROS {

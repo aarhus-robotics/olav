@@ -30,8 +30,8 @@ IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
 CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 
-#include <olav_sensors/powertrain/powertrain_interface.hpp>
-#include <olav_sensors/powertrain/powertrain_interface_exceptions.hpp>
+#include <olav_sensors/powertrain/exceptions.hpp>
+#include <olav_sensors/powertrain/interface.hpp>
 
 namespace OLAV {
 namespace Interfaces {

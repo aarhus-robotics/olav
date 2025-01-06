@@ -1,0 +1,38 @@
+ #############################################################################
+ #                            _     _     _     _                            #
+ #                           / \   / \   / \   / \                           #
+ #                          ( O ) ( L ) ( A ) ( V )                          #
+ #                           \_/   \_/   \_/   \_/                           #
+ #                                                                           #
+ #                  OLAV: Off-Road Light Autonomous Vehicle                  #
+ #############################################################################
+
+# 
+
+# Enumeration type for the control mode.
+#
+# The following types are available:
+# - (0) MANUAL: Control output is a triad of throttle, brake and steering
+#   actuator efforts, routed to separate topics.
+# - (1) AUTONOMOUS: Control output is a pair of separate throttle and
+#   brake actuatorefforts and a steering angle setpoint, routed to separate
+#   topics. in radians per second.
+uint8 MANUAL=0
+uint8 AUTONOMOUS=1
+
+# REQUEST
+# -------
+
+# 
+uint8 mode
+
+---
+
+# RESULT
+# ------
+
+# Outcome of the engine start attempt.
+bool success
+
+# In case of failure, details on the error state.
+string message

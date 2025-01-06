@@ -1,0 +1,16 @@
+"/**":
+  ros__parameters:
+    olav:
+      type: diagnostic_aggregator/AnalyzerGroup
+      path: olav
+      analyzers:
+        drive-by-wire:
+          type: diagnostic_aggregator/GenericAnalyzer
+          path: drive-by-wire
+          startswith: ["olav/drive-by-wire/"]
+          find_and_remove_prefix: ["olav/drive-by-wire"]
+        mux:
+          type: diagnostic_aggregator/GenericAnalyzer
+          path: mux
+          startswith: ["olav/mux/"]
+          find_and_remove_prefix: ["olav/mux"]

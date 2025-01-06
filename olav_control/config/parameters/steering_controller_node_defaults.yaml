@@ -1,0 +1,31 @@
+"/**":
+  ros__parameters:
+    controller:
+      rate: 100.0
+      gains:
+        proportional: 1.0
+        integral: 0.1
+        derivative: 0.001
+      setpoint:
+        filter:
+          enabled: true
+          window: 10
+          order: 3
+        ramp:
+          enabled: true
+          magnitude: 0.001
+      feedback:
+        filter:
+          enabled: true
+          window: 10
+          order: 3
+      output:
+        minimum: -1.0
+        maximum: 1.0
+        change:
+          enabled: true
+          magnitude: 0.001
+      limit:
+        integral:
+          enabled: true
+          magnitude: 50.0

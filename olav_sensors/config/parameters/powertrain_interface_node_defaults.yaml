@@ -1,0 +1,17 @@
+"/**":
+  ros__parameters:
+    rate: 100.0
+    connection:
+      port: "/dev/powertrain"
+      baudrate: 9600
+      timeout: 5
+    wheel_radius: 0.3175
+    filter:
+      engine:
+        samples: 200
+      axle:
+        samples: 200
+    odometry:
+      frame_id: "odom"
+      child_frame_id: "base_link"
+      covariance: 0.01

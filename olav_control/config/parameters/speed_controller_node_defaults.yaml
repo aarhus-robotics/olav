@@ -1,0 +1,28 @@
+"/**":
+  ros__parameters:
+    controller:
+      gains:
+        feedforward: 0.01
+        proportional: 0.5
+        integral: 0.003
+        derivative: 0.0
+      setpoint:
+        ramp:
+          enabled: true
+          magnitude: 0.1
+      feedforward:
+        model: proportional
+        offset: 0.18
+      output:
+        minimum: 0.0
+        maximum: 1.0
+        change:
+          enabled: true
+          magnitude: 0.1
+      limit:
+        integral:
+          enabled: false
+          magnitude: 1.0
+      odometry:
+        enabled: true
+      rate: 50.0

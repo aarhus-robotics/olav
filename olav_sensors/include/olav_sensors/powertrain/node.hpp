@@ -39,6 +39,8 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #include <boost/accumulators/statistics.hpp>
 #include <boost/accumulators/statistics/rolling_mean.hpp>
 
+#include <diagnostic_msgs/msg/diagnostic_array.hpp>
+#include <diagnostic_msgs/msg/diagnostic_status.hpp>
 #include <nav_msgs/msg/odometry.hpp>
 #include <rclcpp/rclcpp.hpp>
 #include <rclcpp_action/rclcpp_action.hpp>
@@ -54,27 +56,28 @@ class PowertrainInterfaceNode : public rclcpp::Node {
   public:
     PowertrainInterfaceNode();
 
-  protected:
+  private:
     void Configure();
+
     void GetParameters();
+
     void Initialize();
+
     void Activate();
+
     void CreateTimers();
+
     void CreatePublishers();
 
-  private:
-    void TimerCallback();
+    void StartTimers();
 
     /** @brief Shared pointer to the publisher for filtered engine speed. */
     rclcpp::Publisher<olav_interfaces::msg::SetpointStamped>::SharedPtr
-        filtered_engine_speed_publisher_;
+        engine_speed_publisher_;
 
     /** @brief Shared pointer to the publisher for filtered wheel speed. */
     rclcpp::Publisher<olav_interfaces::msg::SetpointStamped>::SharedPtr
-        filtered_vehicle_speed_publisher_;
-
-    /** @brief Shared pointer to the timer for message publishing. */
-    rclcpp::TimerBase::SharedPtr timer_;
+        tachometer_speed_publisher_;
 
     std::string odometry_frame_id_;
 
@@ -95,8 +98,6 @@ class PowertrainInterfaceNode : public rclcpp::Node {
 
     int timeout_;
 
-    double rate_;
-
     double wheel_radius_;
 
     int engine_speed_filter_samples_;
@@ -112,6 +113,34 @@ class PowertrainInterfaceNode : public rclcpp::Node {
         double,
         boost::accumulators::stats<boost::accumulators::tag::rolling_mean>>>
         axle_speed_accumulator_;
+
+    // Parse
+    // -----
+
+    rclcpp::TimerBase::SharedPtr parse_timer_;
+
+    double parse_period_;
+
+    void ParseTimerCallback();
+
+    // Diagnostic
+    // ----------
+
+    rclcpp::TimerBase::SharedPtr diagnostic_timer_;
+
+    void DiagnosticTimerCallback();
+
+    rclcpp::Publisher<diagnostic_msgs::msg::DiagnosticArray>::SharedPtr
+        diagnostic_publisher_;
+
+    std::string hardware_id_ = "olav-ptr-9jr2";
+
+    // Connection
+    // ----------
+
+    rclcpp::TimerBase::SharedPtr connect_timer_;
+
+    void ConnectTimerCallback();
 };
 
 } // namespace ROS

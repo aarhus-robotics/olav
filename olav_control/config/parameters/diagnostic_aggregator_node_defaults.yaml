@@ -14,3 +14,8 @@
           path: mux
           startswith: ["olav/mux/"]
           find_and_remove_prefix: ["olav/mux"]
+        powertrain:
+          type: diagnostic_aggregator/GenericAnalyzer
+          path: powertrain
+          startswith: ["olav/powertrain/"]
+          find_and_remove_prefix: ["olav/powertrain"]

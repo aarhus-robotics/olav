@@ -36,7 +36,7 @@ namespace OLAV {
 namespace ROS {
 
 PowertrainInterfaceNode::PowertrainInterfaceNode()
-    : rclcpp::Node("powertrain_interface_node") {
+    : rclcpp::Node("powertrain_interface") {
     Configure();
     Activate();
 }
@@ -46,42 +46,9 @@ void PowertrainInterfaceNode::Configure() {
     Initialize();
 }
 
-void PowertrainInterfaceNode::Activate() {
-    CreatePublishers();
-    CreateTimers();
-
-    int connection_attempt = 1;
-    while(!interface_->IsOpen() && connection_attempt < 5) {
-        // FIXME: I am not sure checking for rclcpp::ok() in the node
-        // constructor is the way to go.
-        if(!rclcpp::ok()) { return; }
-        try {
-            interface_->Open();
-            RCLCPP_INFO(get_logger(),
-                        "Connected to powertrain interface microcontroller!");
-        } catch(OLAV::Exceptions::PowertrainInterfaceException& exception) {
-            RCLCPP_WARN(get_logger(),
-                        "Could not initialise the powertrain interface "
-                        "(Attempt: %i/%i)",
-                        connection_attempt,
-                        5);
-            connection_attempt++;
-            rclcpp::sleep_for(std::chrono::seconds(1));
-        }
-    }
-    if(connection_attempt == 5) {
-        RCLCPP_ERROR(
-            get_logger(),
-            "Could not connect to powertrain interface microcontroller.");
-        return;
-    }
-
-    timer_->reset();
-}
-
 void PowertrainInterfaceNode::GetParameters() {
     declare_parameter("rate", 100.0);
-    rate_ = get_parameter("rate").as_double();
+    parse_period_ = 1.0 / get_parameter("rate").as_double();
 
     declare_parameter("connection.port", "/dev/powertrain");
     port_ = get_parameter("connection.port").as_string();
@@ -113,13 +80,36 @@ void PowertrainInterfaceNode::GetParameters() {
     odometry_child_frame_id_ = get_parameter("odometry.covariance").as_double();
 }
 
+void PowertrainInterfaceNode::Activate() {
+    CreateTimers();
+    CreatePublishers();
+    StartTimers();
+}
+
+void PowertrainInterfaceNode::CreateTimers() {
+    connect_timer_ = create_wall_timer(
+        std::chrono::duration<double>(5.0),
+        std::bind(&PowertrainInterfaceNode::ConnectTimerCallback, this));
+    connect_timer_->cancel();
+
+    parse_timer_ = create_wall_timer(
+        std::chrono::duration<double>(parse_period_),
+        std::bind(&PowertrainInterfaceNode::ParseTimerCallback, this));
+    parse_timer_->cancel();
+
+    diagnostic_timer_ = create_wall_timer(
+        std::chrono::duration<double>(1.0),
+        std::bind(&PowertrainInterfaceNode::DiagnosticTimerCallback, this));
+    diagnostic_timer_->cancel();
+}
+
 void PowertrainInterfaceNode::CreatePublishers() {
-    filtered_engine_speed_publisher_ =
+    engine_speed_publisher_ =
         create_publisher<olav_interfaces::msg::SetpointStamped>(
             "engine/speed",
             RMW_QOS_POLICY_RELIABILITY_SYSTEM_DEFAULT);
 
-    filtered_vehicle_speed_publisher_ =
+    tachometer_speed_publisher_ =
         create_publisher<olav_interfaces::msg::SetpointStamped>(
             "tachometer/speed",
             RMW_QOS_POLICY_RELIABILITY_SYSTEM_DEFAULT);
@@ -127,16 +117,32 @@ void PowertrainInterfaceNode::CreatePublishers() {
     odometry_publisher_ = create_publisher<nav_msgs::msg::Odometry>(
         "tachometer/odometry",
         RMW_QOS_POLICY_RELIABILITY_SYSTEM_DEFAULT);
+
+    diagnostic_publisher_ =
+        create_publisher<diagnostic_msgs::msg::DiagnosticArray>(
+            "/diagnostics",
+            RMW_QOS_POLICY_RELIABILITY_SYSTEM_DEFAULT);
 }
 
-void PowertrainInterfaceNode::CreateTimers() {
-    timer_ = create_wall_timer(
-        std::chrono::duration<double>(1.0 / rate_),
-        std::bind(&PowertrainInterfaceNode::TimerCallback, this));
-    timer_->cancel();
+void PowertrainInterfaceNode::StartTimers() {
+    connect_timer_->reset();
+    parse_timer_->reset();
+    diagnostic_timer_->reset();
 }
 
-void PowertrainInterfaceNode::TimerCallback() {
+void PowertrainInterfaceNode::ConnectTimerCallback() {
+    if(interface_->IsOpen()) return;
+
+    try {
+        interface_->Open();
+        RCLCPP_INFO(get_logger(),
+                    "Connected to powertrain interface microcontroller!");
+    } catch(OLAV::Exceptions::PowertrainInterfaceException& exception) {}
+}
+
+void PowertrainInterfaceNode::ParseTimerCallback() {
+    if(!interface_->IsOpen()) return;
+
     auto time = get_clock()->now();
 
     auto engine_speed = interface_->GetEngineSpeed();
@@ -147,10 +153,9 @@ void PowertrainInterfaceNode::TimerCallback() {
 
     auto filtered_engine_speed_message =
         std::make_shared<olav_interfaces::msg::SetpointStamped>();
-    filtered_engine_speed_message->header.frame_id = "can";
     filtered_engine_speed_message->header.stamp = time;
     filtered_engine_speed_message->setpoint = mean_engine_speed;
-    filtered_engine_speed_publisher_->publish(*filtered_engine_speed_message);
+    engine_speed_publisher_->publish(*filtered_engine_speed_message);
 
     auto axle_speed = interface_->GetAxleSpeed();
 
@@ -161,11 +166,10 @@ void PowertrainInterfaceNode::TimerCallback() {
 
     auto filtered_axle_speed_message =
         std::make_shared<olav_interfaces::msg::SetpointStamped>();
-    filtered_axle_speed_message->header.frame_id = "can";
     filtered_axle_speed_message->header.stamp = time;
     filtered_axle_speed_message->setpoint =
         mean_axle_speed * 2.0 * M_PI * wheel_radius_;
-    filtered_vehicle_speed_publisher_->publish(*filtered_axle_speed_message);
+    tachometer_speed_publisher_->publish(*filtered_axle_speed_message);
 
     auto odometry_message = std::make_shared<nav_msgs::msg::Odometry>();
     odometry_message->header.frame_id = odometry_frame_id_;
@@ -175,6 +179,25 @@ void PowertrainInterfaceNode::TimerCallback() {
         mean_axle_speed * 2.0 * M_PI * wheel_radius_;
     odometry_message->twist.covariance[0] = odometry_twist_covariance_;
     odometry_publisher_->publish(*odometry_message);
+}
+
+void PowertrainInterfaceNode::DiagnosticTimerCallback() {
+    diagnostic_msgs::msg::DiagnosticStatus diagnostic_status_message;
+    diagnostic_status_message.level = interface_->IsOpen()
+        ? diagnostic_msgs::msg::DiagnosticStatus::OK
+        : diagnostic_msgs::msg::DiagnosticStatus::ERROR;
+    diagnostic_status_message.name = "olav/powertrain/connection";
+    diagnostic_status_message.message = interface_->IsOpen()
+        ? "Serial communication interface is open and transferring data."
+        : "No available serial communication interface to the powertrain "
+          "microcontroller. Please check the configure device address and the "
+          "physical connection to the microcontroller.";
+    diagnostic_status_message.hardware_id = hardware_id_;
+
+    diagnostic_msgs::msg::DiagnosticArray diagnostic_array_message;
+    diagnostic_array_message.header.stamp = get_clock()->now();
+    diagnostic_array_message.status.push_back(diagnostic_status_message);
+    diagnostic_publisher_->publish(diagnostic_array_message);
 }
 
 void PowertrainInterfaceNode::Initialize() {

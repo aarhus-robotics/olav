@@ -15,6 +15,7 @@ message(STATUS "Building the powertrain interface node ...")
 
 # > Find external packages
 # ------------------------
+find_package(diagnostic_msgs REQUIRED)
 find_package(nav_msgs REQUIRED)
 find_package(nlohmann_json REQUIRED)
 find_package(olav_interfaces REQUIRED)
@@ -35,8 +36,14 @@ target_include_directories(
 
 # > Link external dependencies
 # ----------------------------
-ament_target_dependencies(${PROJECT_NAME}_powertrain_interface_node
-                          olav_interfaces nav_msgs rclcpp rclcpp_action serial)
+ament_target_dependencies(
+  ${PROJECT_NAME}_powertrain_interface_node
+  diagnostic_msgs
+  olav_interfaces
+  nav_msgs
+  rclcpp
+  rclcpp_action
+  serial)
 target_link_libraries(${PROJECT_NAME}_powertrain_interface_node
                       ${PROJECT_NAME}_serial_device_interface_library)
 

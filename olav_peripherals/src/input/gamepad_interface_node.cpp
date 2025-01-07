@@ -140,17 +140,23 @@ void GamepadInterfaceNode::CreatePublishers() {
 
 void GamepadInterfaceNode::CreateClients() {
     start_engine_client_ =
-        create_client<olav_interfaces::srv::StartEngine>("start_engine");
+        create_client<std_srvs::srv::Trigger>("start_engine");
+
     shift_gear_down_client_ =
         create_client<std_srvs::srv::Trigger>("shift_gear_down");
+
     shift_gear_up_client_ =
         create_client<std_srvs::srv::Trigger>("shift_gear_up");
+
     cycle_ignition_client_ =
         create_client<std_srvs::srv::Trigger>("cycle_ignition");
+
     cycle_control_mode_client_ =
         create_client<std_srvs::srv::Trigger>("cycle_control_mode");
+
     emergency_stop_client_ =
         create_client<std_srvs::srv::Trigger>("emergency_stop");
+
     ready_to_run_client_ = create_client<std_srvs::srv::Trigger>("ready");
 }
 
@@ -231,9 +237,7 @@ void GamepadInterfaceNode::JoyStateCallback(
 
         last_starter_request_time_ = time;
 
-        auto request =
-            std::make_shared<olav_interfaces::srv::StartEngine::Request>();
-        request->duration = 1.5;
+        auto request = std::make_shared<std_srvs::srv::Trigger::Request>();
         auto future = start_engine_client_->async_send_request(request);
     }
 

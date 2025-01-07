@@ -46,7 +46,6 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #include <olav_interfaces/action/shift_gear.hpp>
 #include <olav_interfaces/msg/setpoint_stamped.hpp>
 #include <olav_interfaces/srv/set_control_mode.hpp>
-#include <olav_interfaces/srv/start_engine.hpp>
 
 namespace OLAV {
 namespace ROS {
@@ -219,8 +218,7 @@ class GamepadInterfaceNode : public rclcpp::Node {
     double fast_debounce_time_;
 
     /** @brief Shared pointer to the engine start service client. */
-    rclcpp::Client<olav_interfaces::srv::StartEngine>::SharedPtr
-        start_engine_client_;
+    rclcpp::Client<std_srvs::srv::Trigger>::SharedPtr start_engine_client_;
 
     /** @brief Last parsed engine start request time stamp. */
     rclcpp::Time last_starter_request_time_;

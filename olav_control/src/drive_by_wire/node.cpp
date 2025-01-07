@@ -70,8 +70,7 @@ void DriveByWireNode::GetParameters() {
     debug_period_ = 1.0 / get_parameter("rates.debug").as_double();
 
     declare_parameter("starter.duration", 3.0);
-    engine_starter_default_duration_ =
-        get_parameter("starter.duration").as_double();
+    engine_starter_duration_ = get_parameter("starter.duration").as_double();
 
     // FIXME: Check that the provided value is positive.
     declare_parameter("starter.check.window", 10);
@@ -294,23 +293,13 @@ void DriveByWireNode::CreateServices() {
                   std::placeholders::_2));
 
     start_engine_service_ = create_service<std_srvs::srv::Trigger>(
-        "start_engine",
+        "run_engine_starter",
         std::bind(&DriveByWireNode::StartEngine,
                   this,
                   std::placeholders::_1,
                   std::placeholders::_2),
         rmw_qos_profile_default,
         services_callback_group_);
-
-    run_engine_starter_service_ =
-        create_service<olav_interfaces::srv::StartEngine>(
-            "run_engine_starter",
-            std::bind(&DriveByWireNode::RunEngineStarter,
-                      this,
-                      std::placeholders::_1,
-                      std::placeholders::_2),
-            rmw_qos_profile_default,
-            services_callback_group_);
 
     emergency_stop_service_ = create_service<std_srvs::srv::Trigger>(
         "emergency_stop/trigger",
@@ -726,35 +715,10 @@ void DriveByWireNode::SetIgnition(
 void DriveByWireNode::StartEngine(
     const std::shared_ptr<std_srvs::srv::Trigger::Request> request,
     std::shared_ptr<std_srvs::srv::Trigger::Response> response) {
-    (void)request;
-
-    auto run_starter_request =
-        std::make_shared<olav_interfaces::srv::StartEngine::Request>();
-    auto run_starter_response =
-        std::make_shared<olav_interfaces::srv::StartEngine::Response>();
-    run_starter_request->duration = engine_starter_default_duration_;
-
-    RunEngineStarter(run_starter_request, run_starter_response);
-
-    RCLCPP_INFO(get_logger(), run_starter_response->message.c_str());
-    response->success = run_starter_response->success;
-    response->message = run_starter_response->message;
-}
-
-void DriveByWireNode::RunEngineStarter(
-    const std::shared_ptr<olav_interfaces::srv::StartEngine::Request> request,
-    std::shared_ptr<olav_interfaces::srv::StartEngine::Response> response) {
     if(!has_engine_speed_) {
-        SetResponseFailError<olav_interfaces::srv::StartEngine::Response>(
+        SetResponseFailError<std_srvs::srv::Trigger::Response>(
             response,
             "Engine speed not available.");
-        return;
-    }
-
-    if(request->duration < 0.0) {
-        SetResponseFailError<olav_interfaces::srv::StartEngine::Response>(
-            response,
-            "Duration must be a positive value.");
         return;
     }
 
@@ -769,7 +733,7 @@ void DriveByWireNode::RunEngineStarter(
     auto initial_time = get_clock()->now();
     rclcpp::Duration elapsed_time(0, 0);
 
-    while(elapsed_time.seconds() < request->duration) {
+    while(elapsed_time.seconds() < engine_starter_duration_) {
         elapsed_time = (get_clock()->now() - initial_time);
     }
 
@@ -797,17 +761,15 @@ void DriveByWireNode::RunEngineStarter(
     auto mean_engine_speed = boost::accumulators::rolling_mean(accumulator);
 
     if(mean_engine_speed > engine_speed_threshold_) {
-        SetResponseSuccessInfo<olav_interfaces::srv::StartEngine::Response>(
+        SetResponseSuccessInfo<std_srvs::srv::Trigger::Response>(
             response,
-            "Engine started successfully in " +
-                std::to_string(request->duration) +
-                " seconds, mean engine speed is " +
+            "Engine started successfully, mean engine speed is " +
                 std::to_string(mean_engine_speed));
 
     } else {
-        SetResponseFailError<olav_interfaces::srv::StartEngine::Response>(
+        SetResponseFailError<std_srvs::srv::Trigger::Response>(
             response,
-            "Could not start engine");
+            "Could not start engine.");
     }
 }
 

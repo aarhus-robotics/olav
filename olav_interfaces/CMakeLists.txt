@@ -17,7 +17,7 @@ project(olav_interfaces)
 
 # Compiler options
 # ----------------
-if(CMAKE_COMPILER_IS_GNUCXX OR CMAKE_CXX_COMPILER_ID MATCHES "Clang")
+if(CMAKE_COMPILER_IS_GNUCXX OR CMAKE_CXX_COMPILER_ID MATCHES Clang)
   add_compile_options(-Wall -Wextra -Wpedantic)
 endif()
 
@@ -39,7 +39,6 @@ rosidl_generate_interfaces(
   "msg/PIDStatus.msg"
   "msg/SetpointStamped.msg"
   # Services
-  "srv/StartEngine.srv"
   "srv/SetControlMode.srv"
   "srv/SetPIDGains.srv"
   DEPENDENCIES

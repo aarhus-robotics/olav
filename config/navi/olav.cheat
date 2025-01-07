@@ -280,7 +280,6 @@ olav parameter set <node> <parameter> <value>
 # ---------------------------- #
 % <odin.olavnet> Drive-by-wire
 # ---------------------------- #
-$ starter_duration: echo "3.0 5.0 7.0" | tr ' ' '\n' --- --header "The engine starter duration value."
 
 # Ready up
 ros2 service call /ready std_srvs/srv/Trigger "{}"
@@ -292,7 +291,7 @@ ros2 service call /cycle_ignition std_srvs/srv/Trigger "{}"
 ros2 service call /cycle_ignition std_srvs/srv/Trigger "{}"
 
 # Start engine
-ros2 service call /start_engine olav_interfaces/srv/StartEngine "{"duration": <starter_duration>}"
+ros2 service call /start_engine std_srvs/srv/Trigger "{}"
 
 # Shift gear down
 ros2 service call /shift_gear_down std_srvs/srv/Trigger "{}"

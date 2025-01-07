@@ -59,7 +59,6 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #include <olav_interfaces/msg/drive_by_wire_plc_status.hpp>
 #include <olav_interfaces/msg/setpoint_stamped.hpp>
 #include <olav_interfaces/srv/set_pid_gains.hpp>
-#include <olav_interfaces/srv/start_engine.hpp>
 
 namespace OLAV {
 namespace ROS {
@@ -227,16 +226,6 @@ class DriveByWireNode : public rclcpp::Node {
 
     void TriggerEmergencyStop();
 
-    /** @brief Shared pointer to the service to run the engine starter for a
-     * fixed amount of time. */
-    rclcpp::Service<olav_interfaces::srv::StartEngine>::SharedPtr
-        run_engine_starter_service_;
-
-    void RunEngineStarter(
-        const std::shared_ptr<olav_interfaces::srv::StartEngine::Request>
-            request,
-        std::shared_ptr<olav_interfaces::srv::StartEngine::Response> response);
-
     /** @brief Shared pointer to the service to start the engine. */
     rclcpp::Service<std_srvs::srv::Trigger>::SharedPtr start_engine_service_;
 
@@ -244,7 +233,7 @@ class DriveByWireNode : public rclcpp::Node {
     StartEngine(const std::shared_ptr<std_srvs::srv::Trigger::Request> request,
                 std::shared_ptr<std_srvs::srv::Trigger::Response> response);
 
-    double engine_starter_default_duration_;
+    double engine_starter_duration_;
 
     int engine_speed_window_size_;
 

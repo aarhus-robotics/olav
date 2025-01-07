@@ -22,7 +22,7 @@ from rcl_interfaces.msg import Parameter, ParameterType
 from std_srvs.srv import SetBool, Trigger
 
 from olav_interfaces.msg import SetpointStamped
-from olav_interfaces.srv import StartEngine, SetControlAuthority, SetControlMode
+from olav_interfaces.srv import SetControlAuthority, SetControlMode
 from olav_interfaces.action import ShiftGear
 
 
@@ -80,7 +80,6 @@ class Service(Function):
     TYPES = {
         "trigger": Trigger,
         "set_bool": SetBool,
-        "start_engine": StartEngine,
         "set_control_authority": SetControlAuthority,
         "set_control_mode": SetControlMode,
     }
@@ -153,15 +152,6 @@ class SetBoolService(Service):
         self.future = self.client.call_async(request)
 
 
-class StartEngineService(Service):
-
-    def __call__(self) -> None:
-
-        request = StartEngine.Request()
-        request.duration = 2.0
-        self.future = self.client.call_async(request)
-
-
 class TriggerService(Service):
 
     def __call__(self, value):
@@ -183,8 +173,6 @@ class ServiceFactory:
             return SetControlModeService(name, topic, _type, node)
         elif _type == ShiftGear:
             return ShiftGearService(name, topic, _type, node)
-        elif _type == StartEngine:
-            return StartEngineService(name, topic, _type, node)
         elif _type == Trigger:
             return TriggerService(name, topic, _type, node)
 

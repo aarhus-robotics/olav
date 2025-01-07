@@ -215,20 +215,20 @@ void DriveByWireNode::CreateSubscriptions() {
 
 void DriveByWireNode::CreatePublishers() {
     ready_publisher_ = create_publisher<std_msgs::msg::Bool>(
-        "ready",
+        "signals/ready",
         RMW_QOS_POLICY_RELIABILITY_SYSTEM_DEFAULT);
 
     emergency_stop_publisher_ = create_publisher<std_msgs::msg::Bool>(
-        "emergency_stop/state",
+        "signals/estop",
         RMW_QOS_POLICY_RELIABILITY_SYSTEM_DEFAULT);
 
     steering_angle_publisher_ =
         create_publisher<olav_interfaces::msg::SetpointStamped>(
-            "feedback/steering_angle",
+            "sensors/steering/angle",
             RMW_QOS_POLICY_RELIABILITY_SYSTEM_DEFAULT);
 
     joint_state_publisher_ = create_publisher<sensor_msgs::msg::JointState>(
-        "joints/steering",
+        "description/joints/steering",
         RMW_QOS_POLICY_RELIABILITY_SYSTEM_DEFAULT);
 
     plc_status_publisher_ =
@@ -389,7 +389,7 @@ void DriveByWireNode::InitializeRegisters() {
 }
 
 void DriveByWireNode::WriterCallback() {
-    if(!IsHealthy()) return;
+    if(!is_connected_) return;
 
     DriveByWireSetpoint setpoint;
 
@@ -417,6 +417,7 @@ void DriveByWireNode::WriterCallback() {
 
 void DriveByWireNode::ReaderCallback() {
     if(!is_connected_) return;
+
     DriveByWireFeedback feedback;
 
     {
@@ -440,7 +441,8 @@ void DriveByWireNode::ReaderCallback() {
 
         drive_by_wire_feedback_ =
             std::make_shared<DriveByWireFeedback>(feedback);
-        // TODO: This must be moved out!
+
+        // TODO: Delegate this to a separate thread.
         PublishSteeringAngle();
 
         // TODO: Delegate this to a separate thread.
@@ -541,28 +543,28 @@ void DriveByWireNode::PublishSteeringAngle() {
 }
 
 void DriveByWireNode::ConnectCallback() {
-    if(!is_connected_) {
-        RCLCPP_INFO(get_logger(),
-                    "Connecting to drive-by-wire on address %s:%i",
-                    connection_address_.c_str(),
-                    connection_port_);
+    if(is_connected_) return;
 
-        try {
-            interface_->Open();
-        } catch(OLAV::Exceptions::DriveByWireInterfaceException& exception) {
-            RCLCPP_ERROR(get_logger(),
-                         "Could not initialize drive-by-wire interface!");
-            return;
-        }
+    RCLCPP_INFO(get_logger(),
+                "Connecting to drive-by-wire on address %s:%i",
+                connection_address_.c_str(),
+                connection_port_);
 
-        if(interface_->IsConnected()) {
-            is_connected_ = true;
-            RCLCPP_INFO(get_logger(), "Connected successfully!");
-        } else {
-            RCLCPP_ERROR(get_logger(),
-                         "The drive-by-wire is communicating, but the "
-                         "connection dropped.");
-        }
+    try {
+        interface_->Open();
+    } catch(OLAV::Exceptions::DriveByWireInterfaceException& exception) {
+        RCLCPP_ERROR(get_logger(),
+                     "Could not initialize drive-by-wire interface!");
+        return;
+    }
+
+    if(interface_->IsConnected()) {
+        is_connected_ = true;
+        RCLCPP_INFO(get_logger(), "Connected successfully!");
+    } else {
+        RCLCPP_ERROR(get_logger(),
+                     "The drive-by-wire is communicating, but the "
+                     "connection dropped.");
     }
 }
 
@@ -690,6 +692,7 @@ void DriveByWireNode::CycleIgnition(
     const std::shared_ptr<std_srvs::srv::Trigger::Request> request,
     std::shared_ptr<std_srvs::srv::Trigger::Response> response) {
     (void)request;
+
     if(!is_ready_) {
         SetResponseFailError<std_srvs::srv::Trigger::Response>(
             response,

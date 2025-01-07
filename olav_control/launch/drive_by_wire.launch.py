@@ -33,7 +33,7 @@ def generate_launch_description():
                                                               "config/parameters/overrides_defaults.yaml").as_posix())
 
     # > Declare log level launch argument
-    log_level_argument = DeclareLaunchArgument("log_level", default_value="WARN")
+    log_level_argument = DeclareLaunchArgument("log_level", default_value="INFO")
 
     # Nodes
     # -----
@@ -230,7 +230,7 @@ def generate_launch_description():
         package="diagnostic_aggregator",
         #prefix="konsole -e gdb -ex=r --args",
         executable="aggregator_node",
-        arguments=["--ros-args", "--log-level", LaunchConfiguration("log_level")],
+        arguments=["--ros-args", "--log-level", "warn"],
         parameters=[
             Path(get_package_share_path("olav_control") /
                  "config/parameters/diagnostic_aggregator_node_defaults.yaml").as_posix(),

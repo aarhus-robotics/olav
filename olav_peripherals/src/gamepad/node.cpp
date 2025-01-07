@@ -37,6 +37,11 @@ namespace ROS {
 
 GamepadInterfaceNode::GamepadInterfaceNode() : rclcpp::Node("gamepad_node") {}
 
+void GamepadInterfaceNode::Configure() {
+    GetParameters();
+    Initialize();
+}
+
 void GamepadInterfaceNode::GetParameters() {
     declare_parameter("throttle.deadzone", 0.01);
     throttle_deadzone_ = get_parameter("throttle.deadzone").as_double();
@@ -103,6 +108,22 @@ void GamepadInterfaceNode::GetParameters() {
     rate_ = get_parameter("rate").as_double();
 }
 
+void GamepadInterfaceNode::Initialize() {
+    last_ignition_request_time_ = get_clock()->now();
+    last_starter_request_time_ = get_clock()->now();
+    last_shifter_request_time_ = get_clock()->now();
+    last_control_mode_cycle_time_ = get_clock()->now();
+    last_ready_to_run_time_ = get_clock()->now();
+}
+
+void GamepadInterfaceNode::Activate() {
+    CreateSubscriptions();
+    CreateClients();
+    CreateTimers();
+    CreatePublishers();
+    StartTimers();
+}
+
 void GamepadInterfaceNode::CreateSubscriptions() {
     joy_subscription_ = create_subscription<sensor_msgs::msg::Joy>(
         "joy",
@@ -110,32 +131,6 @@ void GamepadInterfaceNode::CreateSubscriptions() {
         std::bind(&GamepadInterfaceNode::JoyStateCallback,
                   this,
                   std::placeholders::_1));
-}
-
-void GamepadInterfaceNode::CreateTimers() {
-    controls_timer_ = create_wall_timer(
-        std::chrono::duration<double>(1.0 / rate_),
-        std::bind(&GamepadInterfaceNode::TimerCallback, this));
-}
-
-void GamepadInterfaceNode::CreatePublishers() {
-    throttle_publisher_ =
-        create_publisher<olav_interfaces::msg::SetpointStamped>(
-            "throttle",
-            RMW_QOS_POLICY_RELIABILITY_SYSTEM_DEFAULT);
-
-    brake_publisher_ = create_publisher<olav_interfaces::msg::SetpointStamped>(
-        "brake",
-        RMW_QOS_POLICY_RELIABILITY_SYSTEM_DEFAULT);
-
-    steering_angle_publisher_ =
-        create_publisher<olav_interfaces::msg::SetpointStamped>(
-            "steering_angle",
-            RMW_QOS_POLICY_RELIABILITY_SYSTEM_DEFAULT);
-
-    heartbeat_publisher_ = create_publisher<std_msgs::msg::Header>(
-        "heartbeat",
-        RMW_QOS_POLICY_RELIABILITY_SYSTEM_DEFAULT);
 }
 
 void GamepadInterfaceNode::CreateClients() {
@@ -160,13 +155,34 @@ void GamepadInterfaceNode::CreateClients() {
     ready_to_run_client_ = create_client<std_srvs::srv::Trigger>("ready");
 }
 
-void GamepadInterfaceNode::Initialize() {
-    last_ignition_request_time_ = get_clock()->now();
-    last_starter_request_time_ = get_clock()->now();
-    last_shifter_request_time_ = get_clock()->now();
-    last_control_mode_cycle_time_ = get_clock()->now();
-    last_ready_to_run_time_ = get_clock()->now();
+void GamepadInterfaceNode::CreateTimers() {
+    controls_timer_ = create_wall_timer(
+        std::chrono::duration<double>(1.0 / rate_),
+        std::bind(&GamepadInterfaceNode::TimerCallback, this));
+    controls_timer_->cancel();
 }
+
+void GamepadInterfaceNode::CreatePublishers() {
+    throttle_publisher_ =
+        create_publisher<olav_interfaces::msg::SetpointStamped>(
+            "throttle",
+            RMW_QOS_POLICY_RELIABILITY_SYSTEM_DEFAULT);
+
+    brake_publisher_ = create_publisher<olav_interfaces::msg::SetpointStamped>(
+        "brake",
+        RMW_QOS_POLICY_RELIABILITY_SYSTEM_DEFAULT);
+
+    steering_angle_publisher_ =
+        create_publisher<olav_interfaces::msg::SetpointStamped>(
+            "steering",
+            RMW_QOS_POLICY_RELIABILITY_SYSTEM_DEFAULT);
+
+    heartbeat_publisher_ = create_publisher<std_msgs::msg::Header>(
+        "heartbeat",
+        RMW_QOS_POLICY_RELIABILITY_SYSTEM_DEFAULT);
+}
+
+void GamepadInterfaceNode::StartTimers() { controls_timer_->reset(); }
 
 void GamepadInterfaceNode::JoyStateCallback(
     const sensor_msgs::msg::Joy::ConstSharedPtr joy_message) {
@@ -303,39 +319,33 @@ void GamepadInterfaceNode::TimerCallback() {
     double brake = 0.0;
     double steering = 0.0;
 
-    if(controls_mutex_.try_lock_for(
-           std::chrono::duration<double>(1.0 / rate_))) {
+    {
+        std::lock_guard<std::mutex> controls_lock(controls_mutex_);
+
         throttle = throttle_;
         brake = brake_;
         steering = steering_;
-        controls_mutex_.unlock();
-    } else {
-        RCLCPP_ERROR(get_logger(), "cant lock");
-        return;
     }
 
-    auto throttle_message =
-        std::make_shared<olav_interfaces::msg::SetpointStamped>();
-    throttle_message->setpoint = throttle;
-    throttle_message->header.frame_id = "gamepad";
-    throttle_publisher_->publish(*throttle_message);
+    std_msgs::msg::Header heartbeat_message;
+    heartbeat_message.frame_id = frame_id_;
+    heartbeat_message.stamp = get_clock()->now();
+    heartbeat_publisher_->publish(heartbeat_message);
 
-    auto brake_message =
-        std::make_shared<olav_interfaces::msg::SetpointStamped>();
-    brake_message->setpoint = brake;
-    brake_message->header.frame_id = "gamepad";
-    brake_publisher_->publish(*brake_message);
+    olav_interfaces::msg::SetpointStamped throttle_message;
+    throttle_message.header.frame_id = frame_id_;
+    throttle_message.setpoint = throttle;
+    throttle_publisher_->publish(throttle_message);
 
-    auto steering_angle_message =
-        std::make_shared<olav_interfaces::msg::SetpointStamped>();
-    steering_angle_message->setpoint = steering * maximum_steering_angle_;
-    steering_angle_message->header.frame_id = "gamepad";
-    steering_angle_publisher_->publish(*steering_angle_message);
+    olav_interfaces::msg::SetpointStamped brake_message;
+    brake_message.header.frame_id = frame_id_;
+    brake_message.setpoint = brake;
+    brake_publisher_->publish(brake_message);
 
-    auto heartbeat_message = std::make_shared<std_msgs::msg::Header>();
-    heartbeat_message->frame_id = "gamepad";
-    heartbeat_message->stamp = get_clock()->now();
-    heartbeat_publisher_->publish(*heartbeat_message);
+    olav_interfaces::msg::SetpointStamped steering_angle_message;
+    steering_angle_message.setpoint = steering * maximum_steering_angle_;
+    steering_angle_message.header.frame_id = frame_id_;
+    steering_angle_publisher_->publish(steering_angle_message);
 }
 
 void GamepadInterfaceNode::ShiftGearDownCallback(
@@ -345,7 +355,6 @@ void GamepadInterfaceNode::ShiftGearDownCallback(
         RCLCPP_INFO(get_logger(),
                     "Gear downshift request successful: %s",
                     response->message.c_str());
-        std::cout << response->message << std::endl;
     } else {
         RCLCPP_ERROR(get_logger(),
                      "Gear downshift request failed: %s",
@@ -360,7 +369,6 @@ void GamepadInterfaceNode::ShiftGearUpCallback(
         RCLCPP_INFO(get_logger(),
                     "Gear upshift request successful: %s",
                     response->message.c_str());
-        std::cout << response->message << std::endl;
     } else {
         RCLCPP_ERROR(get_logger(),
                      "Gear upshift request failed: %s",
@@ -375,7 +383,6 @@ void GamepadInterfaceNode::CycleControlModeCallback(
         RCLCPP_INFO(get_logger(),
                     "Control mode cycle request successful: %s",
                     response->message.c_str());
-        std::cout << response->message << std::endl;
     } else {
         RCLCPP_ERROR(get_logger(),
                      "Control mode cycle request failed: %s",
@@ -390,7 +397,6 @@ void GamepadInterfaceNode::CycleIgnitionCallback(
         RCLCPP_INFO(get_logger(),
                     "Ignition state cycle request successful: %s",
                     response->message.c_str());
-        std::cout << response->message << std::endl;
     } else {
         RCLCPP_ERROR(get_logger(),
                      "Ignition state cycle request request failed: %s",
@@ -405,7 +411,6 @@ void GamepadInterfaceNode::TriggerEmergencyCallback(
         RCLCPP_INFO(get_logger(),
                     "Emergency stop request successful: %s",
                     response->message.c_str());
-        std::cout << response->message << std::endl;
     } else {
         RCLCPP_ERROR(get_logger(),
                      "Emergency stop request failed: %s",
@@ -420,7 +425,6 @@ void GamepadInterfaceNode::ReadyToRunCallback(
         RCLCPP_INFO(get_logger(),
                     "Ready to run request successful: %s",
                     response->message.c_str());
-        std::cout << response->message << std::endl;
     } else {
         RCLCPP_ERROR(get_logger(),
                      "Ready to run request failed: %s",

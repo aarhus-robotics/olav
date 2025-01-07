@@ -88,35 +88,23 @@ class GamepadInterfaceNode : public rclcpp::Node {
     GamepadInterfaceNode();
 
   protected:
-    /**
-     * @brief Get the gamepad node parameters.
-     */
+    void Configure();
+
     void GetParameters();
 
-    /**
-     * @brief Initialize the gamepad node class members.
-     */
     void Initialize();
 
-    /**
-     * @brief Create the gamepad node subscriptions.
-     */
+    void Activate();
+
     void CreateSubscriptions();
 
-    /**
-     * @brief Create the gamepad node timers.
-     */
+    void CreateClients();
+
     void CreateTimers();
 
-    /**
-     * @brief Create the gamepad node publishers.
-     */
     void CreatePublishers();
 
-    /**
-     * @brief Create the gamepad node clients.
-     */
-    void CreateClients();
+    void StartTimers();
 
   private:
     /**
@@ -279,9 +267,11 @@ class GamepadInterfaceNode : public rclcpp::Node {
     void ReadyToRunCallback(
         rclcpp::Client<std_srvs::srv::Trigger>::SharedFuture future);
 
-    std::shared_timed_mutex controls_mutex_;
+    std::mutex controls_mutex_;
 
     double rate_;
+
+    std::string frame_id_ = "gamepad";
 };
 
 } // namespace ROS

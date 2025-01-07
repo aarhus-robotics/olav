@@ -127,21 +127,21 @@ def generate_launch_description():
         remappings=[
             # > Subscriptions
             # :: Input efforts
-            ("in/efforts/throttle", "mux/in/throttle"),
-            ("in/efforts/brake", "mux/in/brake"),
-            ("in/efforts/steering", "mux/in/steering"),
+            ("in/throttle", "mux/in/throttle"),
+            ("in/brake", "mux/in/brake"),
+            ("in/steering", "mux/in/steering"),
             # :: Input commands
-            ("in/composite/drive", "mux/in/drive"),
+            ("in/drive", "mux/in/drive"),
             # :: Input signals
-            ("in/signals/heartbeat", "mux/in/heartbeat"),
-            ("in/signals/heartbeat", "mux/in/heartbeat"),
+            ("in/heartbeat", "mux/in/heartbeat"),
+            ("in/heartbeat", "mux/in/heartbeat"),
             # > Publishers
             # :: Muxed efforts
-            ("out/efforts/throttle", "controls/throttle"),
-            ("out/efforts/brake", "controls/brake"),
-            ("out/efforts/steering", "controls/steering"),
+            ("out/throttle", "controls/throttle"),
+            ("out/brake", "controls/brake"),
+            ("out/steering", "controls/steering"),
             # :: Muxed heartbeats
-            ("out/signals/heartbeat", "signals/heartbeat"),
+            ("out/heartbeat", "signals/heartbeat"),
             # > Services servers
             ("set_control_mode", "mux/set_control_mode"),
             ("cycle_control_mode", "mux/cycle_control_mode"),

@@ -293,7 +293,7 @@ void DriveByWireNode::CreateServices() {
                   std::placeholders::_2));
 
     start_engine_service_ = create_service<std_srvs::srv::Trigger>(
-        "run_engine_starter",
+        "start_engine",
         std::bind(&DriveByWireNode::StartEngine,
                   this,
                   std::placeholders::_1,
@@ -302,7 +302,7 @@ void DriveByWireNode::CreateServices() {
         services_callback_group_);
 
     emergency_stop_service_ = create_service<std_srvs::srv::Trigger>(
-        "emergency_stop/trigger",
+        "emergency_stop",
         std::bind(&DriveByWireNode::EmergencyStop,
                   this,
                   std::placeholders::_1,
@@ -516,27 +516,18 @@ void DriveByWireNode::PublishSteeringAngle() {
 void DriveByWireNode::ConnectCallback() {
     if(is_connected_) return;
 
-    RCLCPP_INFO(get_logger(),
-                "Connecting to drive-by-wire on address %s:%i",
-                connection_address_.c_str(),
-                connection_port_);
-
     try {
         interface_->Open();
     } catch(OLAV::Exceptions::DriveByWireInterfaceException& exception) {
-        RCLCPP_ERROR(get_logger(),
-                     "Could not initialize drive-by-wire interface!");
         return;
     }
 
-    if(interface_->IsConnected()) {
-        is_connected_ = true;
-        RCLCPP_INFO(get_logger(), "Connected successfully!");
-    } else {
-        RCLCPP_ERROR(get_logger(),
-                     "The drive-by-wire is communicating, but the "
-                     "connection dropped.");
-    }
+    is_connected_ = true;
+    RCLCPP_INFO(get_logger(),
+                "Successfully connected to the drive-by-wire Modbus TCP "
+                "server on << %s:%i >>!",
+                connection_address_.c_str(),
+                connection_port_);
 }
 
 void DriveByWireNode::Disconnect() {
@@ -548,16 +539,26 @@ void DriveByWireNode::Disconnect() {
             interface_->Close();
             is_connected_ = false;
             is_ready_ = false;
-            RCLCPP_INFO(get_logger(), "Successfully disconnected!");
+            RCLCPP_INFO(get_logger(),
+                        "Successfully disconnected from the drive-by-wire "
+                        "Modbus TCP server!");
         } catch(OLAV::Exceptions::DriveByWireInterfaceException& exception) {
             RCLCPP_ERROR(get_logger(),
-                         "Could not initialise drive-by-wire interface ");
+                         "Could not disconnect from the drive-by-wire Modbus "
+                         "TCP server!");
         }
     }
 }
 
 void DriveByWireNode::HealthCheckCallback() {
     auto current_time = get_clock()->now();
+
+    if(is_connected_ && !interface_->IsConnected()) {
+        // TODO: This needs a mutex.
+        is_connected_ = false;
+        RCLCPP_ERROR(get_logger(),
+                     "Lost connection to the drive-by-wire Modbus TCP server!");
+    };
 
     has_engine_speed_ = (current_time - last_engine_speed_time_).seconds() >=
             health_check_period_

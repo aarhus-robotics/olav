@@ -385,7 +385,7 @@
                   "pretty-print": "         d     "
                 },
                 "text": {
-                  "repr": "'aulav'",
+                  "repr": "'olav'",
                   "type": "repr"
                 }
               },
@@ -434,7 +434,7 @@
             "plugin": {
               "keys": {
                 "current_service_name": {
-                  "repr": "'/aulav/datalogger/stop'",
+                  "repr": "'/olav/datalogger/stop'",
                   "type": "repr"
                 },
                 "splitter_orientation": {

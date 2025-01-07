@@ -5,7 +5,7 @@ Panels:
     Property Tree Widget:
       Expanded:
         - /Grid1
-        - /AULAV1/LiDAR1/Autocompute Value Bounds1
+        - /OLAV1/LiDAR1/Autocompute Value Bounds1
         - /AUTON1
         - /AUTON1/MPP1
         - /AUTON1/MPP1/MPP Path1
@@ -282,7 +282,7 @@ Visualization Manager:
             Filter size: 10
             History Policy: Keep Last
             Reliability Policy: Reliable
-            Value: /aulav/lidar/points
+            Value: /olav/lidar/points
           Use Fixed Frame: false
           Use rainbow: true
           Value: true
@@ -323,7 +323,7 @@ Visualization Manager:
             Filter size: 10
             History Policy: Keep Last
             Reliability Policy: Reliable
-            Value: /aulav/gnss_ins/filter/odometry
+            Value: /olav/gnss_ins/filter/odometry
           Value: true
         - Alpha: 1
           Class: rviz_default_plugins/Effort
@@ -335,7 +335,7 @@ Visualization Manager:
             front_axle_to_front_right_wheel_revolute:
               Value: true
           Name: Steering Actuator
-          Robot Description: /aulav/model/description
+          Robot Description: /olav/model/description
           Scale: 1
           TF Prefix: ""
           Topic:
@@ -344,7 +344,7 @@ Visualization Manager:
             Filter size: 10
             History Policy: Keep Last
             Reliability Policy: Reliable
-            Value: /aulav/model/joints/updates/front_wheels
+            Value: /olav/model/joints/steering
           Value: true
           Width: 0.019999999552965164
         - Alpha: 1
@@ -357,7 +357,7 @@ Visualization Manager:
             Durability Policy: Volatile
             History Policy: Keep Last
             Reliability Policy: Reliable
-            Value: /aulav/model/description
+            Value: /olav/model/description
           Enabled: true
           Links:
             All Links Enabled: true
@@ -462,7 +462,7 @@ Visualization Manager:
           Value: true
           Visual Enabled: true
       Enabled: true
-      Name: AULAV
+      Name: OLAV
     - Class: rviz_common/Group
       Displays:
         - Class: rviz_common/Group

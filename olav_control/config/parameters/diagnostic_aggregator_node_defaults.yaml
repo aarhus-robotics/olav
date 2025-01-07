@@ -9,11 +9,11 @@
           path: drive-by-wire
           startswith: ["olav/drive-by-wire/"]
           find_and_remove_prefix: ["olav/drive-by-wire"]
-        mux:
+        multiplexer:
           type: diagnostic_aggregator/GenericAnalyzer
-          path: mux
-          startswith: ["olav/mux/"]
-          find_and_remove_prefix: ["olav/mux"]
+          path: multiplexer
+          startswith: ["olav/multiplexer/"]
+          find_and_remove_prefix: ["olav/multiplexer"]
         powertrain:
           type: diagnostic_aggregator/GenericAnalyzer
           path: powertrain

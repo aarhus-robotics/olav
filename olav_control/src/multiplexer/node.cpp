@@ -438,7 +438,7 @@ void ControlMultiplexerNode::DiagnosticTimerCallback() {
     diagnostic_message.level = emergency_stop_
         ? diagnostic_msgs::msg::DiagnosticStatus::ERROR
         : diagnostic_msgs::msg::DiagnosticStatus::OK;
-    diagnostic_message.name = "olav/mux/estop";
+    diagnostic_message.name = "olav/multiplexer/estop";
     diagnostic_message.message = emergency_stop_
         ? "Emergency stop raised! All node functionality is halted"
         : "The emergency stop is not raised.";

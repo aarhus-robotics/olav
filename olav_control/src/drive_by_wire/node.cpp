@@ -148,7 +148,6 @@ void DriveByWireNode::Initialize() {
 void DriveByWireNode::Activate() {
     CreateSubscriptions();
     CreateServices();
-    CreateActions();
     CreateTimers();
     CreatePublishers();
     StartTimers();
@@ -345,23 +344,6 @@ void DriveByWireNode::CreateServices() {
                   this,
                   std::placeholders::_1,
                   std::placeholders::_2));
-}
-
-void DriveByWireNode::CreateActions() {
-    shift_gear_action_ =
-        rclcpp_action::create_server<olav_interfaces::action::ShiftGear>(
-            this,
-            "shift_gear",
-            std::bind(&DriveByWireNode::SetGoalShiftGearAction,
-                      this,
-                      std::placeholders::_1,
-                      std::placeholders::_2),
-            std::bind(&DriveByWireNode::CancelShiftGearAction,
-                      this,
-                      std::placeholders::_1),
-            std::bind(&DriveByWireNode::AcceptShiftGearAction,
-                      this,
-                      std::placeholders::_1));
 }
 
 void DriveByWireNode::StartTimers() {
@@ -924,173 +906,6 @@ void DriveByWireNode::Ready(
             response,
             "Drive-by-wire interface started.");
     }
-}
-
-rclcpp_action::GoalResponse DriveByWireNode::SetGoalShiftGearAction(
-    const rclcpp_action::GoalUUID&,
-    std::shared_ptr<const olav_interfaces::action::ShiftGear::Goal> goal) {
-    RCLCPP_INFO(get_logger(),
-                "Received gear switch request with target gear: %i",
-                goal->gear);
-
-    return rclcpp_action::GoalResponse::ACCEPT_AND_EXECUTE;
-}
-
-void DriveByWireNode::AcceptShiftGearAction(
-    const std::shared_ptr<
-        rclcpp_action::ServerGoalHandle<olav_interfaces::action::ShiftGear>>
-        goal) {
-    // Register callback for switch gear action execution.
-    std::thread{std::bind(&DriveByWireNode::ExecuteShiftGearAction,
-                          this,
-                          std::placeholders::_1),
-                goal}
-        .detach();
-}
-
-rclcpp_action::CancelResponse DriveByWireNode::CancelShiftGearAction(
-    const std::shared_ptr<
-        rclcpp_action::ServerGoalHandle<olav_interfaces::action::ShiftGear>>
-        goal) {
-    auto result = std::make_shared<olav_interfaces::action::ShiftGear_Result>();
-    result->success = false;
-    result->message = "Canceled.";
-    goal->canceled(result);
-
-    return rclcpp_action::CancelResponse::ACCEPT;
-}
-
-void DriveByWireNode::ExecuteShiftGearAction(
-    const std::shared_ptr<
-        rclcpp_action::ServerGoalHandle<olav_interfaces::action::ShiftGear>>
-        goal) {
-    auto feedback =
-        std::make_shared<olav_interfaces::action::ShiftGear_Feedback>();
-
-    // Stop accepting commands.
-    is_ready_ = false;
-
-    // Issue commands to stop the vehicle and wait for the transient to
-    // settle.
-    RCLCPP_INFO(get_logger(), "Stopping vehicle");
-
-    feedback->message = "Stopping vehicle";
-    goal->publish_feedback(feedback);
-
-    {
-        std::unique_lock<std::shared_mutex> setpoint_lock(setpoint_mutex_);
-        drive_by_wire_setpoint_->SetSteering(0.0);
-        drive_by_wire_setpoint_->SetThrottle(0.0);
-        drive_by_wire_setpoint_->SetBrake(1.0);
-    }
-
-    std::this_thread::sleep_for(std::chrono::seconds(3));
-
-    // Move the gear actuator to the correct position. If the final position
-    // is a static gear, return.
-    RCLCPP_INFO(get_logger(), "Moving actuator");
-    feedback = std::make_shared<olav_interfaces::action::ShiftGear_Feedback>();
-    feedback->message = "Moving actuator";
-    goal->publish_feedback(feedback);
-
-    {
-        std::unique_lock<std::shared_mutex> setpoint_lock(setpoint_mutex_);
-        drive_by_wire_setpoint_->SetGear(goal->get_goal()->gear);
-    }
-
-    std::this_thread::sleep_for(std::chrono::seconds(3));
-    if(goal->get_goal()->gear == DriveByWireInterface::NEUTRAL ||
-       goal->get_goal()->gear == DriveByWireInterface::PARK) {
-        std::shared_ptr<olav_interfaces::action::ShiftGear_Result> result;
-        std::string message("Successfully change gear to position %i",
-                            goal->get_goal()->gear);
-        result->success = true;
-        result->message = message;
-        goal->succeed(result);
-    }
-
-    // Release brake and gradually apply throttle.
-    RCLCPP_INFO(get_logger(), "Engaging gear");
-    feedback = std::make_shared<olav_interfaces::action::ShiftGear_Feedback>();
-    feedback->message = "Engaging gear";
-    goal->publish_feedback(feedback);
-
-    double mean_engine_speed = 0.0;
-    double maximum_engine_speed = 2000.0;
-
-    double mean_vehicle_speed = 0.0;
-    double minimum_vehicle_speed = 0.5;
-
-    int retries = 0;
-    int max_retries = 3;
-    while(retries < max_retries) {
-        double maximum_throttle = 0.3;
-        double throttle = 0.0;
-        auto initial_time = get_clock()->now();
-        rclcpp::Duration elapsed_time(0, 0);
-        auto duration = rclcpp::Duration(3, 0);
-        auto final_time = initial_time + duration;
-
-        initial_time = get_clock()->now();
-        elapsed_time = rclcpp::Duration(0, 0);
-        while(elapsed_time.seconds() < duration.seconds()) {
-            elapsed_time = (get_clock()->now() - initial_time);
-
-            if(mean_engine_speed >= maximum_engine_speed) {
-                auto result = std::make_shared<
-                    olav_interfaces::action::ShiftGear_Result>();
-                result->success = false;
-                result->message = "";
-                goal->abort(result);
-                return;
-            }
-
-            if(mean_vehicle_speed >= minimum_vehicle_speed) {
-                {
-                    std::unique_lock<std::shared_mutex> setpoint_lock(
-                        setpoint_mutex_);
-                    drive_by_wire_setpoint_->SetBrake(1.0);
-                    drive_by_wire_setpoint_->SetThrottle(0.0);
-                }
-
-                auto result = std::make_shared<
-                    olav_interfaces::action::ShiftGear_Result>();
-                result->success = true;
-                result->message = "Successfully switched gear.";
-                goal->succeed(result);
-                is_ready_ = true;
-                return;
-            }
-
-            throttle = maximum_throttle *
-                Smoothstep(elapsed_time.seconds(), 0.0, duration.seconds());
-
-            {
-                std::unique_lock<std::shared_mutex> setpoint_lock(
-                    setpoint_mutex_);
-                drive_by_wire_setpoint_->SetBrake(0.0);
-                drive_by_wire_setpoint_->SetThrottle(throttle);
-            }
-        }
-
-        retries++;
-        RCLCPP_WARN(get_logger(), "RETRYING");
-        feedback->message = "";
-        feedback->retries++;
-        goal->publish_feedback(feedback);
-    }
-
-    auto result = std::make_shared<olav_interfaces::action::ShiftGear_Result>();
-    result->success = false;
-    result->message = "Exceeded maximum retries.";
-
-    {
-        std::unique_lock<std::shared_mutex> setpoint_lock(setpoint_mutex_);
-        drive_by_wire_setpoint_->SetBrake(1.0);
-        drive_by_wire_setpoint_->SetThrottle(0.0);
-    }
-
-    goal->abort(result);
 }
 
 double DriveByWireNode::Smoothstep(double x, double edge0, double edge1) {

@@ -20,7 +20,6 @@ find_package(Modbus REQUIRED)
 find_package(nav_msgs REQUIRED)
 find_package(olav_interfaces REQUIRED)
 find_package(rclcpp REQUIRED)
-find_package(rclcpp_action REQUIRED)
 find_package(sensor_msgs REQUIRED)
 find_package(std_srvs REQUIRED)
 
@@ -45,7 +44,6 @@ ament_target_dependencies(
   nav_msgs
   olav_interfaces
   rclcpp
-  rclcpp_action
   sensor_msgs
   std_srvs)
 target_link_libraries(${PROJECT_NAME}_drive_by_wire_interface_node modbus)

@@ -46,7 +46,6 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #include <nav_msgs/msg/odometry.hpp>
 #include <rclcpp/rclcpp.hpp>
 #include <rclcpp/service.hpp>
-#include <rclcpp_action/rclcpp_action.hpp>
 #include <sensor_msgs/msg/joint_state.hpp>
 #include <std_msgs/msg/bool.hpp>
 #include <std_msgs/msg/header.hpp>
@@ -57,7 +56,6 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #include <olav_control/drive_by_wire/feedback.hpp>
 #include <olav_control/drive_by_wire/interface.hpp>
 #include <olav_control/drive_by_wire/setpoint.hpp>
-#include <olav_interfaces/action/shift_gear.hpp>
 #include <olav_interfaces/msg/drive_by_wire_plc_status.hpp>
 #include <olav_interfaces/msg/setpoint_stamped.hpp>
 #include <olav_interfaces/srv/set_pid_gains.hpp>
@@ -79,7 +77,6 @@ class DriveByWireNode : public rclcpp::Node {
     void CreateTimers();
     void CreatePublishers();
     void CreateServices();
-    void CreateActions();
     void StartTimers();
 
   private:
@@ -377,24 +374,6 @@ class DriveByWireNode : public rclcpp::Node {
         const std::shared_ptr<std_srvs::srv::Trigger::Request> request,
         std::shared_ptr<std_srvs::srv::Trigger::Response> response);
 
-    rclcpp_action::GoalResponse SetGoalShiftGearAction(
-        const rclcpp_action::GoalUUID&,
-        std::shared_ptr<const olav_interfaces::action::ShiftGear::Goal> goal);
-
-    // Shift gear action
-    // -----------------
-    rclcpp_action::Server<olav_interfaces::action::ShiftGear>::SharedPtr
-        shift_gear_action_;
-    void
-    AcceptShiftGearAction(const std::shared_ptr<rclcpp_action::ServerGoalHandle<
-                              olav_interfaces::action::ShiftGear>> goal);
-    void ExecuteShiftGearAction(
-        const std::shared_ptr<
-            rclcpp_action::ServerGoalHandle<olav_interfaces::action::ShiftGear>>
-            goal);
-    rclcpp_action::CancelResponse
-    CancelShiftGearAction(const std::shared_ptr<rclcpp_action::ServerGoalHandle<
-                              olav_interfaces::action::ShiftGear>> goal);
     // -------------
 
     // Setpoint

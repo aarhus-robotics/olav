@@ -252,12 +252,17 @@ ssh -qt 192.168.69.4 "olav time tracking"
 % <odin.olavnet> Publisher
 # --------------------- #
 $ heartbeat_authority: echo "autonomy gamepad internal" | tr ' ' '\n' --- --header "The authority of the heartbeat."
+$ setpoint_type: echo "throttle brake steering" | tr ' ' '\n' --- --header "The setpoint type."
+$ setpoint_magnitude: echo "0.5 1.0 1.5 2.0 2.5 3.0 3.5 4.0 4.5 5.0" | tr ' ' '\n'  --- --header "The setpoint magnitude."
 $ ackermann_speed: echo "0.5 1.0 1.5 2.0 2.5 3.0 3.5 4.0 4.5 5.0" | tr ' ' '\n'  --- --header "The desired speed in m/s."
 $ ackermann_steering: echo "0.0 -30.0 -20.0 -10.0 -5.0 5.0 10.0 20.0 30.0" | tr ' ' '\n' --- --header "The desired steering angle in degrees."
 $ ackermann_rate: echo "1.0 5.0 1.0 50.0 100.0 200.0" | tr ' ' '\n' --- --header "The desired publish rate."
 
 # Publish a std_msgs/msg/Header heartbeat message.
 olav publish heartbeat <heartbeat_authority>
+
+# Publish a olav_interfaces/msg/SetpointStamped message.
+olav publish setpoint <setpoint_type> <setpoint_magnitude>
 
 # Publish a ackermann_msgs/msg/AckermannDriveStamped message.
 olav publish ackermann <ackermann_speed> <ackermann_steering> <ackermann_rate>

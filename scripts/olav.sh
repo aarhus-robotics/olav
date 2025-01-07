@@ -59,6 +59,7 @@ elif [ "$(cat /etc/hostname)" = "thor" ]; then
     VALID_SESSIONS=(${LIST_OF_THOR_SESSIONS})
 else
     printf "Invalid hostname.\n"
+    exit
 fi
 
 ########################
@@ -214,7 +215,7 @@ elif [ "${1}" = "parameter" ]; then
 elif [ "${1}" = "publish" ]; then
 
     if [ "${2}" = "ackermann" ]; then
-        printf "Publishing AckermannDriveStamped message...\n"
+        printf "Publishing AckermannDriveStamped message ...\n"
         printf "[ ACKERMANNDRIVESTAMPED INFO | Speed: %0.2f | Steering %0.2f ]\n" ${speed} ${steering}
         ros2 topic pub /olav/commands/composite/drive \
             ackermann_msgs/msg/AckermannDriveStamped \
@@ -223,13 +224,20 @@ elif [ "${1}" = "publish" ]; then
             >/dev/null 2>&1
 
     elif [ "${2}" = "heartbeat" ]; then
-        printf "Sending heartbeat...\n"
+        printf "Sending heartbeat ...\n"
         printf "[ HEARTBEAT INFO | Authority: \"%s\" | Rate: %d ]\n" ${1} ${2}
         ros2 topic pub /olav/commands/signals/heartbeat \
             std_msgs/msg/Header \
             "{"frame_id": "${3}", "stamp": "now"}" \
             -r ${4} \
             >/dev/null 2>&1
+
+    elif [ "${2}" = "setpoint" ]; then
+        printf "Sending setpoint ...\n"
+        printf "[ SETPOINT INFO | Magnitude: \"%d\" ]\n" ${4}
+        ros2 topic pub /olav/controls/mux/${3} \
+            olav_interfaces/msg/SetpointStamped \
+            "{"header": {"frame_id": "${3}", "stamp": "now"}, "setpoint": ${4}}" 
     fi
 
 #######################

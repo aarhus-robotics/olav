@@ -53,16 +53,17 @@ def generate_launch_description():
         ],
         remappings=[
             # > Subscriptions
-            ("engine/speed", "sensors/powertrain/engine/speed"),
-            ("odometry", "sensors/ins/filter/odometry"),
-            ("efforts/throttle", "controls/mux/efforts/throttle"),
-            ("efforts/brake", "controls/mux/efforts/brake"),
-            ("efforts/steering", "controls/mux/efforts/steering"),
-            ("heartbeat", "controls/mux/signals/heartbeat"),
+            ("feedback/engine/speed", "sensors/powertrain/engine/speed"),
+            ("feedback/odometry", "sensors/powertrain/tachometer/odometry"),
+            ("controls/throttle", "controls/throttle"),
+            ("controls/brake", "controls/brake"),
+            ("controls/steering", "controls/steering"),
+            ("signals/heartbeat", "signals/heartbeat"),
             # > Publishers
-            ("ready", "signals/ready"),
-            ("feedback/steering", "sensors/encoders/steering"),
-            ("joints/steering", "model/joints/updates/front_wheels"),
+            ("signals/ready", "signals/ready"),
+            ("signals/estop", "signals/estop"),
+            ("sensors/steering/angle", "sensors/steering/angle"),
+            ("model/joints/steering", "model/joints/updates/front_wheels"),
             ("status", "dbw/status"),
             # > Services servers
             ("ready", "dbw/ready"),
@@ -136,11 +137,11 @@ def generate_launch_description():
             ("in/signals/heartbeat", "mux/in/heartbeat"),
             # > Publishers
             # :: Muxed efforts
-            ("out/efforts/throttle", "mux/out/throttle"),
-            ("out/efforts/brake", "mux/out/brake"),
-            ("out/efforts/steering", "muxed/out/steering"),
+            ("out/efforts/throttle", "controls/throttle"),
+            ("out/efforts/brake", "controls/brake"),
+            ("out/efforts/steering", "controls/steering"),
             # :: Muxed heartbeats
-            ("out/signals/heartbeat", "mux/out/heartbeat"),
+            ("out/signals/heartbeat", "signals/heartbeat"),
             # > Services servers
             ("set_control_mode", "mux/set_control_mode"),
             ("cycle_control_mode", "mux/cycle_control_mode"),

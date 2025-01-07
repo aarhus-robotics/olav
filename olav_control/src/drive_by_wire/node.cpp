@@ -160,7 +160,7 @@ void DriveByWireNode::CreateSubscriptions() {
 
     engine_speed_subscription_ =
         create_subscription<olav_interfaces::msg::SetpointStamped>(
-            "engine/speed",
+            "feedback/engine/speed",
             RMW_QOS_POLICY_RELIABILITY_SYSTEM_DEFAULT,
             std::bind(&DriveByWireNode::EngineSpeedCallback,
                       this,
@@ -168,7 +168,7 @@ void DriveByWireNode::CreateSubscriptions() {
             subscription_options);
 
     odometry_subscription_ = create_subscription<nav_msgs::msg::Odometry>(
-        "odometry",
+        "feedback/odometry",
         RMW_QOS_POLICY_RELIABILITY_SYSTEM_DEFAULT,
         std::bind(&DriveByWireNode::OdometryCallback,
                   this,
@@ -176,7 +176,7 @@ void DriveByWireNode::CreateSubscriptions() {
         subscription_options);
 
     heartbeat_subscription_ = create_subscription<std_msgs::msg::Header>(
-        "heartbeat",
+        "signals/heartbeat",
         RMW_QOS_POLICY_RELIABILITY_SYSTEM_DEFAULT,
         std::bind(&DriveByWireNode::HeartbeatCallback,
                   this,
@@ -185,7 +185,7 @@ void DriveByWireNode::CreateSubscriptions() {
 
     throttle_subscription_ =
         create_subscription<olav_interfaces::msg::SetpointStamped>(
-            "efforts/throttle",
+            "controls/throttle",
             RMW_QOS_POLICY_RELIABILITY_SYSTEM_DEFAULT,
             std::bind(&DriveByWireNode::ThrottleCallback,
                       this,
@@ -194,7 +194,7 @@ void DriveByWireNode::CreateSubscriptions() {
 
     brake_subscription_ =
         create_subscription<olav_interfaces::msg::SetpointStamped>(
-            "efforts/brake",
+            "controls/brake",
             RMW_QOS_POLICY_RELIABILITY_SYSTEM_DEFAULT,
             std::bind(&DriveByWireNode::BrakeCallback,
                       this,
@@ -203,7 +203,7 @@ void DriveByWireNode::CreateSubscriptions() {
 
     steering_subscription_ =
         create_subscription<olav_interfaces::msg::SetpointStamped>(
-            "efforts/steering",
+            "controls/steering",
             RMW_QOS_POLICY_RELIABILITY_SYSTEM_DEFAULT,
             std::bind(&DriveByWireNode::SteeringCallback,
                       this,
@@ -226,7 +226,7 @@ void DriveByWireNode::CreatePublishers() {
             RMW_QOS_POLICY_RELIABILITY_SYSTEM_DEFAULT);
 
     joint_state_publisher_ = create_publisher<sensor_msgs::msg::JointState>(
-        "description/joints/steering",
+        "model/joints/steering",
         RMW_QOS_POLICY_RELIABILITY_SYSTEM_DEFAULT);
 
     plc_status_publisher_ =

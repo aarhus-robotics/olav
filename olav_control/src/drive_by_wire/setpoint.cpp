@@ -38,13 +38,13 @@ namespace ROS {
 
 DriveByWireSetpoint::DriveByWireSetpoint() {}
 
-DriveByWireSetpoint::DriveByWireSetpoint(const double& steering,
-                                         const double& brake,
-                                         const double& throttle,
-                                         const bool& ignition,
-                                         const bool& emergency,
-                                         const bool& starter,
-                                         const int& gear)
+DriveByWireSetpoint::DriveByWireSetpoint(double steering,
+                                         double brake,
+                                         double throttle,
+                                         bool ignition,
+                                         bool emergency,
+                                         bool starter,
+                                         int gear)
     : steering_(steering),
       brake_(brake),
       throttle_(throttle),

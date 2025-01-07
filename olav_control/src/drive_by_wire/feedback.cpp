@@ -37,13 +37,13 @@ namespace ROS {
 
 DriveByWireFeedback::DriveByWireFeedback() {}
 
-DriveByWireFeedback::DriveByWireFeedback(int16_t& steering_angle,
-                                         int16_t& gear,
-                                         int16_t& gear_actuator_position,
-                                         int16_t& brake_actuator_position,
-                                         bool& ignition,
-                                         bool& is_autonomous_mode_on,
-                                         bool& is_gear_actuator_in_position)
+DriveByWireFeedback::DriveByWireFeedback(int16_t steering_angle,
+                                         int16_t gear,
+                                         int16_t gear_actuator_position,
+                                         int16_t brake_actuator_position,
+                                         bool ignition,
+                                         bool is_autonomous_mode_on,
+                                         bool is_gear_actuator_in_position)
     : steering_actuator_position_(steering_angle),
       selected_gear_(gear),
       gear_actuator_position_(gear_actuator_position),

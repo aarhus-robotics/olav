@@ -35,7 +35,10 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 namespace OLAV {
 namespace ROS {
 
-GamepadInterfaceNode::GamepadInterfaceNode() : rclcpp::Node("gamepad_node") {}
+GamepadInterfaceNode::GamepadInterfaceNode() : rclcpp::Node("gamepad_node") {
+    Configure();
+    Activate();
+}
 
 void GamepadInterfaceNode::Configure() {
     GetParameters();

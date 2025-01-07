@@ -230,7 +230,7 @@ void ControlMultiplexerNode::ThrottleCallback(
             throttle_publisher_->publish(*throttle_effort_message);
         }
     } else if(active_control_mode_ == ControlMode::AUTONOMOUS &&
-              throttle_effort_message->header.frame_id == "internal") {
+              throttle_effort_message->header.frame_id == "controller") {
         if(IsValidThrottleEffort(throttle_effort_message->setpoint)) {
             throttle_publisher_->publish(*throttle_effort_message);
         }
@@ -245,7 +245,7 @@ void ControlMultiplexerNode::BrakeCallback(
             brake_publisher_->publish(*brake_effort_message);
         }
     } else if(active_control_mode_ == ControlMode::AUTONOMOUS &&
-              brake_effort_message->header.frame_id == "internal") {
+              brake_effort_message->header.frame_id == "controller") {
         if(IsValidBrakeEffort(brake_effort_message->setpoint)) {
             brake_publisher_->publish(*brake_effort_message);
         }
@@ -254,7 +254,7 @@ void ControlMultiplexerNode::BrakeCallback(
 
 void ControlMultiplexerNode::SteeringCallback(
     olav_interfaces::msg::SetpointStamped::SharedPtr steering_effort_message) {
-    if(steering_effort_message->header.frame_id == "internal") {
+    if(steering_effort_message->header.frame_id == "controller") {
         if(IsValidSteeringEffort(steering_effort_message->setpoint)) {
             steering_publisher_->publish(*steering_effort_message);
         }

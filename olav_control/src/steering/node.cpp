@@ -340,7 +340,7 @@ void SteeringControllerNode::ControlCallback() {
 
     // Publish the controller throttle output.
     auto message = std::make_shared<olav_interfaces::msg::SetpointStamped>();
-    message->header.frame_id = "internal";
+    message->header.frame_id = "controller";
     message->setpoint = controller_->GetOutput();
     output_publisher_->publish(*message);
 }

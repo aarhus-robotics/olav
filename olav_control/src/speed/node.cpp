@@ -433,7 +433,7 @@ void SpeedControllerNode::ControlTimerCallback() {
     // Publish the throttle effort.
     auto throttle_message =
         std::make_shared<olav_interfaces::msg::SetpointStamped>();
-    throttle_message->header.frame_id = "internal";
+    throttle_message->header.frame_id = "controller";
     throttle_message->setpoint = (output >= 0) ? output : 0.0;
     throttle_publisher_->publish(*throttle_message);
 
@@ -441,7 +441,7 @@ void SpeedControllerNode::ControlTimerCallback() {
     if(minimum_output_ < 0.0) {
         auto brake_message =
             std::make_shared<olav_interfaces::msg::SetpointStamped>();
-        brake_message->header.frame_id = "internal";
+        brake_message->header.frame_id = "controller";
         brake_message->setpoint = (output < -brake_threshold_)
             ? boost::algorithm::clamp(-output, 0.0, brake_limit_)
             : 0.0;
@@ -516,7 +516,7 @@ void SpeedControllerNode::PublishThrottle(const double& throttle) {
     // Publish the throttle effort.
     auto throttle_message =
         std::make_shared<olav_interfaces::msg::SetpointStamped>();
-    throttle_message->header.frame_id = "internal";
+    throttle_message->header.frame_id = "controller";
     throttle_message->setpoint = throttle;
     throttle_publisher_->publish(*throttle_message);
 }

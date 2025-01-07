@@ -37,6 +37,7 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #include <ackermann_msgs/msg/ackermann_drive_stamped.hpp>
 #include <diagnostic_msgs/msg/diagnostic_array.hpp>
 #include <diagnostic_msgs/msg/diagnostic_status.hpp>
+#include <diagnostic_msgs/msg/key_value.hpp>
 #include <rclcpp/rclcpp.hpp>
 #include <std_msgs/msg/bool.hpp>
 #include <std_msgs/msg/header.hpp>
@@ -48,54 +49,8 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 namespace OLAV {
 namespace ROS {
 
-/**
- * @brief Class defining an rclcpp ROS node for control multiplexing. The ROS
- * node is repsonsible for validating the magnitude and source of the control
- * commands passed to the drive-by-wire PLC interface, and provides the system
- * and users with interfaces to change the active control authority. Finally,
- * the class provides automatic safety overrides irrespective of the active
- * control authority.
- *
- */
 class ControlMultiplexerNode : public rclcpp::Node {
   public:
-    /**
-     * @brief Enumeration type defining the multiplexer output control mode.
-     */
-    enum ControlMode {
-        /** @brief Control output is a triad of throttle, brake and steering
-         * actuator efforts, routed to separate topics. */
-        MANUAL = 0,
-
-        /** @brief Control output is target speed (and optional acceleration and
-         * jerk) and steering angle (and optional steering rate), routed to a
-         * single ackermann_msgs/msg/AckermannDriveStamped topic. */
-        AUTONOMOUS = 1
-    };
-
-    std::string FromControlMode(ControlMode mode) {
-        if(mode == ControlMode::MANUAL) {
-            return std::string("manual");
-        } else if(mode == ControlMode::AUTONOMOUS) {
-            return std::string("autonomous");
-        } else {
-            throw std::invalid_argument("Invalid control mode.");
-        }
-    }
-
-    ControlMode ToControlMode(std::string mode) {
-        if(mode == "manual") {
-            return ControlMode::MANUAL;
-        } else if(mode == "autonomous") {
-            return ControlMode::AUTONOMOUS;
-        } else {
-            throw std::invalid_argument("Invalid control mode");
-        }
-    }
-
-    /**
-     * @brief Construct a new control multiplexer node.
-     */
     ControlMultiplexerNode();
 
   private:
@@ -109,6 +64,10 @@ class ControlMultiplexerNode : public rclcpp::Node {
 
     void CreateSubscriptions();
 
+    void CreateCommandSubscriptions();
+
+    void DeleteCommandSubscriptions();
+
     void CreateServices();
 
     void CreateClients();
@@ -119,279 +78,254 @@ class ControlMultiplexerNode : public rclcpp::Node {
 
     void StartTimers();
 
-    void SetMode(ControlMode mode);
+    void Reset();
 
-    void CycleControlMode(
-        const std::shared_ptr<std_srvs::srv::Trigger::Request> request,
-        std::shared_ptr<std_srvs::srv::Trigger::Response> response);
+    // Thread safety
+    // -------------
 
-    void CreateSetpointSubscriptions();
+    /** @brief Subscriptions callback group. */
+    rclcpp::CallbackGroup::SharedPtr subscriptions_callback_group_;
+
+    /** @brief Services callback group. */
+    rclcpp::CallbackGroup::SharedPtr services_callback_group_;
+
+    // Muxed signals
+    // -------------
+
+    /** @brief Heartbeat subscription. */
+    rclcpp::Subscription<std_msgs::msg::Header>::SharedPtr
+        heartbeat_subscription_;
 
     /**
-     * @brief Callback for the command multiplexer node autonomous navigation
-     * system throttle effort.
+     * @brief Heartbeat subscription callback.
      *
-     * @param throttle_message Autonomous navigation system throttle effort
-     * message.
+     * @param heartbeat_message Heartbeat message.
+     */
+    void HeartbeatCallback(
+        const std_msgs::msg::Header::ConstSharedPtr heartbeat_message);
+
+    /** @brief Throttle subscription. */
+    rclcpp::Subscription<olav_interfaces::msg::SetpointStamped>::SharedPtr
+        throttle_subscription_;
+
+    /**
+     * @brief Throttle subscription callback.
+     *
+     * @param throttle_message Throttle message.
      */
     void ThrottleCallback(
         olav_interfaces::msg::SetpointStamped::SharedPtr throttle_message);
 
+    /** @brief Throttle publisher. */
+    rclcpp::Publisher<olav_interfaces::msg::SetpointStamped>::SharedPtr
+        throttle_publisher_;
+
+    /** @brief Brake subscription. */
+    rclcpp::Subscription<olav_interfaces::msg::SetpointStamped>::SharedPtr
+        brake_subscription_;
+
     /**
-     * @brief Callback for the command multiplexer node autonomous navigation
-     * system brake effort.
+     * @brief Brake subscription callback.
      *
-     * @param brake_message Autonomous navigation system brake effort
-     * message.
+     * @param brake_message Brake message.
      */
     void BrakeCallback(
         olav_interfaces::msg::SetpointStamped::SharedPtr brake_message);
 
+    /** @brief Brake publisher. */
+    rclcpp::Publisher<olav_interfaces::msg::SetpointStamped>::SharedPtr
+        brake_publisher_;
+
+    /** @brief Steering subscription. */
+    rclcpp::Subscription<olav_interfaces::msg::SetpointStamped>::SharedPtr
+        steering_subscription_;
+
     /**
-     * @brief Callback for the command multiplexer node autonomous navigation
-     * system steering effort.
+     * @brief Steering subscription callback.
      *
-     * @param steering_message Autonomous navigation system steering effort
-     * message.
+     * @param steering_message Steering message.
      */
     void SteeringCallback(
         olav_interfaces::msg::SetpointStamped::SharedPtr steering_message);
 
+    /** @brief Steering publisher. */
+    rclcpp::Publisher<olav_interfaces::msg::SetpointStamped>::SharedPtr
+        steering_publisher_;
+
+    /** @brief Heartbeat publisher. */
+    rclcpp::Publisher<std_msgs::msg::Header>::SharedPtr heartbeat_publisher_;
+
+    /** @brief Ackermann drive subscription. */
+    rclcpp::Subscription<ackermann_msgs::msg::AckermannDriveStamped>::SharedPtr
+        ackermann_drive_subscription_;
+
+    /**
+     * @brief Ackermann drive subscription callback.
+     *
+     * @param ackermann_drive_message Ackermann drive message.
+     */
     void
     AckermannDriveCallback(ackermann_msgs::msg::AckermannDriveStamped::SharedPtr
                                ackermann_drive_message);
 
-    void HeartbeatCallback(
-        const std_msgs::msg::Header::ConstSharedPtr heartbeat_message);
+    // Speed controller client
+    // -----------------------
 
-    void EmergencyStopCallback(
-        const std_msgs::msg::Bool::ConstSharedPtr heartbeat_message);
+    /**
+     * @brief Start speed controller.
+     */
+    void StartSpeedController();
 
+    /** @brief Start speed controller client. */
+    rclcpp::Client<std_srvs::srv::Trigger>::SharedPtr
+        start_speed_controller_client_;
+
+    /**
+     * @brief Start speed controller client callback.
+     *
+     * @param future Start speed controller request future.
+     */
+    void StartSpeedControllerCallback(
+        rclcpp::Client<std_srvs::srv::Trigger>::SharedFuture future);
+
+    /**
+     * @brief Stop speed controller.
+     */
+    void StopSpeedController();
+
+    /** @brief Stop speed controller client. */
+    rclcpp::Client<std_srvs::srv::Trigger>::SharedPtr
+        stop_speed_controller_client_;
+
+    /**
+     * @brief Stop speed controller client callback.
+     *
+     * @param future Stop speed controller request future.
+     */
+    void StopSpeedControllerCallback(
+        rclcpp::Client<std_srvs::srv::Trigger>::SharedFuture future);
+
+    // Steering controller client
+    // --------------------------
+
+    /**
+     * @brief Start steering controller.
+     */
+    void StartSteeringController();
+
+    /** @brief Start steering controller client. */
+    rclcpp::Client<std_srvs::srv::Trigger>::SharedPtr
+        start_steering_controller_client_;
+
+    /**
+     * @brief Start steering controller client callback.
+     *
+     * @param future Start steering controller request future.
+     */
+    void StartSteeringControllerCallback(
+        rclcpp::Client<std_srvs::srv::Trigger>::SharedFuture future);
+
+    /**
+     * @brief Stop steering controller.
+     */
+    void StopSteeringController();
+
+    /** @brief Stop steering controller client. */
+    rclcpp::Client<std_srvs::srv::Trigger>::SharedPtr
+        stop_steering_controller_client_;
+
+    /**
+     * @brief Stop steering controller client callback.
+     *
+     * @param future Stop steering controller request future.
+     */
+    void StopSteeringControllerCallback(
+        rclcpp::Client<std_srvs::srv::Trigger>::SharedFuture future);
+    // ---------------
+
+    // Mode
+    // ----
+
+    /**
+     * @brief Set multiplexer control mode.
+     *
+     * @param mode Multiplexer control mode.
+     */
+    void SetMode(const std::string& mode);
+
+    /** @brief Cycle control mode service. */
+    rclcpp::Service<std_srvs::srv::Trigger>::SharedPtr
+        cycle_control_mode_service_;
+
+    /**
+     * @brief Cycle control mode service callback.
+     *
+     * @param request Cycle control mode request.
+     * @param response Cycle control mode response.
+     */
+    void CycleControlMode(
+        const std::shared_ptr<std_srvs::srv::Trigger::Request> request,
+        std::shared_ptr<std_srvs::srv::Trigger::Response> response);
+
+    /** @brief Set control mode service. */
+    rclcpp::Service<olav_interfaces::srv::SetControlMode>::SharedPtr
+        set_control_mode_service_;
+
+    /**
+     * @brief Set control mode service callback.
+     *
+     * @param request Set control mode request.
+     * @param response Set control mode response.
+     */
     void SetControlMode(
         const std::shared_ptr<olav_interfaces::srv::SetControlMode::Request>
             request,
         std::shared_ptr<olav_interfaces::srv::SetControlMode::Response>
             response);
 
+    /** @brief Active control mode. */
+    std::string active_control_mode_;
+
+    // Error handling
+    // --------------
+
+    /** @brief Is the node in a faulty state? */
+    bool is_faulty_ = false;
+
     /**
-     * @brief Callback for the set parameters service.
+     * @brief Is the multiplexer active?
      *
-     * @param parameters
-     * @return rcl_interfaces::msg::SetParametersResult
+     * @return true The multiplexer is active.
+     * @return false The multiplexer is not active.
      */
-    rcl_interfaces::msg::SetParametersResult
-    SetParametersCallback(const std::vector<rclcpp::Parameter>& parameters);
+    bool IsActive();
 
-    /** @brief Shared pointer to the autonomous navigation system throttle
-     * effort subscription. */
-    rclcpp::Subscription<olav_interfaces::msg::SetpointStamped>::SharedPtr
-        throttle_subscription_;
+    /** @brief Emergency stop state. */
+    bool emergency_stop_ = false;
 
-    /** @brief Shared pointer to the autonomous navigation system brake effort
-     * subscription. */
-    rclcpp::Subscription<olav_interfaces::msg::SetpointStamped>::SharedPtr
-        brake_subscription_;
-
-    /** @brief Shared pointer to the autonomous navigation system steering
-     * effort subscription. */
-    rclcpp::Subscription<olav_interfaces::msg::SetpointStamped>::SharedPtr
-        steering_subscription_;
-
-    rclcpp::Subscription<ackermann_msgs::msg::AckermannDriveStamped>::SharedPtr
-        ackermann_drive_subscription_;
-
-    /** @brief Shared pointer to the autonomous navigation system heartbeat
-     * signal subscription. */
-    rclcpp::Subscription<std_msgs::msg::Header>::SharedPtr
-        heartbeat_subscription_;
-
-    /** @brief Shared pointer to the autonomy switch subscription. */
-    rclcpp::Subscription<std_msgs::msg::Bool>::SharedPtr
-        autonomy_switch_subscription_;
-
-    bool autonomy_switch_ = false;
-
-    /** @brief Shared pointer to the emergency stop subscription. */
+    /** @brief Emergency stop subscription. */
     rclcpp::Subscription<std_msgs::msg::Bool>::SharedPtr
         emergency_stop_subscription_;
 
-    bool emergency_stop_ = false;
-
-    /** @brief Shared pointer to the the muxed throttle effort publisher. */
-    rclcpp::Publisher<olav_interfaces::msg::SetpointStamped>::SharedPtr
-        throttle_publisher_;
-
-    /** @brief Shared pointer to the the muxed brake effort publisher. */
-    rclcpp::Publisher<olav_interfaces::msg::SetpointStamped>::SharedPtr
-        brake_publisher_;
-
-    /** @brief Shared pointer to the the muxed steering effort publisher. */
-    rclcpp::Publisher<olav_interfaces::msg::SetpointStamped>::SharedPtr
-        steering_publisher_;
-
-    /** @brief Shared pointer to the the muxed heartbeat signal publisher. */
-    rclcpp::Publisher<std_msgs::msg::Header>::SharedPtr heartbeat_publisher_;
-
-    // Service servers
-    // ---------------
-    rclcpp::Service<std_srvs::srv::Trigger>::SharedPtr
-        cycle_control_mode_service_;
-
-    rclcpp::Service<olav_interfaces::srv::SetControlMode>::SharedPtr
-        set_control_mode_service_;
-    // ---------------
-
-    // Service clients
-    // ---------------
-    rclcpp::Client<std_srvs::srv::Trigger>::SharedPtr
-        start_speed_controller_client_;
-
-    void StartSpeedControllerCallback(
-        rclcpp::Client<std_srvs::srv::Trigger>::SharedFuture future);
-
-    rclcpp::Client<std_srvs::srv::Trigger>::SharedPtr
-        stop_speed_controller_client_;
-
-    void StopSpeedControllerCallback(
-        rclcpp::Client<std_srvs::srv::Trigger>::SharedFuture future);
-
-    rclcpp::Client<std_srvs::srv::Trigger>::SharedPtr
-        start_steering_controller_client_;
-
-    void StartSteeringControllerCallback(
-        rclcpp::Client<std_srvs::srv::Trigger>::SharedFuture future);
-
-    rclcpp::Client<std_srvs::srv::Trigger>::SharedPtr
-        stop_steering_controller_client_;
-
-    void StopSteeringControllerCallback(
-        rclcpp::Client<std_srvs::srv::Trigger>::SharedFuture future);
-    // ---------------
-
-    /** @brief Shared pointer to the set parameters callback handle. */
-    OnSetParametersCallbackHandle::SharedPtr set_parameters_callback_;
-
-    /** @brief Manual brake effort threshold value before the autonomous
-     * navigation system brake effort is overriden. */
-    double brake_threshold_;
-
-    std::atomic<ControlMode> active_control_mode_;
-
-    bool warn_once_;
-
-    // Thread safety
-    // -------------
-
-    /** @brief Shared pointer to a shared time mutex for reading and setting the
-     * active control mode. */
-    mutable std::shared_timed_mutex control_mode_mutex_;
-
-    /** @brief Shared pointer to the mutually exclusive callback group for
-     * synchronous services callbacks. */
-    rclcpp::CallbackGroup::SharedPtr services_callback_group_;
-
-    /** @brief Shared pointer to the reentrant callback group for asynchronous
-     * subscriptions callback. */
-    rclcpp::CallbackGroup::SharedPtr subscriptions_callback_group_;
-
-    // Input validation
-    // ----------------
     /**
-     * @brief Whether or not a warning is logged when the issued controls do not
-     * pass the bounds check.
-     */
-    bool warn_on_bounds_violations_;
-
-    /**
-     * @brief The maximum allowed throttle effort magnitude before throttle is
-     * clamped.
-     */
-    double maximum_throttle_effort_;
-
-    /**
-     * @brief Check whether the provided throttle effort is within bounds of the
-     * compact [0, max_throttle].
+     * @brief Emergency stop subscription callback.
      *
-     * @param throttle_effort Throttle effort to be checked.
-     * @return true The throttle effort is within bounds.
-     * @return false The throttle effort is out of bounds.
+     * @param emergency_stop_message Emergency stop message.
      */
-    bool IsValidThrottleEffort(const double& throttle_effort);
+    void EmergencyStopCallback(
+        const std_msgs::msg::Bool::ConstSharedPtr emergency_stop_message);
 
-    /**
-     * @brief The maximum allowed brake effort magnitude before brake is
-     * clamped.
-     */
-    double maximum_brake_effort_;
+    // Diagnostic
+    // ----------
 
-    /**
-     * @brief Check whether the provided brake effort is within bounds of the
-     * compact [0, max_brake].
-     *
-     * @param brake_effort Brake effort to be checked.
-     * @return true The brake effort is within bounds.
-     * @return false The brake effort is out of bounds.
-     */
-    bool IsValidBrakeEffort(const double& brake_effort);
-
-    /**
-     * @brief The maximum allowed steering effort magnitude before steering is
-     * clamped.
-     *
-     */
-    double maximum_steering_effort_;
-
-    /**
-     * @brief Check whether the provided steering effort is within bounds of the
-     * compact
-     *        [-max_steering_effort, max_steering_effort].
-     *
-     * @param steering_effort Steering effort to be checked.
-     * @return true The steering effort is within bounds.
-     * @return false The steering effort is out of bounds.
-     */
-
-    bool IsValidSteeringEffort(const double& steering_effort);
-
-    /**
-     * @brief The maximum allowed speed setpoint before speed is clamped.
-     */
-    double maximum_speed_setpoint_;
-
-    /**
-     * @brief Check whether the provided speed setpoint is below the maximum
-     * allowed speed setpoint.
-     *
-     * @param speed_setpoint Speed setpoint to be checked.
-     * @return true The speed setpoint is within bounds.
-     * @return false The speed setpoint is out of bounds.
-     */
-
-    bool IsValidSpeedSetpoint(const double& speed_setpoint);
-
-    /**
-     * @brief The maximum steering angle setpoint before the steering angle
-     * setpoint is clamped.
-     */
-    double maximum_steering_angle_setpoint_;
-
-    /**
-     * @brief Check whether the provided steering angle setpoint is within
-     * bounds of the compact
-     *        [-max_steering_angle, max_steering angle].
-     *
-     * @param steering_angle_setpoint Steering angle setpoint to be checked.
-     * @return true The steering angle setpoint is within bounds.
-     * @return false The steering angle setpoint is out of bounds.
-     */
-    bool IsValidSteeringAngleSetpoint(const double& steering_angle_setpoint);
-    // ----------------
-
+    /** @brief Diagnostic publisher. */
     rclcpp::Publisher<diagnostic_msgs::msg::DiagnosticArray>::SharedPtr
         diagnostic_publisher_;
 
+    /** @brief Diagnostic callback execution timer.  */
     rclcpp::TimerBase::SharedPtr diagnostic_timer_;
 
+    /** @brief Diagnostic callback function. */
     void DiagnosticTimerCallback();
 };
 

@@ -52,7 +52,7 @@ void DriveByWireNode::GetParameters() {
     declare_parameter("connection.port", 502);
     connection_port_ = get_parameter("connection.port").as_int();
 
-    declare_parameter("rates.connect", 0.2);
+    declare_parameter("rates.connect", 1.0);
     get_parameter("rates.connect").as_double();
     connect_period_ = 1.0 / get_parameter("rates.connect").as_double();
 
@@ -69,7 +69,7 @@ void DriveByWireNode::GetParameters() {
     declare_parameter("rates.debug", 1.0);
     debug_period_ = 1.0 / get_parameter("rates.debug").as_double();
 
-    declare_parameter("starter.duration", 3.0);
+    declare_parameter("starter.duration", 2.0);
     engine_starter_duration_ = get_parameter("starter.duration").as_double();
 
     // FIXME: Check that the provided value is positive.

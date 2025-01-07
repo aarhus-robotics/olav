@@ -191,6 +191,7 @@ void SpeedControllerNode::Activate() {
     CreateTimers();
     CreateServices();
     CreatePublishers();
+    StartTimers();
 }
 
 void SpeedControllerNode::CreateSubscriptions() {
@@ -238,7 +239,14 @@ void SpeedControllerNode::CreateTimers() {
         std::chrono::duration<double>(1.0 / control_rate_),
         std::bind(&SpeedControllerNode::ControlTimerCallback, this));
     control_timer_->cancel();
+
+    diagnostic_timer_ = create_wall_timer(
+        std::chrono::duration<double>(1.0),
+        std::bind(&SpeedControllerNode::DiagnosticTimerCallback, this));
+    diagnostic_timer_->cancel();
 }
+
+void SpeedControllerNode::StartTimers() { diagnostic_timer_->reset(); }
 
 void SpeedControllerNode::CreatePublishers() {
     throttle_publisher_ =
@@ -260,6 +268,11 @@ void SpeedControllerNode::CreatePublishers() {
     status_publisher_ = create_publisher<olav_interfaces::msg::PIDStatus>(
         "status",
         RMW_QOS_POLICY_RELIABILITY_SYSTEM_DEFAULT);
+
+    diagnostic_publisher_ =
+        create_publisher<diagnostic_msgs::msg::DiagnosticArray>(
+            "/diagnostics",
+            RMW_QOS_POLICY_RELIABILITY_SYSTEM_DEFAULT);
 }
 
 rcl_interfaces::msg::SetParametersResult
@@ -506,6 +519,19 @@ void SpeedControllerNode::PublishThrottle(const double& throttle) {
     throttle_message->header.frame_id = "internal";
     throttle_message->setpoint = throttle;
     throttle_publisher_->publish(*throttle_message);
+}
+
+void SpeedControllerNode::DiagnosticTimerCallback() {
+    diagnostic_msgs::msg::DiagnosticArray diagnostic_array_message;
+    diagnostic_array_message.header.stamp = get_clock()->now();
+    diagnostic_msgs::msg::DiagnosticStatus diagnostic_status_message;
+    diagnostic_status_message.name = "olav/speed_controller/enabled";
+    diagnostic_status_message.message = is_stopped_
+        ? "The speed controller is stopped."
+        : "The speed controller is currently active and running.";
+    diagnostic_status_message.hardware_id = hardware_id_;
+    diagnostic_array_message.status.push_back(diagnostic_status_message);
+    diagnostic_publisher_->publish(diagnostic_array_message);
 }
 
 } // namespace ROS

@@ -35,6 +35,8 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #include <Eigen/Dense>
 #include <Eigen/Geometry>
 
+#include <diagnostic_msgs/msg/diagnostic_array.hpp>
+#include <diagnostic_msgs/msg/diagnostic_status.hpp>
 #include <nav_msgs/msg/odometry.hpp>
 #include <rclcpp/rclcpp.hpp>
 #include <std_srvs/srv/trigger.hpp>
@@ -210,6 +212,15 @@ class SpeedControllerNode : public rclcpp::Node {
     void CheckDeadzone();
 
     void PublishThrottle(const double& throttle);
+
+    rclcpp::Publisher<diagnostic_msgs::msg::DiagnosticArray>::SharedPtr
+        diagnostic_publisher_;
+
+    rclcpp::TimerBase::SharedPtr diagnostic_timer_;
+
+    void DiagnosticTimerCallback();
+
+    std::string hardware_id_ = "olav-spd-k4mj";
 };
 
 } // namespace ROS

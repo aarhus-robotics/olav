@@ -15,6 +15,7 @@ message(STATUS "Building the speed controller node ...")
 
 # > Find external packages
 # ------------------------
+find_package(diagnostic_msgs REQUIRED)
 find_package(Eigen3 REQUIRED)
 find_package(nav_msgs REQUIRED)
 find_package(olav_interfaces REQUIRED)
@@ -38,6 +39,7 @@ target_include_directories(
 # ----------------------------
 ament_target_dependencies(
   ${PROJECT_NAME}_speed_controller_node
+  diagnostic_msgs
   Eigen3
   nav_msgs
   olav_interfaces

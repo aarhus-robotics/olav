@@ -105,7 +105,7 @@ def generate_launch_description():
             ("robot_description", "model/description"),
             # > Publishers
             ("joint_states", "model/joints/states"),
-            ("front_wheels", "model/joints/updates/front_wheels"),
+            ("front_wheels", "model/joints/steering"),
         ],
         emulate_tty=True,
         output={

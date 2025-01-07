@@ -55,28 +55,26 @@ def generate_launch_description():
             # > Subscriptions
             ("feedback/engine/speed", "sensors/powertrain/engine/speed"),
             ("feedback/odometry", "sensors/powertrain/tachometer/odometry"),
-            ("controls/throttle", "controls/throttle"),
-            ("controls/brake", "controls/brake"),
-            ("controls/steering", "controls/steering"),
-            ("signals/heartbeat", "signals/heartbeat"),
+            #("signals/heartbeat", "signals/heartbeat"),
+            #("controls/throttle", "controls/throttle"),
+            #("controls/brake", "controls/brake"),
+            #("controls/steering", "controls/steering"),
             # > Publishers
-            ("signals/ready", "signals/ready"),
-            ("signals/estop", "signals/estop"),
-            ("sensors/steering/angle", "sensors/steering/angle"),
-            ("model/joints/steering", "model/joints/updates/front_wheels"),
-            ("status", "dbw/status"),
+            #("signals/ready", "signals/ready"),
+            #("signals/estop", "signals/estop"),
+            #("sensors/steering/angle", "sensors/steering/angle"),
+            #("model/joints/steering", "model/joints/steering"),
+            ("status", "drive_by_wire/status"),
+            #("/diagnostics", "/diagnostics"),
             # > Services servers
-            ("ready", "dbw/ready"),
-            ("cycle_ignition", "dbw/cycle_ignition"),
-            ("set_ignition", "dbw/set_ignition"),
-            ("start_engine", "dbw/start_engine"),
-            ("emergency_stop", "dbw/emergency_stop"),
-            ("shift_gear_up", "dbw/shift_gear_up"),
-            ("shift_gear_down", "dbw/shift_gear_down"),
-            ("set_steering_pid_gains", "dbw/set_steering_pid_gains"),
-            # > Service clients
-            ("steering/start", "controllers/steering/start"),
-            ("steering/stop", "controllers/steering/stop"),
+            ("ready", "drive_by_wire/ready"),
+            ("set_ignition", "drive_by_wire/set_ignition"),
+            ("cycle_ignition", "drive_by_wire/cycle_ignition"),
+            ("start_engine", "drive_by_wire/start_engine"),
+            ("emergency_stop", "drive_by_wire/emergency_stop"),
+            ("set_steering_pid_gains", "drive_by_wire/set_steering_pid_gains"),
+            ("shift_gear_up", "drive_by_wire/shift_gear_up"),
+            ("shift_gear_down", "drive_by_wire/shift_gear_down"),
         ],
         emulate_tty=True,
         output={
@@ -126,30 +124,24 @@ def generate_launch_description():
         ],
         remappings=[
             # > Subscriptions
-            # :: Input efforts
-            ("in/throttle", "mux/in/throttle"),
-            ("in/brake", "mux/in/brake"),
-            ("in/steering", "mux/in/steering"),
-            # :: Input commands
-            ("in/drive", "mux/in/drive"),
-            # :: Input signals
-            ("in/heartbeat", "mux/in/heartbeat"),
-            ("in/heartbeat", "mux/in/heartbeat"),
+            ("in/throttle", "multiplexer/in/throttle"),
+            ("in/brake", "multiplexer/in/brake"),
+            ("in/steering", "multiplexer/in/steering"),
+            ("in/drive", "multiplexer/in/drive"),
+            ("in/heartbeat", "multiplexer/in/heartbeat"),
             # > Publishers
-            # :: Muxed efforts
             ("out/throttle", "controls/throttle"),
             ("out/brake", "controls/brake"),
             ("out/steering", "controls/steering"),
-            # :: Muxed heartbeats
             ("out/heartbeat", "signals/heartbeat"),
-            # > Services servers
-            ("set_control_mode", "mux/set_control_mode"),
-            ("cycle_control_mode", "mux/cycle_control_mode"),
-            # > Service clients
-            ("controllers/speed/start", "controllers/speed/start"),
-            ("controllers/speed/stop", "controllers/speed/stop"),
-            ("controllers/steering/start", "controllers/steering/start"),
-            ("controllers/steering/stop", "controllers/steering/stop"),
+            # > Services
+            ("set_control_mode", "multiplexer/set_control_mode"),
+            ("cycle_control_mode", "multiplexer/cycle_control_mode"),
+            # > Clients
+            #("controllers/speed/start", "controllers/speed/start"),
+            #("controllers/speed/stop", "controllers/speed/stop"),
+            #("controllers/steering/start", "controllers/steering/start"),
+            #("controllers/steering/stop", "controllers/steering/stop"),
         ],
         emulate_tty=True,
         output={

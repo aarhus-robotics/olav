@@ -34,23 +34,6 @@ def generate_launch_description():
     # > Declare log level launch argument
     log_level_argument = DeclareLaunchArgument("log_level", default_value="WARN")
 
-    # Launch descriptions
-    # -------------------
-    # > Ouster LiDAR launch description
-    lidar_launch = IncludeLaunchDescription(
-        PythonLaunchDescriptionSource(
-            [Path(get_package_share_path("ouster_ros") / "launch/driver.launch.py").as_posix()]),
-        launch_arguments={
-            "ouster_ns":
-            "olav",
-            "os_driver_name":
-            "lidar",
-            "params_file":
-            Path(get_package_share_path("olav_sensors") / "config/parameters/os_driver_node_defaults.yaml").as_posix(),
-            "viz":
-            'False',
-        }.items())
-
     # Nodes
     # -----
     # > Load cell interface node

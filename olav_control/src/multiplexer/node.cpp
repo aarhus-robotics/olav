@@ -212,7 +212,7 @@ void ControlMultiplexerNode::ThrottleCallback(
     olav_interfaces::msg::SetpointStamped::SharedPtr throttle_effort_message) {
     if(!IsActive()) return;
 
-    if((active_control_mode_ == "gamepad" &&
+    if((active_control_mode_ == "manual" &&
         throttle_effort_message->header.frame_id == "gamepad") ||
        (active_control_mode_ == "autonomy" &&
         throttle_effort_message->header.frame_id == "controller"))
@@ -223,7 +223,7 @@ void ControlMultiplexerNode::BrakeCallback(
     olav_interfaces::msg::SetpointStamped::SharedPtr brake_effort_message) {
     if(!IsActive()) return;
 
-    if((active_control_mode_ == "gamepad" &&
+    if((active_control_mode_ == "manual" &&
         brake_effort_message->header.frame_id == "gamepad") ||
        (active_control_mode_ == "autonomy" &&
         brake_effort_message->header.frame_id == "controller"))
@@ -234,7 +234,7 @@ void ControlMultiplexerNode::SteeringCallback(
     olav_interfaces::msg::SetpointStamped::SharedPtr steering_effort_message) {
     if(!IsActive()) return;
 
-    if((active_control_mode_ == "gamepad" &&
+    if((active_control_mode_ == "manual" &&
         steering_effort_message->header.frame_id == "controller") ||
        (active_control_mode_ == "autonomy" &&
         steering_effort_message->header.frame_id == "controller")) {

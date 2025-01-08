@@ -1,16 +1,16 @@
 <?xml version='1.0' encoding='UTF-8'?>
 <root>
  <tabbed_widget name="Main Window" parent="main_window">
-  <Tab containers="1" tab_name="GNSS/INS + Hall Effect Odometry">
+  <Tab containers="1" tab_name="GNSS/inertial_navigation_system + Hall Effect Odometry">
    <Container>
     <DockSplitter sizes="1" count="1" orientation="-">
      <DockSplitter sizes="0.5;0.5" count="2" orientation="|">
       <DockSplitter sizes="0.500709;0.499291" count="2" orientation="-">
-       <DockArea name="GNSS/INS Longitudinal Speed">
+       <DockArea name="GNSS/inertial_navigation_system Longitudinal Speed">
         <plot mode="TimeSeries" style="Lines" flip_x="false" flip_y="false">
          <range bottom="-1.000000" right="25.010744" top="7.500000" left="20.011554"/>
          <limitY max="7.5" min="-1"/>
-         <curve color="#1f77b4" name="/olav/ins/filter/odometry/twist/twist/linear/x"/>
+         <curve color="#1f77b4" name="/olav/inertial_navigation_system/filter/odometry/twist/twist/linear/x"/>
          <curve color="#1ac938" name="/olav/odometer/vehicle/speed/filtered/magnitude"/>
         </plot>
        </DockArea>
@@ -20,15 +20,15 @@
           <plot mode="TimeSeries" style="Lines" flip_x="false" flip_y="false">
            <range bottom="-1.500000" right="25.010744" top="1.500000" left="20.011554"/>
            <limitY max="1.5" min="-1.5"/>
-           <curve color="#1ac938" name="/olav/ins/filter/odometry/twist/twist/angular/x"/>
+           <curve color="#1ac938" name="/olav/inertial_navigation_system/filter/odometry/twist/twist/angular/x"/>
           </plot>
          </DockArea>
          <DockArea name="INS Roll">
           <plot mode="TimeSeries" style="Lines" flip_x="false" flip_y="false">
            <range bottom="-3.000000" right="25.010744" top="3.000000" left="20.011554"/>
            <limitY max="3" min="-3"/>
-           <curve color="#9467bd" name="/olav/ins/filter/odometry/pose/pose/orientation/roll">
-            <transform name="Scale/Offset" alias="/olav/ins/filter/odometry/pose/pose/orientation/roll[Scale/Offset]">
+           <curve color="#9467bd" name="/olav/inertial_navigation_system/filter/odometry/pose/pose/orientation/roll">
+            <transform name="Scale/Offset" alias="/olav/inertial_navigation_system/filter/odometry/pose/pose/orientation/roll[Scale/Offset]">
              <options value_scale="57.296" value_offset="-1.128" time_offset="0.0"/>
             </transform>
            </curve>
@@ -40,15 +40,15 @@
           <plot mode="TimeSeries" style="Lines" flip_x="false" flip_y="false">
            <range bottom="-1.500000" right="25.010744" top="1.500000" left="20.011554"/>
            <limitY max="1.5" min="-1.5"/>
-           <curve color="#ff7f0e" name="/olav/ins/filter/odometry/twist/twist/angular/y"/>
+           <curve color="#ff7f0e" name="/olav/inertial_navigation_system/filter/odometry/twist/twist/angular/y"/>
           </plot>
          </DockArea>
          <DockArea name="INS Pitch">
           <plot mode="TimeSeries" style="Lines" flip_x="false" flip_y="false">
            <range bottom="-3.000000" right="25.010744" top="3.000000" left="20.011554"/>
            <limitY max="3" min="-3"/>
-           <curve color="#f14cc1" name="/olav/ins/filter/odometry/pose/pose/orientation/pitch">
-            <transform name="Scale/Offset" alias="/olav/ins/filter/odometry/pose/pose/orientation/pitch[Scale/Offset]">
+           <curve color="#f14cc1" name="/olav/inertial_navigation_system/filter/odometry/pose/pose/orientation/pitch">
+            <transform name="Scale/Offset" alias="/olav/inertial_navigation_system/filter/odometry/pose/pose/orientation/pitch[Scale/Offset]">
              <options value_scale="57.296" value_offset="0.450" time_offset="0.0"/>
             </transform>
            </curve>
@@ -63,16 +63,16 @@
          <plot mode="XYPlot" style="Lines" flip_x="false" flip_y="false">
           <range bottom="-5.442366" right="20.361667" top="-5.287056" left="20.234983"/>
           <limitY/>
-          <curve color="#d62728" name="/olav/ins/filter/odometry/pose/pose/position/[x;y]" curve_y="/olav/ins/filter/odometry/pose/pose/position/y" curve_x="/olav/ins/filter/odometry/pose/pose/position/x"/>
+          <curve color="#d62728" name="/olav/inertial_navigation_system/filter/odometry/pose/pose/position/[x;y]" curve_y="/olav/inertial_navigation_system/filter/odometry/pose/pose/position/y" curve_x="/olav/inertial_navigation_system/filter/odometry/pose/pose/position/x"/>
          </plot>
         </DockArea>
         <DockArea name="...">
          <plot mode="XYPlot" style="Lines" flip_x="false" flip_y="false">
           <range bottom="10.187615" right="56.206182" top="10.187739" left="56.206098"/>
           <limitY/>
-          <curve color="#1f77b4" name="/olav/ins/antenna/left/coordinates/l[atitude;ongitude]" curve_y="/olav/ins/antenna/left/coordinates/longitude" curve_x="/olav/ins/antenna/left/coordinates/latitude"/>
-          <curve color="#d62728" name="/olav/ins/antenna/right/coordinates/l[atitude;ongitude]" curve_y="/olav/ins/antenna/right/coordinates/longitude" curve_x="/olav/ins/antenna/right/coordinates/latitude"/>
-          <curve color="#1ac938" name="/olav/ins/filter/coordinates/l[atitude;ongitude]" curve_y="/olav/ins/filter/coordinates/longitude" curve_x="/olav/ins/filter/coordinates/latitude"/>
+          <curve color="#1f77b4" name="/olav/inertial_navigation_system/antenna/left/coordinates/l[atitude;ongitude]" curve_y="/olav/inertial_navigation_system/antenna/left/coordinates/longitude" curve_x="/olav/inertial_navigation_system/antenna/left/coordinates/latitude"/>
+          <curve color="#d62728" name="/olav/inertial_navigation_system/antenna/right/coordinates/l[atitude;ongitude]" curve_y="/olav/inertial_navigation_system/antenna/right/coordinates/longitude" curve_x="/olav/inertial_navigation_system/antenna/right/coordinates/latitude"/>
+          <curve color="#1ac938" name="/olav/inertial_navigation_system/filter/coordinates/l[atitude;ongitude]" curve_y="/olav/inertial_navigation_system/filter/coordinates/longitude" curve_x="/olav/inertial_navigation_system/filter/coordinates/latitude"/>
          </plot>
         </DockArea>
        </DockSplitter>
@@ -81,15 +81,15 @@
          <plot mode="TimeSeries" style="Lines" flip_x="false" flip_y="false">
           <range bottom="-1.500000" right="25.010744" top="1.500000" left="20.011554"/>
           <limitY max="1.5" min="-1.5"/>
-          <curve color="#bcbd22" name="/olav/ins/filter/odometry/twist/twist/angular/z"/>
+          <curve color="#bcbd22" name="/olav/inertial_navigation_system/filter/odometry/twist/twist/angular/z"/>
          </plot>
         </DockArea>
         <DockArea name="INS Yaw">
          <plot mode="TimeSeries" style="Lines" flip_x="false" flip_y="false">
           <range bottom="-90.000000" right="25.010744" top="90.000000" left="20.011554"/>
           <limitY max="90" min="-90"/>
-          <curve color="#17becf" name="/olav/ins/filter/odometry/pose/pose/orientation/yaw">
-           <transform name="Scale/Offset" alias="/olav/ins/filter/odometry/pose/pose/orientation/yaw[Scale/Offset]">
+          <curve color="#17becf" name="/olav/inertial_navigation_system/filter/odometry/pose/pose/orientation/yaw">
+           <transform name="Scale/Offset" alias="/olav/inertial_navigation_system/filter/odometry/pose/pose/orientation/yaw[Scale/Offset]">
             <options value_scale="57.296" value_offset="0.0" time_offset="0.0"/>
            </transform>
           </curve>
@@ -117,7 +117,7 @@
    <max_array_size value="100"/>
    <boolean_strings_to_number value="true"/>
    <remove_suffix_from_strings value="true"/>
-   <selected_topics value="/olav/ins/filter/odometry"/>
+   <selected_topics value="/olav/inertial_navigation_system/filter/odometry"/>
   </plugin>
   <plugin ID="DataLoad ULog"/>
   <plugin ID="ROS2 Topic Subscriber">
@@ -126,7 +126,7 @@
    <max_array_size value="100"/>
    <boolean_strings_to_number value="true"/>
    <remove_suffix_from_strings value="true"/>
-   <selected_topics value="/olav/command/muxed/brake;/olav/command/muxed/speed;/olav/command/muxed/steering_angle;/olav/command/muxed/throttle;/olav/drive_by_wire/feedback/steering_angle;/olav/ins/antenna/left/coordinates;/olav/ins/antenna/right/coordinates;/olav/ins/filter/coordinates;/olav/ins/filter/imu;/olav/ins/filter/odometry;/olav/odometer/vehicle/speed/filtered"/>
+   <selected_topics value="/olav/command/muxed/brake;/olav/command/muxed/speed;/olav/command/muxed/steering_angle;/olav/command/muxed/throttle;/olav/drive_by_wire/feedback/steering_angle;/olav/inertial_navigation_system/antenna/left/coordinates;/olav/inertial_navigation_system/antenna/right/coordinates;/olav/inertial_navigation_system/filter/coordinates;/olav/inertial_navigation_system/filter/imu;/olav/inertial_navigation_system/filter/odometry;/olav/odometer/vehicle/speed/filtered"/>
   </plugin>
   <plugin ID="UDP Server"/>
   <plugin ID="WebSocket Server"/>

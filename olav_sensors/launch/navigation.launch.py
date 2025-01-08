@@ -36,9 +36,9 @@ def generate_launch_description():
     # Nodes
     # -----
     # > GNSS/INS node
-    gnss_ins_node = LifecycleNode(
+    inertial_navigation_system_node = LifecycleNode(
         namespace=LaunchConfiguration("namespace"),
-        name="ins",
+        name="inertial_navigation_system",
         package="microstrain_inertial_driver",
         #prefix="konsole -e gdb -ex=r --args",
         executable="microstrain_inertial_driver_node",
@@ -48,32 +48,44 @@ def generate_launch_description():
             LaunchConfiguration("parameters_overrides"),
         ],
         remappings=[
-            ("ekf/status", "sensors/ins/status/device"),
-            ("ekf/imu/data", "sensors/ins/filter/imu"),
-            ("ekf/llh_position", "sensors/ins/filter/coordinates"),
-            ("ekf/odometry_map", "sensors/ins/filter/odometry"),
-            #("mip/ekf/dual_antenna_heading", "sensors/ins/antenna/dual/heading"),
-            ("gnss_1/llh_position", "sensors/ins/antenna/left/coordinates"),
-            ("gnss_1/time", "sensors/ins/antenna/left/time"),
-            #("gnss_1/velocity", "sensors/ins/antenna/left/velocity"),
-            ("gnss_2/llh_position", "sensors/ins/antenna/right/coordinates"),
-            #("gnss_2/velocity", "sensors/ins/antenna/right/velocity"),
-            ("imu/data", "sensors/ins/imu/data"),
-            #("imu/pressure", "sensors/ins/imu/pressure"),
-            ("mip/ekf/aiding_measurement_summary", "sensors/ins/filter/aiding"),
-            # > NMEA/RTK topics
-            ("nmea", "sensors/ins/rtk/nmea"),
-            ("rtcm", "sensors/ins/rtk/rtcm"),
-            # > Debug topics
-            ("mip/gnss_1/fix_info", "sensors/ins/antenna/left/status/fix"),
-            ("mip/gnss_1/sbas_info", "sensors/ins/antenna/left/status/sbas"),
-            ("mip/gnss_2/fix_info", "sensors/ins/antenna/right/status/fix"),
-            ("mip/gnss_2/sbas_info", "sensors/ins/antenna/right/status/sbas"),
-            ("mip/gnss_corrections/rtk_corrections_status", "sensors/ins/status/rtk"),
-            ("mip/ekf/status", "sensors/ins/filter/status"),
-            ("mip/ekf/gnss_dual_antenna_status", "sensors/ins/antenna/dual/status"),
-            ("mip/ekf/gnss_position_aiding_status", "sensors/ins/status/aiding"),
-            ("mip/ekf/multi_antenna_offset_correction", "sensors/ins/antenna/dual/offset_correction"),
+            # > Publishers
+            ("ekf/status", "sensors/inertial_navigation_system/device/device"),
+            ("ekf/imu/data", "sensors/inertial_navigation_system/filter/imu"),
+            ("ekf/llh_position", "sensors/inertial_navigation_system/filter/coordinates"),
+            ("ekf/odometry_map", "sensors/inertial_navigation_system/filter/odometry"),
+            ("gnss_1/llh_position", "sensors/inertial_navigation_system/antenna/left/coordinates"),
+            ("gnss_1/time", "sensors/inertial_navigation_system/antenna/left/time"),
+            #("gnss_1/velocity", "sensors/inertial_navigation_system/antenna/left/velocity"),
+            ("gnss_2/llh_position", "sensors/inertial_navigation_system/antenna/right/coordinates"),
+            #("gnss_2/velocity", "sensors/inertial_navigation_system/antenna/right/velocity"),
+            ("imu/data", "sensors/inertial_navigation_system/imu/data"),
+            #("imu/pressure", "sensors/inertial_navigation_system/imu/pressure"),
+            ("mip/ekf/aiding_measurement_summary", "sensors/inertial_navigation_system/filter/aiding"),
+            #("mip/ekf/dual_antenna_heading", "sensors/inertial_navigation_system/antenna/dual/heading"),
+            ("nmea", "sensors/inertial_navigation_system/rtk/nmea"),
+            ("rtcm", "sensors/inertial_navigation_system/rtk/rtcm"),
+            ("mip/gnss_1/fix_info", "sensors/inertial_navigation_system/antenna/left/status/fix"),
+            ("mip/gnss_1/sbas_info", "sensors/inertial_navigation_system/antenna/left/status/sbas"),
+            ("mip/gnss_2/fix_info", "sensors/inertial_navigation_system/antenna/right/status/fix"),
+            ("mip/gnss_2/sbas_info", "sensors/inertial_navigation_system/antenna/right/status/sbas"),
+            ("mip/gnss_corrections/rtk_corrections_status", "sensors/inertial_navigation_system/status/rtk"),
+            ("mip/ekf/status", "sensors/inertial_navigation_system/filter/status"),
+            ("mip/ekf/gnss_dual_antenna_status", "sensors/inertial_navigation_system/antenna/dual/status"),
+            ("mip/ekf/gnss_position_aiding_status", "sensors/inertial_navigation_system/status/aiding"),
+            ("mip/ekf/multi_antenna_offset_correction",
+             "sensors/inertial_navigation_system/antenna/dual/offset_correction"),
+            # > Services
+            ("mip/base/get_device_information", "sensors/inertial_navigation_system/device/get_device_information"),
+            ("mip/ekf/reset", "sensors/inertial_navigation_system/filter/reset"),
+            ("mip/three_dm/capture_gyro_bias", "sensors/inertial_navigation_system/capture_gyro_bias"),
+            ("mip/three_dm/device_settings/load", "sensors/inertial_navigation_system/settings/load"),
+            ("mip/three_dm/device_settings/save", "sensors/inertial_navigation_system/settings/save"),
+            ("mip/three_dm/gpio_state/read", "sensors/inertial_navigation_system/gpio/read"),
+            ("mip/three_dm/gpio_state/write", "sensors/inertial_navigation_system/gpio/write"),
+            ("raw_file_config/aux/read", "sensors/inertial_navigation_system/config/aux/read"),
+            ("raw_file_config/aux/write", "sensors/inertial_navigation_system/config/aux/write"),
+            ("raw_file_config/main/read", "sensors/inertial_navigation_system/config/main/read"),
+            ("raw_file_config/main/write", "sensors/inertial_navigation_system/config/main/write"),
         ],
         emulate_tty=True,
         output={
@@ -95,30 +107,9 @@ def generate_launch_description():
             LaunchConfiguration("parameters_overrides"),
         ],
         remappings=[
-            ("nmea", "sensors/ins/rtk/nmea"),
-            ("rtcm", "sensors/ins/rtk/rtcm"),
-        ],
-        emulate_tty=True,
-        output={
-            "both": ["screen", "own_log"],
-        },
-        on_exit=Shutdown(),
-    )
-
-    # > NTPD driver node
-    ntpd_driver_node = Node(
-        namespace=LaunchConfiguration("namespace"),
-        name="ntpd_driver",
-        package="ntpd_driver",
-        #prefix="konsole -e gdb -ex=r --args",
-        executable="shm_driver",
-        parameters=[
-            Path(get_package_share_path("olav_sensors") /
-                 "config/parameters/ntpd_driver_node_defaults.yaml").as_posix(),
-            LaunchConfiguration("parameters_overrides"),
-        ],
-        remappings=[
-            ("time_ref", "sensors/ins/antenna/left/time"),
+            # > Publishers
+            ("nmea", "sensors/inertial_navigation_system/rtk/nmea"),
+            ("rtcm", "sensors/inertial_navigation_system/rtk/rtcm"),
         ],
         emulate_tty=True,
         output={
@@ -153,9 +144,8 @@ def generate_launch_description():
         log_level_argument,
         parameters_overrides_argument,
         # > Nodes
-        gnss_ins_node,
+        inertial_navigation_system_node,
         ntrip_client_node,
-        ntpd_driver_node,
         static_transform_publisher_node,
     ])
 

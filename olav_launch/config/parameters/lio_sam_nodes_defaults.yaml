@@ -1,9 +1,9 @@
 "/**":
   ros__parameters:
     pointCloudTopic: "sensors/lidar/points" # Point cloud data
-    imuTopic: "sensors/ins/imu" # IMU data
-    odomTopic: "sensors/ins/odometry" # IMU pre-preintegration odometry, same frequency as IMU
-    gpsTopic: "sensors/ins/gps" # GPS odometry topic from navsat, see module_navsat.launch file
+    imuTopic: "sensors/inertial_navigation_system/imu" # IMU data
+    odomTopic: "sensors/inertial_navigation_system/odometry" # IMU pre-preintegration odometry, same frequency as IMU
+    gpsTopic: "sensors/inertial_navigation_system/gps" # GPS odometry topic from navsat, see module_navsat.launch file
     lidarFrame: "lidar_link"
     baselinkFrame: "base_link"
     odometryFrame: "odom"

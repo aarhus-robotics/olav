@@ -15,7 +15,7 @@
         # Roof monocular camera
         "/olav/sensors/camera/roof/rgb/camera_info",
         "/olav/sensors/camera/roof/rgb/image_raw/compressed",
-        
+
         # Front stereo camera
         "/olav/sensors/camera/front/rgb/camera_info",
         "/olav/sensors/camera/front/rgb/image_raw/compressed",
@@ -24,18 +24,18 @@
         # > Front stereo camera debugging
         "/olav/sensors/camera/front/imu/data",
 
-        "/olav/sensors/ins/antenna/left/coordinates",
-        "/olav/sensors/ins/antenna/left/velocity",
-        "/olav/sensors/ins/antenna/right/coordinates",
-        "/olav/sensors/ins/antenna/right/velocity",
-        "/olav/sensors/ins/filter/coordinates",
-        "/olav/sensors/ins/filter/imu",
-        "/olav/sensors/ins/filter/odometry",
-        "/olav/sensors/ins/imu",
+        "/olav/sensors/inertial_navigation_system/antenna/left/coordinates",
+        "/olav/sensors/inertial_navigation_system/antenna/left/velocity",
+        "/olav/sensors/inertial_navigation_system/antenna/right/coordinates",
+        "/olav/sensors/inertial_navigation_system/antenna/right/velocity",
+        "/olav/sensors/inertial_navigation_system/filter/coordinates",
+        "/olav/sensors/inertial_navigation_system/filter/imu",
+        "/olav/sensors/inertial_navigation_system/filter/odometry",
+        "/olav/sensors/inertial_navigation_system/imu",
         # Inertial navigation system debugging
-        #"/olav/sensors/ins/status/aiding",
-        #"/olav/sensors/ins/status/dual_antenna",
-        #"/olav/sensors/ins/status/offset_correction",
+        #"/olav/sensors/inertial_navigation_system/status/aiding",
+        #"/olav/sensors/inertial_navigation_system/status/dual_antenna",
+        #"/olav/sensors/inertial_navigation_system/status/offset_correction",
         "/olav/sensors/lidar/points",
         "/olav/sensors/lidar/metadata",
         # LiDAR debugging
@@ -43,7 +43,7 @@
         "/olav/model/description",
         "/olav/model/joints",
         "/olav/model/update/front_wheels",
-        
+
         "/olav/sensors/powertrain/engine/speed",
         "/olav/sensors/powertrain/tachometer/speed",
 

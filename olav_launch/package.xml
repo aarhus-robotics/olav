@@ -10,7 +10,6 @@
   <buildtool_depend>ament_cmake</buildtool_depend>
 
   <exec_depend>depthai-descriptions</exec_depend>
-  <exec_depend>ntpd_driver</exec_depend>
   <exec_depend>olav_control</exec_depend>
   <exec_depend>olav_sensors</exec_depend>
   <exec_depend>ouster_ros</exec_depend>

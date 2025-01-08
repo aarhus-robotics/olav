@@ -5,7 +5,7 @@
     aux_port: "/dev/microstrain_aux"
     aux_baudrate: 115200
     debug: False
-    set_baud: True
+    set_baud: False
     poll_port: False
     poll_rate_hz: 1.0
     poll_max_tries: -1
@@ -14,8 +14,9 @@
     device_setup: True
     save_settings: False
     raw_file_enable: False
-    raw_file_include_support_data: True
+    raw_file_include_support_data: False
     raw_file_directory: "/home/olav/ROS/data/mips/"
+    timestamp_source: 2
     tf_mode: 2
     frame_id: "gnss_ins_link"
     mount_frame_id: "base_link"
@@ -45,23 +46,23 @@
     filter_enable_magnetometer_aiding: False
     filter_enable_external_heading_aiding: False
     filter_init_condition_src: 0
-    filter_auto_heading_alignment_selector: 1
+    filter_auto_heading_alignment_selector: 2
     filter_init_reference_frame: 2
     filter_init_position:
       [56.206109847707005, 10.187714773190772, 67.92141719647318]
     filter_init_velocity: [0.0, 0.0, 0.0]
-    filter_init_attitude: [0.0174532925, 0.0314159265, 0.0]
+    filter_init_attitude: [0.0, 0.0, 0.0]
     filter_relative_position_config: True
     filter_relative_position_frame: 2
     filter_relative_position_source: 1
     filter_relative_position_ref: [56.20622806560521, 10.187309349687691, 30.0]
     filter_lever_arm_offset: [0.0, 0.0, 0.0]
     filter_enable_wheeled_vehicle_constraint: True
-    filter_enable_vertical_gyro_constraint: True
+    filter_enable_vertical_gyro_constraint: False
     filter_enable_gnss_antenna_cal: True
     filter_gnss_antenna_cal_max_offset: 0.1
     filter_pps_source: 1
-    filter_sensor2vehicle_frame_selector: 1
+    filter_sensor2vehicle_frame_selector: 0
     filter_sensor2vehicle_frame_transformation_euler: [0.0, 0.0, 0.0]
     filter_sensor2vehicle_frame_transformation_matrix:
       [1.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0]
@@ -73,16 +74,18 @@
     filter_declination: 0.23
     filter_use_compensated_accel: False
     filter_adaptive_level: 2
-    filter_adaptive_time_limit_ms: 11000
+    filter_adaptive_time_limit_ms: 7000
     filter_enable_external_gps_time_update: False
     filter_external_gps_time_topic: "/external_gps_time"
     gps_leap_seconds: 18.0
+    filter_speed_lever_arm_source: 0
     filter_speed_lever_arm: [0.0, 0.0, 0.0]
     # Not available in the LORD Microstrain GQ7
     # -----------------------------------------
     #filter_heading_source: 1
     #filter_dynamics_mode: 1
     # -----------------------------------------
+    filter_gnss_aiding_source_control: 1
     imu_orientation_cov: [0.01, 0.00, 0.00, 0.00, 0.01, 0.00, 0.00, 0.00, 0.01]
     imu_linear_cov: [0.01, 0.00, 0.00, 0.00, 0.01, 0.00, 0.00, 0.00, 0.01]
     imu_angular_cov: [0.01, 0.00, 0.00, 0.00, 0.01, 0.00, 0.00, 0.00, 0.01]
@@ -108,6 +111,8 @@
     sbas_enable_ranging: False
     sbas_enable_corrections: True
     sbas_apply_integrity: False
+    # The next line is commented out as empty arrays are not permitted.
+    # Uncomment the line and fill it in if you want to specify PRNs.
     #sbas_included_prns: []
     low_pass_filter_config: True
     accel_low_pass_filter_enable: True
@@ -122,6 +127,7 @@
     pressure_low_pass_filter_enable: False
     pressure_low_pass_filter_auto: False
     pressure_low_pass_filter_frequency: 1
+    imu_data_raw_rate: 0
     imu_data_rate: 100
     imu_mag_data_rate: 0
     imu_pressure_data_rate: 0
@@ -136,7 +142,7 @@
     gnss2_velocity_ecef_data_rate: 0
     gnss2_odometry_earth_data_rate: 0
     gnss2_time_data_rate: 0
-    filter_human_readable_status_data_rate: 0
+    filter_human_readable_status_data_rate: 1
     filter_imu_data_rate: 100
     filter_llh_position_data_rate: 1
     filter_velocity_data_rate: 0
@@ -189,3 +195,5 @@
     subscribe_ext_vel_body: False
     subscribe_ext_heading_ned: False
     subscribe_ext_heading_enu: False
+    subscribe_ext_mag: False
+    subscribe_ext_pressure: False

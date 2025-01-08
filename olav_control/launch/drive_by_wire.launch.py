@@ -168,7 +168,7 @@ def generate_launch_description():
         remappings=[
             # > Subscriptions
             ("speed", "controllers/speed/speed"),
-            ("odometry", "sensors/ins/filter/odometry"),
+            ("odometry", "sensors/inertial_navigation_system/filter/odometry"),
             # > Publishers
             ("throttle", "commands/inputs/efforts/throttle"),
             ("brake", "commands/inputs/efforts/brake"),
@@ -200,10 +200,10 @@ def generate_launch_description():
         ],
         remappings=[
             # > Subscriptions
-            ("setpoint", "controllers/steering/steering"),
+            ("setpoint", "controllers/steering/angle"),
             ("feedback", "sensors/steering/angle"),
             # > Publishers
-            ("output", "commands/inputs/efforts/steering"),
+            ("output", "commands/steering"),
             ("status", "controllers/steering/status"),
             # > Services
             ("start", "controllers/steering/start"),

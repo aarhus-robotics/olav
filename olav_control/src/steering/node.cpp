@@ -36,7 +36,15 @@ namespace OLAV {
 namespace ROS {
 
 SteeringControllerNode::SteeringControllerNode()
-    : rclcpp::Node("steering_controller") {}
+    : rclcpp::Node("steering_controller") {
+    Configure();
+    Activate();
+}
+
+void SteeringControllerNode::Configure() {
+    GetParameters();
+    Initialize();
+}
 
 void SteeringControllerNode::GetParameters() {
     // Define a floating point range suitable for controller gains.
@@ -217,6 +225,13 @@ void SteeringControllerNode::Initialize() {
     has_feedback_ = false;
     has_setpoint_ = false;
     is_stopped_ = true;
+}
+
+void SteeringControllerNode::Activate() {
+    CreateSubscriptions();
+    CreateTimers();
+    CreateServices();
+    CreatePublishers();
 }
 
 void SteeringControllerNode::Reset() {

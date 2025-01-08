@@ -64,10 +64,6 @@ class ControlMultiplexerNode : public rclcpp::Node {
 
     void CreateSubscriptions();
 
-    void CreateCommandSubscriptions();
-
-    void DeleteCommandSubscriptions();
-
     void CreateServices();
 
     void CreateClients();
@@ -167,6 +163,14 @@ class ControlMultiplexerNode : public rclcpp::Node {
     void
     AckermannDriveCallback(ackermann_msgs::msg::AckermannDriveStamped::SharedPtr
                                ackermann_drive_message);
+
+    /** @brief Speed setpoint publisher. */
+    rclcpp::Publisher<olav_interfaces::msg::SetpointStamped>::SharedPtr
+        speed_setpoint_publisher_;
+
+    /** @brief Steering angle setpoint publisher. */
+    rclcpp::Publisher<olav_interfaces::msg::SetpointStamped>::SharedPtr
+        steering_angle_setpoint_publisher_;
 
     // Speed controller client
     // -----------------------

@@ -107,10 +107,6 @@ void ControlMultiplexerNode::CreateSubscriptions() {
                   this,
                   std::placeholders::_1));
 
-    CreateCommandSubscriptions();
-}
-
-void ControlMultiplexerNode::CreateCommandSubscriptions() {
     ackermann_drive_subscription_ =
         create_subscription<ackermann_msgs::msg::AckermannDriveStamped>(
             "in/drive",
@@ -118,10 +114,6 @@ void ControlMultiplexerNode::CreateCommandSubscriptions() {
             std::bind(&ControlMultiplexerNode::AckermannDriveCallback,
                       this,
                       std::placeholders::_1));
-}
-
-void ControlMultiplexerNode::DeleteCommandSubscriptions() {
-    // ackermann_drive_subscription_.reset();
 }
 
 void ControlMultiplexerNode::CreateServices() {
@@ -181,6 +173,16 @@ void ControlMultiplexerNode::CreatePublishers() {
             "out/steering",
             RMW_QOS_POLICY_RELIABILITY_SYSTEM_DEFAULT);
 
+    speed_setpoint_publisher_ =
+        create_publisher<olav_interfaces::msg::SetpointStamped>(
+            "out/speed",
+            RMW_QOS_POLICY_RELIABILITY_SYSTEM_DEFAULT);
+
+    steering_angle_setpoint_publisher_ =
+        create_publisher<olav_interfaces::msg::SetpointStamped>(
+            "out/steering_angle",
+            RMW_QOS_POLICY_RELIABILITY_SYSTEM_DEFAULT);
+
     heartbeat_publisher_ = create_publisher<std_msgs::msg::Header>(
         "out/heartbeat",
         RMW_QOS_POLICY_RELIABILITY_SYSTEM_DEFAULT);
@@ -214,7 +216,7 @@ void ControlMultiplexerNode::ThrottleCallback(
 
     if((active_control_mode_ == "manual" &&
         throttle_effort_message->header.frame_id == "gamepad") ||
-       (active_control_mode_ == "autonomy" &&
+       (active_control_mode_ == "autonomous" &&
         throttle_effort_message->header.frame_id == "controller"))
         brake_publisher_->publish(*throttle_effort_message);
 }
@@ -225,7 +227,7 @@ void ControlMultiplexerNode::BrakeCallback(
 
     if((active_control_mode_ == "manual" &&
         brake_effort_message->header.frame_id == "gamepad") ||
-       (active_control_mode_ == "autonomy" &&
+       (active_control_mode_ == "autonomous" &&
         brake_effort_message->header.frame_id == "controller"))
         brake_publisher_->publish(*brake_effort_message);
 }
@@ -236,7 +238,7 @@ void ControlMultiplexerNode::SteeringCallback(
 
     if((active_control_mode_ == "manual" &&
         steering_effort_message->header.frame_id == "controller") ||
-       (active_control_mode_ == "autonomy" &&
+       (active_control_mode_ == "autonomous" &&
         steering_effort_message->header.frame_id == "controller")) {
         steering_publisher_->publish(*steering_effort_message);
     }
@@ -247,17 +249,27 @@ void ControlMultiplexerNode::AckermannDriveCallback(
         ackermann_drive_message) {
     if(!IsActive()) return;
 
+    if((active_control_mode_ == "manual") &&
+       (ackermann_drive_message->header.frame_id == "gamepad")) {
+        olav_interfaces::msg::SetpointStamped steering_angle_setpoint;
+        steering_angle_setpoint.header = ackermann_drive_message->header;
+        steering_angle_setpoint.setpoint =
+            ackermann_drive_message->drive.steering_angle;
+        steering_angle_setpoint_publisher_->publish(steering_angle_setpoint);
+    }
     // Check the active control mode and authority.
-    if((ackermann_drive_message->header.frame_id == "autonomy") &&
-       (active_control_mode_ == "autonomous")) {
+    else if((active_control_mode_ == "autonomous") &&
+            (ackermann_drive_message->header.frame_id == "autonomy")) {
         olav_interfaces::msg::SetpointStamped speed_setpoint;
         speed_setpoint.header = ackermann_drive_message->header;
         speed_setpoint.setpoint = ackermann_drive_message->drive.speed;
+        speed_setpoint_publisher_->publish(speed_setpoint);
 
         olav_interfaces::msg::SetpointStamped steering_angle_setpoint;
         steering_angle_setpoint.header = ackermann_drive_message->header;
         steering_angle_setpoint.setpoint =
             ackermann_drive_message->drive.steering_angle;
+        steering_angle_setpoint_publisher_->publish(steering_angle_setpoint);
     }
 }
 
@@ -348,10 +360,8 @@ void ControlMultiplexerNode::StopSteeringControllerCallback(
 void ControlMultiplexerNode::SetMode(const std::string& mode) {
     if(mode == "manual") {
         active_control_mode_ = "manual";
-        DeleteCommandSubscriptions();
     } else if(mode == "autonomous") {
         active_control_mode_ = "autonomous";
-        CreateCommandSubscriptions();
     }
 }
 

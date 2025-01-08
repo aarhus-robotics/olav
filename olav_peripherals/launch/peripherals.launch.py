@@ -79,7 +79,7 @@ def generate_launch_description():
             # > Publishers
             ("throttle", "multiplexer/in/throttle"),
             ("brake", "multiplexer/in/brake"),
-            ("steering", "multiplexer/in/steering"),
+            ("drive", "multiplexer/in/drive"),
             ("heartbeat", "multiplexer/in/heartbeat"),
             # > Service clients
             ("start_engine", "drive_by_wire/start_engine"),

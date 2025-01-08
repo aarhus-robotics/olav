@@ -37,6 +37,7 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #include <boost/algorithm/clamp.hpp>
 #include <boost/math/interpolators/cardinal_cubic_b_spline.hpp>
 
+#include <ackermann_msgs/msg/ackermann_drive_stamped.hpp>
 #include <rclcpp/rclcpp.hpp>
 #include <sensor_msgs/msg/joy.hpp>
 #include <std_msgs/msg/header.hpp>
@@ -172,8 +173,8 @@ class GamepadInterfaceNode : public rclcpp::Node {
     boost::math::interpolators::cardinal_cubic_b_spline<double> brake_curve_;
 
     /** @brief Shared pointer to the steering effort publisher. */
-    rclcpp::Publisher<olav_interfaces::msg::SetpointStamped>::SharedPtr
-        steering_angle_publisher_;
+    rclcpp::Publisher<ackermann_msgs::msg::AckermannDriveStamped>::SharedPtr
+        ackermann_drive_publisher_;
 
     /** @brief Maximum steering angle achievable via the controller. */
     double maximum_steering_angle_;

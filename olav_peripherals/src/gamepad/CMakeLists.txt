@@ -15,6 +15,7 @@ message(STATUS "Building the gamepad interface node ...")
 
 # > Find external packages
 # ------------------------
+find_package(ackermann_msgs REQUIRED)
 find_package(olav_interfaces REQUIRED)
 find_package(rclcpp REQUIRED)
 find_package(sensor_msgs REQUIRED)
@@ -33,7 +34,7 @@ target_include_directories(
 
 # > Link external dependencies
 # ----------------------------
-ament_target_dependencies(${PROJECT_NAME}_gamepad_interface_node
+ament_target_dependencies(${PROJECT_NAME}_gamepad_interface_node ackermann_msgs
                           olav_interfaces rclcpp sensor_msgs std_srvs)
 
 # > Define install rules

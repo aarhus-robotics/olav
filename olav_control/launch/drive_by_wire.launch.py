@@ -133,6 +133,8 @@ def generate_launch_description():
             ("out/throttle", "controls/throttle"),
             ("out/brake", "controls/brake"),
             ("out/steering", "controls/steering"),
+            ("out/speed", "controllers/speed/speed"),
+            ("out/steering_angle", "controllers/steering/angle"),
             ("out/heartbeat", "signals/heartbeat"),
             # > Services
             ("set_control_mode", "multiplexer/set_control_mode"),
@@ -165,7 +167,7 @@ def generate_launch_description():
         ],
         remappings=[
             # > Subscriptions
-            ("speed", "controls/mux/setpoints/speed"),
+            ("speed", "controllers/speed/speed"),
             ("odometry", "sensors/ins/filter/odometry"),
             # > Publishers
             ("throttle", "commands/inputs/efforts/throttle"),
@@ -198,8 +200,8 @@ def generate_launch_description():
         ],
         remappings=[
             # > Subscriptions
-            ("setpoint", "controls/mux/setpoints/steering"),
-            ("feedback", "sensors/encoders/steering"),
+            ("setpoint", "controllers/steering/steering"),
+            ("feedback", "sensors/steering/angle"),
             # > Publishers
             ("output", "commands/inputs/efforts/steering"),
             ("status", "controllers/steering/status"),

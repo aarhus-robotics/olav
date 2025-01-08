@@ -175,9 +175,9 @@ void GamepadInterfaceNode::CreatePublishers() {
         "brake",
         RMW_QOS_POLICY_RELIABILITY_SYSTEM_DEFAULT);
 
-    steering_angle_publisher_ =
-        create_publisher<olav_interfaces::msg::SetpointStamped>(
-            "steering",
+    ackermann_drive_publisher_ =
+        create_publisher<ackermann_msgs::msg::AckermannDriveStamped>(
+            "drive",
             RMW_QOS_POLICY_RELIABILITY_SYSTEM_DEFAULT);
 
     heartbeat_publisher_ = create_publisher<std_msgs::msg::Header>(
@@ -345,10 +345,12 @@ void GamepadInterfaceNode::TimerCallback() {
     brake_message.setpoint = brake;
     brake_publisher_->publish(brake_message);
 
-    olav_interfaces::msg::SetpointStamped steering_angle_message;
-    steering_angle_message.setpoint = steering * maximum_steering_angle_;
-    steering_angle_message.header.frame_id = frame_id_;
-    steering_angle_publisher_->publish(steering_angle_message);
+    ackermann_msgs::msg::AckermannDriveStamped ackermann_drive_message;
+    ackermann_drive_message.header.frame_id = frame_id_;
+    ackermann_drive_message.header.stamp = get_clock()->now();
+    ackermann_drive_message.drive.steering_angle =
+        steering * maximum_steering_angle_;
+    ackermann_drive_publisher_->publish(ackermann_drive_message);
 }
 
 void GamepadInterfaceNode::ShiftGearDownCallback(

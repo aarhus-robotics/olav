@@ -35,17 +35,6 @@ ros-git-fetch() {
     git -C /home/olav/ROS/src/${1} reset --hard origin/main
 }
 
-# Test SSH connection.
-test-connection() {
-    connection_status=$(ssh -o BatchMode=yes -o ConnectTimeout=5 ${1} echo "OK" 2>&1)
-    if [[ $(echo ${connection_status} | grep "OK") == "OK" ]]; then
-        printf "Connected to ${1}.\n"
-    else
-        printf "Could not connect to \"${1}\".\n"
-        exit 1
-    fi
-}
-
 LIST_OF_REPOSITORIES=("aarhus-robotics/roto" "aarhus-robotics/olav" "aarhus-robotics/navi")
 LIST_OF_ODIN_SESSIONS=("datalogger" "description" "drive-by-wire" "navigation" "perception" "drawbar")
 LIST_OF_THOR_SESSIONS=("peripherals")
@@ -155,7 +144,7 @@ elif [ "${1}" = "gui" ]; then
     # navi cheatsheet menu terminal #
     #################################
     elif [ "${2}" = "navi" ]; then
-        konsole -e lav menu
+        konsole -e olav menu
 
     ###############
     # PlotJuggler #
@@ -235,9 +224,9 @@ elif [ "${1}" = "publish" ]; then
     elif [ "${2}" = "setpoint" ]; then
         printf "Sending setpoint ...\n"
         printf "[ SETPOINT INFO | Magnitude: \"%d\" ]\n" ${4}
-        ros2 topic pub /olav/controls/mux/${3} \
+        ros2 topic pub /olav/controls/${3} \
             olav_interfaces/msg/SetpointStamped \
-            "{"header": {"frame_id": "${3}", "stamp": "now"}, "setpoint": ${4}}" 
+            "{"header": {"frame_id": "console", "stamp": "now"}, "setpoint": ${4}}"
     fi
 
 #######################
@@ -348,23 +337,23 @@ elif [ "${1}" = "sensor" ]; then
         #################################
         if [ "${3}" = "status" ]; then
             printf "Getting LiDAR status ...\n"
-            echo "get_sensor_info" | netcat -N 192.168.69.6 7501 | python3 -m json.tool
+            echo "get_sensor_info" | netcat -N saga.lan 7501 | python3 -m json.tool
 
         ###################################################
         # > Set the LiDAR sensor operating mode to NORMAL #
         ###################################################
         elif [ "${3}" = "start" ]; then
             printf "Starting LiDAR sensor...\n"
-            echo "set_config_param operating_mode NORMAL" | netcat -N 192.168.69.6 7501 >/dev/null 2>&1
-            echo "reinitialize" | netcat -N 192.168.69.6 7501 >/dev/null 2>&1
+            echo "set_config_param operating_mode NORMAL" | netcat -N saga.lan 7501 >/dev/null 2>&1
+            echo "reinitialize" | netcat -N saga.lan 7501 >/dev/null 2>&1
 
         ####################################################
         # > Set the LiDAR sensor operating mode to STANDBY #
         ####################################################
         elif [ "${3}" = "stop" ]; then
             printf "Stopping LiDAR sensor...\n"
-            echo "set_config_param operating_mode STANDBY" | netcat -N 192.168.69.6 7501 >/dev/null 2>&1
-            echo "reinitialize" | netcat -N 192.168.69.6 7501 >/dev/null 2>&1
+            echo "set_config_param operating_mode STANDBY" | netcat -N saga.lan 7501 >/dev/null 2>&1
+            echo "reinitialize" | netcat -N saga.lan 7501 >/dev/null 2>&1
 
         else
             echo "Invalid verb - must be one of the following (<start>, <stop>, <status>).\n"
@@ -411,16 +400,15 @@ elif [ "${1}" = "system" ]; then
         olav mux peripherals
 
         # :: Update the main computing unit ROS distribution
-        ssh -qt 192.168.69.4 "olav update"
-        ssh -qt 192.168.69.4 "olav build"
+        ssh -qt odin.lan "olav update"
+        ssh -qt odin.lan "olav build"
 
         # :: Start the main computing unit sessions.
-        ssh -qt 192.168.69.4 "olav mux datalogger"
-        ssh -qt 192.168.69.4 "olav mux description"
-        ssh -qt 192.168.69.4 "olav mux drive-by-wire"
-        ssh -qt 192.168.69.4 "olav mux navigation"
-        ssh -qt 192.168.69.4 "olav mux perception"
-        ssh -qt 192.168.69.4 "olav mux autonomy"
+        ssh -qt odin.lan "olav mux datalogger"
+        ssh -qt odin.lan "olav mux description"
+        ssh -qt odin.lan "olav mux drive-by-wire"
+        ssh -qt odin.lan "olav mux navigation"
+        ssh -qt odin.lan "olav mux perception"
 
     #########################
     # Bring the system down #
@@ -431,14 +419,14 @@ elif [ "${1}" = "system" ]; then
         olav stop peripherals
 
         # :: Stop the main computing unit sessions.
-        ssh -qt 192.168.69.4 "olav stop datalogger"
-        ssh -qt 192.168.69.4 "olav stop description"
-        ssh -qt 192.168.69.4 "olav stop drive-by-wire"
-        ssh -qt 192.168.69.4 "olav stop navigation"
-        ssh -qt 192.168.69.4 "olav stop perception"
+        ssh -qt odin.lan "olav stop datalogger"
+        ssh -qt odin.lan "olav stop description"
+        ssh -qt odin.lan "olav stop drive-by-wire"
+        ssh -qt odin.lan "olav stop navigation"
+        ssh -qt odin.lan "olav stop perception"
 
         # :: Set the LiDAR sensor to STANDBY mode.
-        lav sensor lidar stop
+        olav sensor lidar stop
     fi
 
 else

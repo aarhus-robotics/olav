@@ -62,6 +62,7 @@ void ControlMultiplexerNode::Initialize() {
 void ControlMultiplexerNode::Activate() {
     CreateSubscriptions();
     CreateServices();
+    CreateClients();
     CreateTimers();
     CreatePublishers();
     StartTimers();
@@ -120,7 +121,7 @@ void ControlMultiplexerNode::CreateCommandSubscriptions() {
 }
 
 void ControlMultiplexerNode::DeleteCommandSubscriptions() {
-    ackermann_drive_subscription_.reset();
+    // ackermann_drive_subscription_.reset();
 }
 
 void ControlMultiplexerNode::CreateServices() {

@@ -1,8 +1,8 @@
 "/**":
   ros__parameters:
     topics: [""]
-    regex:
-    excludes:
+    regex: ""
+    excludes: ""
     storage: mcap
     max_cache_size: 1048576000
     compression:

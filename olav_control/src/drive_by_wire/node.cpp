@@ -637,6 +637,8 @@ void DriveByWireNode::EngineSpeedCallback(
 
 void DriveByWireNode::HeartbeatCallback(
     const std_msgs::msg::Header::ConstSharedPtr heartbeat_message) {
+    (void)heartbeat_message;
+
     // Update the last received heartbeat timestamp.
     has_heartbeat_ = true;
     last_heartbeat_time_ = get_clock()->now();
@@ -716,6 +718,8 @@ void DriveByWireNode::SetIgnition(
 void DriveByWireNode::StartEngine(
     const std::shared_ptr<std_srvs::srv::Trigger::Request> request,
     std::shared_ptr<std_srvs::srv::Trigger::Response> response) {
+    (void)request;
+    
     if(!has_engine_speed_) {
         SetResponseFailError<std_srvs::srv::Trigger::Response>(
             response,

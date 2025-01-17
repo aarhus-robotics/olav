@@ -42,13 +42,13 @@ class DriveByWireFeedback {
   public:
     DriveByWireFeedback();
 
-    DriveByWireFeedback(int16_t steering_angle,
-                        int16_t gear,
-                        int16_t gear_actuator_position,
-                        int16_t brake_actuator_position,
-                        bool ignition,
-                        bool is_autonomous_mode_on,
-                        bool is_gear_actuator_in_position);
+    DriveByWireFeedback(const int16_t& steering_actuator_position,
+                        const int16_t& selected_gear,
+                        const bool& is_ignition_on,
+                        const bool& is_autonomous_mode_on,
+                        const int16_t& brake_actuator_position,
+                        const int16_t& gear_actuator_position,
+                        const bool& is_gear_actuator_in_position);
 
     void IsIgnitionOn(bool is_ignition_on);
 
@@ -84,21 +84,6 @@ class DriveByWireFeedback {
 
   private:
     /**
-     * @brief Ignition state register value.
-     */
-    bool is_ignition_on_ = false;
-
-    /**
-     * @brief Autonomous mode switch state register value.
-     */
-    bool is_autonomous_mode_on_ = false;
-
-    /**
-     * @brief Brake actuator position register value.
-     */
-    int16_t brake_actuator_position_ = -1;
-
-    /**
      * @brief Steering actuator position register value.
      */
     int16_t steering_actuator_position_ = -1;
@@ -119,6 +104,21 @@ class DriveByWireFeedback {
      * @brief Selected gear register value.
      */
     int16_t selected_gear_ = -1;
+
+    /**
+     * @brief Ignition state register value.
+     */
+    bool is_ignition_on_ = false;
+
+    /**
+     * @brief Autonomous mode switch state register value.
+     */
+    bool is_autonomous_mode_on_ = false;
+
+    /**
+     * @brief Brake actuator position register value.
+     */
+    int16_t brake_actuator_position_ = -1;
 
     /**
      * @brief Gear actuator position register value.

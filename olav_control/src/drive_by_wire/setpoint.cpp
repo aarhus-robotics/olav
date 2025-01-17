@@ -38,20 +38,20 @@ namespace ROS {
 
 DriveByWireSetpoint::DriveByWireSetpoint() {}
 
-DriveByWireSetpoint::DriveByWireSetpoint(double steering,
-                                         double brake,
-                                         double throttle,
-                                         bool ignition,
-                                         bool emergency,
-                                         bool starter,
-                                         int gear)
-    : steering_(steering),
+DriveByWireSetpoint::DriveByWireSetpoint(const double& throttle,
+                        const double& brake,
+                        const double& steering,
+                        const int& gear,
+                        const bool& ignition,
+                        const bool& engine_starter,
+                        const int& emergency_stop)
+    : throttle_(throttle),
       brake_(brake),
-      throttle_(throttle),
+      steering_(steering),
+      gear_(gear),
       ignition_(ignition),
-      emergency_stop_(emergency),
-      engine_starter_(starter),
-      gear_(gear) {}
+      engine_starter_(engine_starter),
+      emergency_stop_(emergency_stop) {}
 
 void DriveByWireSetpoint::SetThrottle(double throttle) {
     if(throttle < 0.0 || throttle > 1.0) {

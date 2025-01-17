@@ -43,13 +43,13 @@ class DriveByWireSetpoint {
   public:
     DriveByWireSetpoint();
 
-    DriveByWireSetpoint(double steering,
-                        double brake,
-                        double throttle,
-                        bool ignition,
-                        bool emergency,
-                        bool starter,
-                        int gear);
+    DriveByWireSetpoint(const double& throttle,
+                        const double& brake,
+                        const double& steering,
+                        const int& gear,
+                        const bool& ignition,
+                        const bool& engine_starter,
+                        const int& emergency_stop);
 
     void SetThrottle(double throttle);
 

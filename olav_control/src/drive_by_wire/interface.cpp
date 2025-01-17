@@ -94,10 +94,10 @@ DriveByWireFeedback DriveByWireInterface::Read() {
 
     auto feedback = DriveByWireFeedback(steering_angle,
                                         gear,
-                                        gear_actuator_position,
-                                        brake_actuator_position,
                                         ignition,
                                         is_autonomous_mode_on,
+                                        brake_actuator_position,
+                                        gear_actuator_position,
                                         is_gear_actuator_in_position);
 
     return feedback;

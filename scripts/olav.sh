@@ -12,10 +12,31 @@
 # This script manages the commands for computing units and human-interface
 # devices in OLAV. The script must executed from a ROS sourced environment.
 
+# Exit on non-zero statuses.
+set -e
+
 # Capture interrupt signals.
 trap interrupt INT
 function interrupt() {
     exit
+}
+
+check-ros-version() {
+    if [ ${ROS_VERSION} != 2 ]; then
+        prettyprint "Wrong ROS version of environment not sourced!"
+    fi
+}
+
+get-dependencies() {
+    if [[ -z "$(command -v lolcat)" ]]; then
+        printf "Installing dependency \"lolcat\" ...\n"
+        sudo apt install --yes lolcat
+    fi
+}
+
+# Pretty print strings using lolcat
+prettyprint() {
+    printf "${1}\n" | lolcat
 }
 
 # Check if a string is present in a list of strings.
@@ -31,87 +52,119 @@ is_in_list() {
 # Fetch the latest commit from origin/main and override any local changes for a
 # repository under the ROS local workspace source directory.
 ros-git-fetch() {
-    timeout 10s git -C /home/olav/ROS/src/${1} fetch
-    git -C /home/olav/ROS/src/${1} reset --hard origin/main
+    timeout 10s git -C ${HOME}/ROS/src/${1} fetch
+    git -C ${HOME}/ROS/src/${1} reset --hard origin/main
 }
 
 LIST_OF_REPOSITORIES=("aarhus-robotics/roto" "aarhus-robotics/olav" "aarhus-robotics/navi")
 LIST_OF_ODIN_SESSIONS=("datalogger" "description" "drive-by-wire" "navigation" "perception" "drawbar")
 LIST_OF_THOR_SESSIONS=("peripherals")
 
+#####################################
+# Install the required dependencies #
+#####################################
+get-dependencies
+
+##############################################
+# Check the environment is correctly sourced #
+##############################################
+check-ros-version
+
 ################################
 # Validate the device hostname #
 ################################
-if [ "$(cat /etc/hostname)" = "odin" ]; then
+if
+    [ "$(cat /etc/hostname)" = "odin" ]
+then
     VALID_SESSIONS=(${LIST_OF_ODIN_SESSIONS})
 elif [ "$(cat /etc/hostname)" = "thor" ]; then
     VALID_SESSIONS=(${LIST_OF_THOR_SESSIONS})
 else
-    printf "Invalid hostname.\n"
+    prettyprint "Invalid hostname.\n"
     exit
 fi
 
-########################
-# Start a tmux session #
-########################
-if [ "${1}" = "start" ]; then
+if [ "${1}" = "sessions" ]; then
 
-    if is_in_list "${VALID_SESSIONS}" ${2}; then
-        printf "Starting session \"${2}\" session ...\n"
-        if [ "${2}" = "description" ]; then
-            ros2 launch olav_description description.launch.py
-        elif [ "${2}" = "drive-by-wire" ]; then
-            ros2 launch olav_control drive_by_wire.launch.py
-        elif [ "${2}" = "perception" ]; then
-            ros2 launch olav_sensors perception.launch.py
-        elif [ "${2}" = "navigation" ]; then
-            ros2 launch olav_sensors navigation.launch.py
-        elif [ "${2}" = "navigation" ]; then
-            ros2 launch olav_sensors mapping.launch.py
-        elif [ "${2}" = "drawbar" ]; then
-            ros2 launch olav_sensors drawbar.launch.py
-        elif [ "${2}" = "datalogger" ]; then
-            ros2 launch olav_launch datalogger.launch.py
-        elif [ "${2}" = "peripherals" ]; then
-            ros2 launch olav_peripherals peripherals.launch.py
-        else
-            printf "Invalid session name.\n"
+    ########################
+    # Start a tmux session #
+    ########################
+    if [ "${2}" = "start" ]; then
+
+        if is_in_list "${VALID_SESSIONS}" ${3}; then
+            prettyprint "Starting session \"${3}\" session ..."
+            if [ "${3}" = "description" ]; then
+                ros2 launch olav_description description.launch.py
+            elif [ "${3}" = "drive-by-wire" ]; then
+                ros2 launch olav_control drive_by_wire.launch.py
+            elif [ "${3}" = "perception" ]; then
+                ros2 launch olav_sensors perception.launch.py
+            elif [ "${3}" = "navigation" ]; then
+                ros2 launch olav_sensors navigation.launch.py
+            elif [ "${3}" = "mapping" ]; then
+                ros2 launch olav_sensors mapping.launch.py
+            elif [ "${3}" = "drawbar" ]; then
+                ros2 launch olav_sensors drawbar.launch.py
+            elif [ "${3}" = "datalogger" ]; then
+                ros2 launch olav_utilities datalogger.launch.py
+            elif [ "${3}" = "peripherals" ]; then
+                ros2 launch olav_peripherals peripherals.launch.py
+            else
+                prettyprint "Invalid session name \"${3}\"!"
+            fi
         fi
-    fi
 
-#######################
-# Stop a tmux session #
-#######################
-elif [ "${1}" = "stop" ]; then
-    if is_in_list "${VALID_SESSIONS}" ${2}; then
-        printf "Stopping session \"${2}\"...\n"
-        tmux send-keys -t ${2} C-c >/dev/null 2>&1
-    else
-        printf "Invalid session name \"${2}\"!\n"
-    fi
+    #######################
+    # Stop a tmux session #
+    #######################
+    elif [ "${2}" = "stop" ]; then
+        if is_in_list "${VALID_SESSIONS}" ${3}; then
+            prettyprint "Stopping session \"${3}\"..."
+            tmux send-keys -t ${3} C-c >/dev/null 2>&1
+            exit
+        else
+            prettyprint "Invalid session name \"${3}\"!"
+            exit
+        fi
 
-############################
-# Attach to a tmux session #
-############################
-elif [ "${1}" = "attach" ]; then
+    ############################
+    # Attach to a tmux session #
+    ############################
+    elif [ "${2}" = "attach" ]; then
 
-    # Core session
-    if is_in_list "${VALID_SESSIONS}" ${2}; then
-        printf "Attaching to session \"${2}\" ...\n"
-        tmux attach -t ${2}
-    else
-        printf "Invalid session name \"${2}\"!\n"
-    fi
+        # Core session
+        if is_in_list "${VALID_SESSIONS}" ${3}; then
+            prettyprint "Attaching to session \"${3}\" ..."
+            tmux attach -t ${3}
+            exit
+        else
+            prettyprint "Invalid session name \"${3}\"!"
+            exit
+        fi
 
-####################
-# Mux tmux session #
-####################
-elif [ "${1}" = "mux" ]; then
-    if is_in_list "${VALID_SESSIONS}" ${2}; then
-        printf "Muxing session \"${2}\" ...\n"
-        tmux new-session -d -s ${2} "olav start ${2}"
-    else
-        printf "Invalid session name \"${2}\"!\n"
+    ####################
+    # Mux tmux session #
+    ####################
+    elif [ "${2}" = "mux" ]; then
+        if is_in_list "${VALID_SESSIONS}" ${3}; then
+            prettyprint "Muxing session \"${3}\" ..."
+            tmux new-session -d -s ${3} "olav start ${3}"
+            exit
+        else
+            prettyprint "Invalid session name \"${3}\"!"
+            exit
+        fi
+
+    ######################
+    # List tmux sessions #
+    ######################
+    elif [ "${2}" = "list" ]; then
+        prettyprint "Listing open sessions ..."
+        tmux list-sessions | lolcat
+
+    elif [ "${2}" = "kill" ]; then
+        prettyprint "Killing all sessions ..."
+        tmux kill-server
     fi
 
 ###################
@@ -119,17 +172,19 @@ elif [ "${1}" = "mux" ]; then
 ###################
 elif [ "${1}" = "update" ]; then
     for repository in ${LIST_OF_REPOSITORIES}; do
-        printf "Updating repository \"$(echo ${repository} | cut -d '/' -f2)\" ...\n"
-        ros-git-fetch ${repository}
+        prettyprint "Updating repository \"$(echo ${repository} | cut -d '/' -f2)\" ..."
+        ros-git-fetch ${repository} | lolcat
     done
+    exit
 
 ##################
 # Build packages #
 ##################
 elif [ "${1}" = "build" ]; then
-    printf "Building ROS packages ...\n"
-    cd /home/olav/ROS
-    colcon --log-base /home/olav/ROS/log/build build >/dev/null
+    prettyprint "Building ROS packages ..."
+    cd ${HOME}/ROS
+    colcon --log-base ${HOME}/ROS/log/build build >/dev/null | lolcat
+    exit
 
 # GUI
 elif [ "${1}" = "gui" ]; then
@@ -137,96 +192,113 @@ elif [ "${1}" = "gui" ]; then
     # Foxglove Studio #
     ###################
     if [ "${2}" = "foxglove-studio" ]; then
-        export ROS_PACKAGE_PATH=/home/olav/ROS/install
+        prettyprint "Launching Foxglove Studio ..."
+        export ROS_PACKAGE_PATH=${HOME}/ROS/install
         foxglove-studio
+        exit
 
     #################################
     # navi cheatsheet menu terminal #
     #################################
     elif [ "${2}" = "navi" ]; then
+        prettyprint "Launching navi menu ..."
         konsole -e olav menu
+        exit
 
     ###############
     # PlotJuggler #
     ###############
     elif [ "${2}" = "plotjuggler" ]; then
+        prettyprint "Launching PlotJuggler ..."
         ros2 run plotjuggler plotjuggler -- -n
+        exit
 
     ###########
     # RQt GUI #
     ###########
     elif [ "${2}" = "rqt_gui" ]; then
+        prettyprint "Launching RQt GUI ..."
         ros2 run rqt_gui rqt_gui -- \
             --clear-config \
             --freeze-layout \
             --hide-title \
             --lock-perspective \
-            --perspective-file "/home/olav/ROS/src/aarhus-robotics/olav/config/rqt_gui/olav.perspective" \
+            --perspective-file "${HOME}/ROS/src/aarhus-robotics/olav/config/rqt_gui/olav.perspective" \
             --qt-binding pyqt
+        exit
 
     ##################
     # RQt Image View #
     ##################
     elif [ "${2}" = "rqt_image_view" ]; then
+        prettyprint "Launching RQt Image View ..."
         ros2 run rqt_image_view rqt_image_view -- \
             --qt-binding pyqt \
             --clear-config \
             --hide-title
+        exit
 
     ########
     # RViz #
     ########
     elif [ "${2}" = "rviz" ]; then
+        prettyprint "Launching RViz ..."
         # Fix graphical issues with Qt/OGRE applications.
         export QT_ENABLE_HIGHDPI_SCALING=0
         export QT_SCREEN_SCALE_FACTORS=1
-        ros2 run rviz2 rviz2 -- -d /home/olav/ROS/src/aarhus-robotics/olav/config/rviz/olav.rviz
+        ros2 run rviz2 rviz2 -- -d ${HOME}/ROS/src/aarhus-robotics/olav/config/rviz/olav.rviz
+        exit
     fi
 
 #############
 # navi menu #
 #############
 elif [ "${1}" = "menu" ]; then
-    printf "Loading menu...\n"
+    prettyprint "Loading navi menu ..."
     while true; do
-        navi --path /home/olav/.config/navi/cheats
-        printf "\nPress any key to return to the menu."
+        navi
+        prettyprint "\nPress any key to return to the menu."
         read
     done
+    exit
 
 elif [ "${1}" = "parameter" ]; then
 
     if [ ${2} = "get" ]; then
-        printf "Getting parameter \"${3}\" value...\n"
-        printf "%s.%s = %s" $(ros2 param get ${3} ${4} --hide-type)
+        prettyprint "Getting parameter \"${3}\" value...\n"
+        prettyprint "%s.%s = %s" $(ros2 param get ${3} ${4} --hide-type)
+        exit
     fi
 
 elif [ "${1}" = "publish" ]; then
 
     if [ "${2}" = "ackermann" ]; then
-        printf "Publishing AckermannDriveStamped message ...\n"
-        printf "[ ACKERMANNDRIVESTAMPED INFO | Speed: %0.2f | Steering %0.2f ]\n" ${speed} ${steering}
-        ros2 topic pub /olav/commands/composite/drive \
+        prettyprint "Publishing AckermannDriveStamped message ..."
+        prettyprint "[ ACKERMANNDRIVESTAMPED INFO | Speed: %0.2f | Steering %0.2f ]" ${speed} ${steering}
+        ros2 topic pub /olav/multiplexer/in/drive \
             ackermann_msgs/msg/AckermannDriveStamped \
             "{"header": {"frame_id": "autonomy", "stamp": "now"}, "drive": {"speed": "${3}", "steering_angle": $((${4} * 3.141592 / 180))}}" \
             -r ${5} \
             >/dev/null 2>&1
+        exit
 
     elif [ "${2}" = "heartbeat" ]; then
-        printf "Sending heartbeat ...\n"
-        printf "[ HEARTBEAT INFO | Authority: \"%s\" | Rate: %d ]\n" ${1} ${2}
-        ros2 topic pub /olav/commands/signals/heartbeat \
+        prettyprint "Sending heartbeat ..."
+        prettyprint "[ HEARTBEAT INFO | Authority: \"%s\" | Rate: %d ]" ${1} ${2}
+        ros2 topic pub /olav/multiplexer/in/heartbeat \
             std_msgs/msg/Header \
             "{"frame_id": "${3}", "stamp": "now"}" \
             -r ${4} \
             >/dev/null 2>&1
+        exit
 
     elif [ "${2}" = "setpoint" ]; then
-        printf "Sending setpoint ...\n"
-        printf "[ SETPOINT INFO | Magnitude: \"%d\" ]\n" ${4}
+        prettyprint "Sending setpoint ..."
+        prettyprint "[ SETPOINT INFO | Magnitude: \"%d\" ]" ${4}
         ros2 topic pub /olav/controls/${3} \
             olav_interfaces/msg/SetpointStamped \
             "{"header": {"frame_id": "console", "stamp": "now"}, "setpoint": ${4}}"
+        exit
     fi
 
 #######################
@@ -238,53 +310,61 @@ elif [ "${1}" = "record" ]; then
     # > Start a new datalogger recording #
     ######################################
     if [ "${2}" = "start" ]; then
-        printf "Starting recording..."
+        prettyprint "Starting recording..."
         ros2 service call /olav/datalogger/start \
             std_srvs/srv/Trigger \
             "{}" \
             >/dev/null 2>&1 &
+        exit
 
     ###########################################
     # > Stop the current datalogger recording #
     ###########################################
     elif [ "${2}" = "stop" ]; then
-        printf "Stopping recording ...\n"
+        prettyprint "Stopping recording ...\n"
         ros2 service call /olav/datalogger/stop \
             std_srvs/srv/Trigger \
             "{}" \
             >/dev/null 2>&1 &
+        exit
 
     ###########################################
     # > Upload a datalogger recording to ERDA #
     ###########################################
     elif [ "${2}" = "upload" ]; then
-        mount /home/olav/ERDA
+        mount ${HOME}/ERDA
 
         ###############################################
         # >> Upload all datalogger recordings to ERDA #
         ###############################################
         if [ "${3}" = "all" ]; then
-            printf "Uploading all recordings ...\n"
-            rsync -aPu /home/olav/ROS/bags/** /home/olav/ERDA/Inbox/
+            prettyprint "Uploading all recordings ..."
+            rsync -aPu ${HOME}/ROS/bags/** ${HOME}/ERDA/Inbox/
+            exit
 
         #####################################################
         # >> Upload a specific datalogger recording to ERDA #
         #####################################################
         else
-            printf "Uploading recording ${3}..."
-            rsync -aPu /home/olav/ROS/bags/${3} /home/olav/ERDA/Inbox/
+            prettyprint "Uploading recording ${3} ..."
+            rsync -aPu ${HOME}/ROS/bags/${3} ${HOME}/ERDA/Inbox/
+            exit
         fi
 
     ###################################
     # > Delete a datalogger recording #
     ###################################
     elif [ "${2}" = "delete" ]; then
+
         if [ "${3}" = "all" ]; then
-            printf "Deleting all recordings..."
-            rm -rf /home/olav/ROS/bags/** >/dev/null 2>&1
+            prettyprint "Deleting all recordings ..."
+            rm -rf ${HOME}/ROS/bags/** >/dev/null 2>&1
+            exit
+
         else
-            printf "Deleting recording ${3}..."
-            rm -rf /home/olav/ROS/bags/${3} >/dev/null 2>&1
+            prettyprint "Deleting recording ${3}..."
+            rm -rf ${HOME}/ROS/bags/${3} >/dev/null 2>&1
+            exit
         fi
 
     ##############################################
@@ -296,70 +376,84 @@ elif [ "${1}" = "record" ]; then
         # >> Get the datalogger recorded topics list #
         ##############################################
         if [ "${3}" = "get" ]; then
-            printf "Retrieving datalogger topics..."
+            prettyprint "Retrieving datalogger topics..."
             ros2 param get /olav/datalogger topics --hide-type | sed 's:^.\(.*\).$:\1:' | tr "," "\n" | tr -d " "
+            exit
 
         ##############################################
         # >> Set the datalogger recorded topics list #
         ##############################################
         elif [ "${3}" = "set" ]; then
-            printf "Setting datalogger topics..."
-            ros2 param set /olav/datalogger topics "$(cat /home/olav/ROS/config/datalogger/${4})"
+            prettyprint "Setting datalogger topics..."
+            ros2 param set /olav/datalogger topics "$(cat ${HOME}/ROS/config/datalogger/${4})"
+            exit
         fi
 
     ##############################################
     # > Check available datalogger storage space #
     ##############################################
     elif [ "${2}" = "storage" ]; then
-        printf "Available space: %s\n" \
-            $(df -H /home/olav/ROS/bags | tail -1 | awk '{print $4}')
+        prettyprint "Available space: %s" \
+            $(df -H ${HOME}/ROS/bags | tail -1 | awk '{print $4}')
+        exit
 
     else
-        echo "No valid verb received - accepted verbs are <start>, <stop>, <upload>, <delete>, <topics> or <storage>."
+        prettyprint "No valid verb received - accepted verbs are <start>, <stop>, <upload>, <delete>, <topics> or <storage>."
+        exit
     fi
 
-elif [ "${1}" = "sensor" ]; then
+elif [ "${1}" = "sensors" ]; then
+
     if [ "${2}" = "ins" ]; then
 
         if [ "${3}" = "reset" ]; then
-            printf "Resetting EKF ...\n"
-            ros2 service call /olav/mip/ekf/reset std_srvs/srv/Empty "{}"
+            prettyprint "Resetting EKF ..."
+            ros2 service call /olav/sensors/inertial_navigation_system/filter/reset std_srvs/srv/Empty "{}"
+            exit
+
         else
-            printf "Invalid INS command."
+            prettyprint "Invalid inertial navigation system command."
+            exit
         fi
 
     ########################
     # LiDAR sensor control #
     ########################
     elif [ "${2}" = "lidar" ]; then
+
         #################################
         # > Get the LiDAR sensor status #
         #################################
         if [ "${3}" = "status" ]; then
-            printf "Getting LiDAR status ...\n"
-            echo "get_sensor_info" | netcat -N saga.lan 7501 | python3 -m json.tool
+            prettyprint "Getting LiDAR status ..."
+            echo "get_sensor_info" | netcat -N saga.lan 7501 | python3 -m json.tool | lolcat
+            exit
 
         ###################################################
         # > Set the LiDAR sensor operating mode to NORMAL #
         ###################################################
         elif [ "${3}" = "start" ]; then
-            printf "Starting LiDAR sensor...\n"
+            prettyprint "Starting LiDAR sensor ..."
             echo "set_config_param operating_mode NORMAL" | netcat -N saga.lan 7501 >/dev/null 2>&1
             echo "reinitialize" | netcat -N saga.lan 7501 >/dev/null 2>&1
+            exit
 
         ####################################################
         # > Set the LiDAR sensor operating mode to STANDBY #
         ####################################################
         elif [ "${3}" = "stop" ]; then
-            printf "Stopping LiDAR sensor...\n"
+            prettyprint "Stopping LiDAR sensor ..."
             echo "set_config_param operating_mode STANDBY" | netcat -N saga.lan 7501 >/dev/null 2>&1
             echo "reinitialize" | netcat -N saga.lan 7501 >/dev/null 2>&1
+            exit
 
         else
-            echo "Invalid verb - must be one of the following (<start>, <stop>, <status>).\n"
+            prettyprint "Invalid verb - must be one of the following: (<start>, <stop>, <status>)."
+            exit
         fi
     else
-        printf "Invalid sensor name."
+        prettyprint "Invalid sensor name: ${2}."
+        exit
     fi
 
 ########################
@@ -367,25 +461,33 @@ elif [ "${1}" = "sensor" ]; then
 ########################
 
 elif [ "${1}" = "time" ]; then
+
     ################
     # Time sources #
     ################
     if [ "${2}" = "sources" ]; then
-        printf "Displaying time sources...\n"
+        prettyprint "Displaying time sources...\n"
         watch -n 1 "chronyc sources -v"
+        exit
 
     #######################
     # Tracking statistics #
     #######################
     elif [ "${2}" = "tracking" ]; then
-        printf "Displaying tracking statistics...\n"
+        prettyprint "Displaying tracking statistics...\n"
         watch -n 1 "chronyc tracking -v"
+        exit
     fi
 
 ###################
 # System commands #
 ###################
 elif [ "${1}" = "system" ]; then
+
+    if [ "$(cat /etc/hostname)" != "thor" ]; then
+        prettyprint "System commands may only be used from thor.olavnet!"
+        exit
+    fi
 
     #######################
     # Bring the system up #
@@ -397,18 +499,20 @@ elif [ "${1}" = "system" ]; then
         olav build
 
         # :: Start the local session
-        olav mux peripherals
+        olav sessions mux peripherals
 
         # :: Update the main computing unit ROS distribution
         ssh -qt odin.lan "olav update"
         ssh -qt odin.lan "olav build"
 
         # :: Start the main computing unit sessions.
-        ssh -qt odin.lan "olav mux datalogger"
-        ssh -qt odin.lan "olav mux description"
-        ssh -qt odin.lan "olav mux drive-by-wire"
-        ssh -qt odin.lan "olav mux navigation"
-        ssh -qt odin.lan "olav mux perception"
+        ssh -qt odin.lan "olav sessions mux datalogger"
+        ssh -qt odin.lan "olav sessions mux description"
+        ssh -qt odin.lan "olav sessions mux drive-by-wire"
+        ssh -qt odin.lan "olav sessions mux navigation"
+        ssh -qt odin.lan "olav sessions mux perception"
+
+        exit
 
     #########################
     # Bring the system down #
@@ -416,19 +520,21 @@ elif [ "${1}" = "system" ]; then
     elif [ "${2}" = "down" ]; then
 
         # :: Stop the local session
-        olav stop peripherals
+        olav sessions stop peripherals
 
         # :: Stop the main computing unit sessions.
-        ssh -qt odin.lan "olav stop datalogger"
-        ssh -qt odin.lan "olav stop description"
-        ssh -qt odin.lan "olav stop drive-by-wire"
-        ssh -qt odin.lan "olav stop navigation"
-        ssh -qt odin.lan "olav stop perception"
+        ssh -qt odin.lan "olav sessions stop datalogger"
+        ssh -qt odin.lan "olav sessions stop description"
+        ssh -qt odin.lan "olav sessions stop drive-by-wire"
+        ssh -qt odin.lan "olav sessions stop navigation"
+        ssh -qt odin.lan "olav sessions stop perception"
 
         # :: Set the LiDAR sensor to STANDBY mode.
-        olav sensor lidar stop
+        olav sensors lidar stop
+
+        exit
     fi
 
 else
-    printf "Invalid command \"${1}\"\n"
+    prettyprint "Invalid command \"${1}\"!"
 fi

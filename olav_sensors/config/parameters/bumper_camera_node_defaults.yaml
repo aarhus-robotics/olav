@@ -54,7 +54,7 @@
       i_isp_den: 3
       i_isp_num: 2
       i_keep_preview_aspect_ratio: true
-      i_low_bandwidth: true
+      i_low_bandwidth: false
       i_low_bandwidth_quality: 80
       i_max_q_size: 30
       i_output_isp: true
@@ -110,7 +110,7 @@
       i_left_rect_low_bandwidth: false
       i_left_rect_low_bandwidth_quality: 50
       i_left_socket_id: 1
-      i_low_bandwidth: true
+      i_low_bandwidth: false
       i_low_bandwidth_quality: 80
       i_lr_check: true
       i_lrc_threshold: 10

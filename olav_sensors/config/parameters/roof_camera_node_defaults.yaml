@@ -33,7 +33,7 @@
       i_isp_den: 3
       i_isp_num: 2
       i_keep_preview_aspect_ratio: true
-      i_low_bandwidth: true
+      i_low_bandwidth: false
       i_low_bandwidth_quality: 90
       i_max_q_size: 30
       i_output_isp: true

@@ -6,7 +6,7 @@ noChunking: false
 noMessageIndex: false
 noSummary: false
 chunkSize: 104857600
-compression: "lz4"
+compression: "Lz4"
 compressionLevel: "Fastest"
 forceCompression: false
 noRepeatedSchemas: false

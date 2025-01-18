@@ -36,6 +36,7 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #include <limits>
 
 #include <boost/algorithm/clamp.hpp>
+#include <boost/math/special_functions/sign.hpp>
 
 namespace OLAV {
 namespace ROS {

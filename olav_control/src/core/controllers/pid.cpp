@@ -238,9 +238,11 @@ void PIDController::Tick() {
     double error = ramped_setpoint - feedback_;
     last_feedback_ = feedback_;
 
-    // Compute the feedforward term.
-    feedforward_term_ =
-        feedforward_offset_ + feedforward_gain_ * unscaled_feedforward_term_;
+    // Compute the feedforward term. Note how the output change sign is computed
+    // in order to select the correct feedforward offset.
+    auto feedforward_sign = boost::math::sign(ramped_setpoint - feedback_);
+    feedforward_term_ = feedforward_sign * feedforward_offset_ +
+        feedforward_gain_ * unscaled_feedforward_term_;
 
     // Compute the proportional term.
     proportional_term_ = proportional_gain_ * error;

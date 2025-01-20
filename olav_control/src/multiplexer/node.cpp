@@ -224,7 +224,7 @@ void ControlMultiplexerNode::ThrottleCallback(
         throttle_effort_message->header.frame_id == "gamepad") ||
        (active_control_mode_ == "autonomous" &&
         throttle_effort_message->header.frame_id == "controller"))
-        brake_publisher_->publish(*throttle_effort_message);
+        throttle_publisher_->publish(*throttle_effort_message);
 }
 
 void ControlMultiplexerNode::BrakeCallback(

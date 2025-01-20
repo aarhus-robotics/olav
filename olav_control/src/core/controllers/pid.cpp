@@ -37,98 +37,110 @@ namespace ROS {
 
 PIDController::PIDController() {}
 
-void PIDController::SetSetpoint(double ramped_setpoint) {
-    setpoint_ = ramped_setpoint;
+void PIDController::SetSetpoint(const double& setpoint) {
+    setpoint_ = setpoint;
 }
 
-double PIDController::GetSetpoint() { return setpoint_; }
+const double& PIDController::GetSetpoint() const { return setpoint_; }
 
-void PIDController::UseSetpointRamping(bool use_setpoint_ramping) {
+void PIDController::UseSetpointRamping(const bool& use_setpoint_ramping) {
     use_setpoint_ramping_ = use_setpoint_ramping;
 }
 
-bool PIDController::UseSetpointRamping() { return use_setpoint_ramping_; }
+const bool& PIDController::UseSetpointRamping() const {
+    return use_setpoint_ramping_;
+}
 
-void PIDController::SetMaximumSetpointChange(double maximum_setpoint_change) {
+void PIDController::SetMaximumSetpointChange(
+    const double& maximum_setpoint_change) {
     maximum_setpoint_change_ = maximum_setpoint_change;
 }
 
-double PIDController::GetMaximumSetpointChange() {
+const double& PIDController::GetMaximumSetpointChange() const {
     return maximum_setpoint_change_;
 }
 
-void PIDController::SetFeedback(double feedback) { feedback_ = feedback; }
+void PIDController::SetFeedback(const double& feedback) {
+    feedback_ = feedback;
+}
 
-double PIDController::GetFeedback() { return feedback_; }
+const double& PIDController::GetFeedback() const { return feedback_; }
 
-void PIDController::SetFeedforwardGain(double feedforward_gain) {
-    if(feedforward_gain < 0.0) {
-        throw std::invalid_argument(
-            "The feedforward gain must be greater than or equal to zero.");
-    }
+void PIDController::SetFeedforwardGain(const double& feedforward_gain) {
+    assert(("Feedforward gain must be greater than or equal to zero.",
+            feedforward_gain >= 0.0));
     feedforward_gain_ = feedforward_gain;
 }
-double PIDController::GetFeedforwardGain() { return feedforward_gain_; }
+
+const double& PIDController::GetFeedforwardGain() const {
+    return feedforward_gain_;
+}
 
 void PIDController::SetUnscaledFeedforwardTerm(
-    double unscaled_feedforward_term) {
+    const double& unscaled_feedforward_term) {
     unscaled_feedforward_term_ = unscaled_feedforward_term;
 }
 
-double PIDController::GetFeedforwardTerm() { return feedforward_term_; }
+const double& PIDController::GetFeedforwardTerm() const {
+    return feedforward_term_;
+}
 
-void PIDController::SetFeedforwardOffset(double feedforward_offset) {
+void PIDController::SetFeedforwardOffset(const double& feedforward_offset) {
     feedforward_offset_ = feedforward_offset;
 }
 
-double PIDController::GetFeedforwardOffset() { return feedforward_offset_; }
+const double& PIDController::GetFeedforwardOffset() const {
+    return feedforward_offset_;
+}
 
-void PIDController::SetProportionalGain(double proportional_gain) {
-    if(proportional_gain < 0.0) {
-        throw std::invalid_argument(
-            "The proportional gain must be larger than zero.");
-    }
+void PIDController::SetProportionalGain(const double& proportional_gain) {
+    assert(("Proportional gain must be greater than or equal to zero.",
+            proportional_gain >= 0.0));
     proportional_gain_ = proportional_gain;
 }
 
-double PIDController::GetProportionalGain() { return proportional_gain_; }
+const double& PIDController::GetProportionalGain() const {
+    return proportional_gain_;
+}
 
-double PIDController::GetProportionalTerm() { return proportional_term_; }
+const double& PIDController::GetProportionalTerm() const {
+    return proportional_term_;
+}
 
 void PIDController::SetIntegralGain(double integral_gain) {
-    if(integral_gain < 0.0) {
-        throw std::invalid_argument(
-            "The integral gain must be greater than or equal to zero.");
-    }
+    assert(("Integral gain must be greater than or equal to zero.",
+            integral_gain >= 0.0));
 
-    // Rescale the current and maximum cumulative error saccordingly.
     if(integral_gain_ > 0.0) {
-        cumulative_error_ = cumulative_error_ * integral_gain_ / integral_gain;
-    }
-    if(use_integral_term_limiter_) {
-        maximum_cumulative_error_ = maximum_integral_term_ / integral_gain_;
+        // Rescale the cumulated error.
+        cumulative_error_ *= integral_gain_ / integral_gain;
+
+        // Rescale the integral term limit.
+        if(use_integral_term_limiter_) {
+            maximum_cumulative_error_ = maximum_integral_term_ / integral_gain_;
+        }
     }
 
     integral_gain_ = integral_gain;
 }
 
-double PIDController::GetIntegralGain() { return integral_gain_; }
+const double& PIDController::GetIntegralGain() const { return integral_gain_; }
 
-double PIDController::GetIntegralTerm() { return integral_term_; }
+const double& PIDController::GetIntegralTerm() const { return integral_term_; }
 
-void PIDController::UseIntegralTermLimiter(bool use_integral_term_limiter) {
+void PIDController::UseIntegralTermLimiter(
+    const bool& use_integral_term_limiter) {
     use_integral_term_limiter_ = use_integral_term_limiter;
 }
 
-bool PIDController::UseIntegralTermLimiter() {
+const bool& PIDController::UseIntegralTermLimiter() const {
     return use_integral_term_limiter_;
 }
 
-void PIDController::SetMaximumIntegralTerm(double maximum_integral_term) {
-    if(maximum_integral_term < 0.0) {
-        throw std::invalid_argument(
-            "The maximum integral term should be larger than zero");
-    }
+void PIDController::SetMaximumIntegralTerm(
+    const double& maximum_integral_term) {
+    assert(("Maximum integral term must be greater than or equal to zero.",
+            maximum_integral_term >= 0.0));
 
     maximum_integral_term_ = maximum_integral_term;
 
@@ -138,24 +150,26 @@ void PIDController::SetMaximumIntegralTerm(double maximum_integral_term) {
     }
 }
 
-double PIDController::GetMaximumIntegralTerm() {
+const double& PIDController::GetMaximumIntegralTerm() const {
     return maximum_integral_term_;
 }
 
-void PIDController::SetDerivativeGain(double derivative_gain) {
-    if(derivative_gain < 0.0) {
-        throw std::invalid_argument(
-            "The derivative gain must be greater than or equal to zero.");
-    }
+void PIDController::SetDerivativeGain(const double& derivative_gain) {
+    assert(("Derivative gain must be greater than or equal to zero.",
+            derivative_gain >= 0.0));
 
     derivative_gain_ = derivative_gain;
 }
 
-double PIDController::GetDerivativeGain() { return derivative_gain_; }
+const double& PIDController::GetDerivativeGain() const {
+    return derivative_gain_;
+}
 
-double PIDController::GetDerivativeTerm() { return derivative_term_; }
+const double& PIDController::GetDerivativeTerm() const {
+    return derivative_term_;
+}
 
-double PIDController::GetOutput() { return output_; }
+const double& PIDController::GetOutput() const { return output_; }
 
 void PIDController::UseOutputLimiter(bool use_output_limiter) {
     use_output_limiter_ = use_output_limiter;
@@ -224,6 +238,24 @@ void PIDController::SetOutputFilterWeight(double output_filter_weight) {
 }
 
 double PIDController::GetOutputFilterWeight() { return output_filter_weight_; }
+
+void PIDController::UseDeadbandFilter(const bool& use_deadband_filter) {
+    use_deadband_filter_ = use_deadband_filter;
+}
+
+const bool& PIDController::IsDeadbanding() { return is_deadbanding_; }
+
+void PIDController::SetDeadbandLowerThreshold(
+    const double& deadband_lower_threshold) {
+    deadband_lower_threshold_ = deadband_lower_threshold;
+}
+
+void PIDController::SetDeadbandUpperThreshold(
+    const double& deadband_upper_threshold) {
+    deadband_upper_threshold_ = deadband_upper_threshold;
+}
+
+const bool& PIDController::UseDeadbandFilter() { return use_deadband_filter_; }
 
 void PIDController::Tick() {
     // Ramp the setpoint used for calculations if user has opted to do so
@@ -309,6 +341,11 @@ void PIDController::Tick() {
         output_ = last_output_ * output_filter_weight_ +
             output_ * (1.0 - output_filter_weight_);
     }
+    if(use_deadband_filter_) {
+        is_deadbanding_ = (output_ > deadband_lower_threshold_ &&
+                           output_ < deadband_upper_threshold_);
+        output_ = is_deadbanding_ ? 0.0 : output_;
+    }
 
     // Update output.
     last_output_ = output_;
@@ -331,10 +368,7 @@ void PIDController::Reset() {
     cumulative_error_ = 0.0;
 
     is_first_tick_ = true;
-}
-
-bool PIDController::IsBounded(double value, double lower, double upper) {
-    return (lower < value) && (value < upper);
+    is_deadbanding_ = false;
 }
 
 } // namespace ROS

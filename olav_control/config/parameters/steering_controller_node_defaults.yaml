@@ -29,3 +29,9 @@
         integral:
           enabled: true
           magnitude: 50.0
+      deadband:
+        filter:
+          enabled: true
+          thresholds:
+            lower: -0.3
+            upper: 0.3

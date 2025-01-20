@@ -51,50 +51,121 @@ class PIDController {
      */
     PIDController();
 
-    void SetSetpoint(double setpoint);
+    void SetSetpoint(const double& setpoint);
 
-    double GetSetpoint();
-
-    void UseSetpointRamping(bool use_setpoint_ramping);
-
-    bool UseSetpointRamping();
-
-    void SetMaximumSetpointChange(double maximum_setpoint_change);
-
-    double GetMaximumSetpointChange();
+    const double& GetSetpoint() const;
 
     /**
-     * @brief Set the plant feedback.
+     * @brief Set whether or not the controller uses a setpoint ramping
+     * strategy.
      *
-     * @param feedback Plant feedback.
+     * @param use_setpoint_ramping Setpoint ramping strategy setting.
      */
-    void SetFeedback(double feedback);
+    void UseSetpointRamping(const bool& use_setpoint_ramping);
 
-    double GetFeedback();
+    /**
+     * @brief Check whether or not the controller uses a setpoint ramping
+     * strategy.
+     *
+     * @return true The controller is ramping setpoints.
+     * @return false The controller is not ramping setpoints.
+     */
+    const bool& UseSetpointRamping() const;
 
-    void SetFeedforwardGain(double feedforward_gain);
+    /**
+     * @brief Set the maximum allowed setpoint change between controller ticks
+     * before the setpoint is ramped.
+     *
+     * @param maximum_setpoint_change Maximum allowed setpoint change.
+     */
+    void SetMaximumSetpointChange(const double& maximum_setpoint_change);
 
-    double GetFeedforwardGain();
+    /**
+     * @brief Get the maximum allowed setpoint change between controller ticks
+     * before the setpoint is ramped.
+     *
+     * @return const double& Maximum allowed setpoint change.
+     */
+    const double& GetMaximumSetpointChange() const;
 
-    void SetUnscaledFeedforwardTerm(double unscaled_feedforward_term);
+    /**
+     * @brief Provide the controller with the plant feedback value.
+     *
+     * @param feedback Plant feedback value.
+     */
+    void SetFeedback(const double& feedback);
 
-    double GetFeedforwardTerm();
+    /**
+     * @brief Get the plant feedback value currently stored in the controller.
+     *
+     * @return const double& Plant feedback value.
+     */
+    const double& GetFeedback() const;
 
-    void SetFeedforwardOffset(double feedforward_offset);
+    /**
+     * @brief Set the feedforward gain.
+     *
+     * @param feedforward_gain Feedforward gain.
+     */
+    void SetFeedforwardGain(const double& feedforward_gain);
 
-    double GetFeedforwardOffset();
+    /**
+     * @brief Get the feedforward gain.
+     *
+     * @return const double& Feedforward gain.
+     */
+    const double& GetFeedforwardGain() const;
+
+    /**
+     * @brief Set the unscaled feedforward term. This method must be called by
+     * an upstream feedforward model before controller ticks.
+     *
+     * @param unscaled_feedforward_term Unscaled feedforward term.
+     */
+    void SetUnscaledFeedforwardTerm(const double& unscaled_feedforward_term);
+
+    /**
+     * @brief Get the feedforward term.
+     *
+     * @return const double& Feedforward term.
+     */
+    const double& GetFeedforwardTerm() const;
+
+    /**
+     * @brief Set the feedforward offset. This offset will carry the sign of the
+     * current controller error, regardless of its original sign.
+     *
+     * @param feedforward_offset Feedforward offset.
+     */
+    void SetFeedforwardOffset(const double& feedforward_offset);
+
+    /**
+     * @brief Get the feedforward offset.
+     *
+     * @return const double& Feedforward offset.
+     */
+    const double& GetFeedforwardOffset() const;
 
     /**
      * @brief Set the proportional gain.
      *
-     * @param proportional_gain Proportional gain. Must be zero or a positive
-     * real number.
+     * @param proportional_gain Proportional gain.
      */
-    void SetProportionalGain(double proportional_gain);
+    void SetProportionalGain(const double& proportional_gain);
 
-    double GetProportionalGain();
+    /**
+     * @brief Get the proportional gain.
+     *
+     * @return const double& Proportional gain.
+     */
+    const double& GetProportionalGain() const;
 
-    double GetProportionalTerm();
+    /**
+     * @brief Get the proportional term.
+     *
+     * @return const double& Proportional term.
+     */
+    const double& GetProportionalTerm() const;
 
     void SetMaximumError(double maximum_error);
 
@@ -106,30 +177,50 @@ class PIDController {
      */
     void SetIntegralGain(double integral_gain);
 
-    double GetIntegralGain();
-
-    double GetIntegralTerm();
+    /**
+     * @brief Get the integral gain.
+     *
+     * @return const double& Integral gain.
+     */
+    const double& GetIntegralGain() const;
 
     /**
-     * @brief Set the controller to limit the integral term.
+     * @brief Get the integral term.
      *
-     * @param use_integral_term_limiter Integral term limiter switch. True to
-     * enable the integral term limiter, false to disable the integral term
-     * limiter.
+     * @return const double& Integral term.
      */
-    void UseIntegralTermLimiter(bool use_integral_term_limiter);
+    const double& GetIntegralTerm() const;
 
     /**
-     * @brief Get the integral term limiter switch state.
+     * @brief Set whether or not the controller will limit the integral term
+     * magnitude.
      *
-     * @return true Integral term limiter is enabled.
-     * @return false Integral term limiter is disabled.
+     * @param use_integral_term_limiter Integral term limiter setting.
      */
-    bool UseIntegralTermLimiter();
+    void UseIntegralTermLimiter(const bool& use_integral_term_limiter);
 
-    void SetMaximumIntegralTerm(double maximum_integral_term);
+    /**
+     * @brief Check whether or not the controller is limiting the integral term
+     * magnitude.
+     *
+     * @return true The controller is limiting the integral term magnitude.
+     * @return false The controller is not limiting the integral term magnitude.
+     */
+    const bool& UseIntegralTermLimiter() const;
 
-    double GetMaximumIntegralTerm();
+    /**
+     * @brief Set the maximum allowed integral term.
+     *
+     * @param maximum_integral_term Maximum allowed integral term.
+     */
+    void SetMaximumIntegralTerm(const double& maximum_integral_term);
+
+    /**
+     * @brief Get the maximum allowed integral term.
+     *
+     * @return const double& Maximum allowed integral term.
+     */
+    const double& GetMaximumIntegralTerm() const;
 
     /**
      * @brief Set the derivative gain.
@@ -137,13 +228,28 @@ class PIDController {
      * @param integral_gain Derivative gain. Must be zero or a positive real
      * number.
      */
-    void SetDerivativeGain(double integral_gain);
+    void SetDerivativeGain(const double& derivative_gain);
 
-    double GetDerivativeGain();
+    /**
+     * @brief Get the derivative gain.
+     *
+     * @return const double& Derivative gain.
+     */
+    const double& GetDerivativeGain() const;
 
-    double GetDerivativeTerm();
+    /**
+     * @brief Get the derivative term.
+     *
+     * @return const double& Derivative term.
+     */
+    const double& GetDerivativeTerm() const;
 
-    double GetOutput();
+    /**
+     * @brief Get the controller output.
+     *
+     * @return const double& Controller output.
+     */
+    const double& GetOutput() const;
 
     void UseOutputLimiter(bool use_output_limiter);
 
@@ -192,22 +298,21 @@ class PIDController {
 
     double GetOutputFilterWeight();
 
+    void UseDeadbandFilter(const bool& use_deadband_filter);
+
+    const bool& UseDeadbandFilter();
+
+    const bool& IsDeadbanding();
+
+    void SetDeadbandLowerThreshold(const double& deadband_lower_threshold);
+
+    void SetDeadbandUpperThreshold(const double& deadband_upper_threshold);
+
     void Tick();
 
     void Reset();
 
   private:
-    /**
-     * @brief Check if a value is bounded.
-     *
-     * @param value Value to be tested.
-     * @param lower Lower bound.
-     * @param upper Upper bound.
-     * @return true The value is bounded.
-     * @return false The value is out of bounds.
-     */
-    bool IsBounded(double value, double lower_bound, double upper_bound);
-
     /** @brief Whether or not this is the first controller tick since the last
      * controller initialization or reset action. */
     bool is_first_tick_ = false;
@@ -304,6 +409,19 @@ class PIDController {
 
     /** @brief Exponential moving average weight. */
     double output_filter_weight_ = 1.0;
+
+    /** @brief Whether or not to use the deadband filter. */
+    bool use_deadband_filter_ = false;
+
+    /** @brief Whether or not the controller output fell within the deadband
+     * during the last controller tick. */
+    bool is_deadbanding_ = false;
+
+    /** @brief Deadband lower threshold. */
+    double deadband_lower_threshold_ = -std::numeric_limits<double>::infinity();
+
+    /** @brief Deadband upper threshold. */
+    double deadband_upper_threshold_ = std::numeric_limits<double>::infinity();
 };
 
 } // namespace ROS

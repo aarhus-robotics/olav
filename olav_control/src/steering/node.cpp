@@ -172,6 +172,20 @@ void SteeringControllerNode::GetParameters() {
     maximum_integral_term_ =
         get_parameter("controller.limit.integral.magnitude").as_double();
 
+    declare_parameter("controller.deadband.filter.enabled", true);
+    use_deadband_filter_ =
+        get_parameter("controller.deadband.filter.enabled").as_bool();
+
+    declare_parameter("controller.deadband.filter.thresholds.lower", -0.3);
+    deadband_lower_threshold_ =
+        get_parameter("controller.deadband.filter.thresholds.lower")
+            .as_double();
+
+    declare_parameter("controller.deadband.filter.thresholds.upper", 0.3);
+    deadband_upper_threshold_ =
+        get_parameter("controller.deadband.filter.thresholds.upper")
+            .as_double();
+
     // Create the parameters callback handle.
     callback_handle_ = add_on_set_parameters_callback(
         std::bind(&SteeringControllerNode::SetParametersCallback,
@@ -192,6 +206,9 @@ void SteeringControllerNode::Initialize() {
     controller_->SetMaximumOutputChange(maximum_output_change_);
     controller_->SetMinimumOutput(minimum_output_);
     controller_->SetMaximumOutput(maximum_output_);
+    controller_->UseDeadbandFilter(use_deadband_filter_);
+    controller_->SetDeadbandLowerThreshold(deadband_lower_threshold_);
+    controller_->SetDeadbandUpperThreshold(deadband_upper_threshold_);
 
     // Initialize the steering angle filter.
     if(use_steering_angle_feedback_filter_) {

@@ -223,6 +223,15 @@ class SteeringControllerNode : public rclcpp::Node {
         std::shared_ptr<std_srvs::srv::Trigger::Response> response);
 
     OnSetParametersCallbackHandle::SharedPtr callback_handle_;
+
+    /** @brief Whether or not to use the deadband filter. */
+    bool use_deadband_filter_;
+
+    /** @brief Deadband filter upper threshold. */
+    double deadband_lower_threshold_;
+
+    /** @brief Deadband filter upper threshold. */
+    double deadband_upper_threshold_;
 };
 
 } // namespace ROS

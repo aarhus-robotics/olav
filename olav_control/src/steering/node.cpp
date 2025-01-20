@@ -144,6 +144,14 @@ void SteeringControllerNode::GetParameters() {
         get_parameter("controller.deadband.filter.thresholds.upper")
             .as_double();
 
+    declare_parameter("controller.limit.error.enabled", true);
+    use_error_threshold_ =
+        get_parameter("controller.limit.error.enabled").as_bool();
+
+    declare_parameter("controller.limit.error.magnitude", 0.04);
+    error_threshold_ =
+        get_parameter("controller.limit.error.magnitude").as_double();
+
     // Create the parameters callback handle.
     callback_handle_ = add_on_set_parameters_callback(
         std::bind(&SteeringControllerNode::SetParametersCallback,
@@ -168,6 +176,8 @@ void SteeringControllerNode::Initialize() {
     controller_->UseDeadbandFilter(use_deadband_filter_);
     controller_->SetDeadbandLowerThreshold(deadband_lower_threshold_);
     controller_->SetDeadbandUpperThreshold(deadband_upper_threshold_);
+    controller_->UseErrorThreshold(use_error_threshold_);
+    controller_->SetErrorThreshold(error_threshold_);
 
     // Initialize the controller atomic flags.
     has_feedback_ = false;

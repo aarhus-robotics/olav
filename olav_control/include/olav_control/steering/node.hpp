@@ -189,6 +189,10 @@ class SteeringControllerNode : public rclcpp::Node {
 
     /** @brief Deadband filter upper threshold. */
     double deadband_upper_threshold_;
+
+    bool use_error_threshold_;
+
+    double error_threshold_;
 };
 
 } // namespace ROS

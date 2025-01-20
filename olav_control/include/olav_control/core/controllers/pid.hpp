@@ -308,6 +308,14 @@ class PIDController {
 
     void SetDeadbandUpperThreshold(const double& deadband_upper_threshold);
 
+    void UseErrorThreshold(const bool& use_error_threshold);
+
+    const bool& UseErrorThreshold();
+
+    void SetErrorThreshold(const double& error_threshold);
+
+    const double& GetErrorThreshold();
+
     void Tick();
 
     void Reset();
@@ -422,6 +430,13 @@ class PIDController {
 
     /** @brief Deadband upper threshold. */
     double deadband_upper_threshold_ = std::numeric_limits<double>::infinity();
+
+    /** @brief Whether or not to use the error threshold to limit action around
+     * the equilibrium point. */
+    bool use_error_threshold_ = false;
+
+    /** @brief Error threshold around equilibrium point. */
+    double error_threshold_ = -std::numeric_limits<double>::infinity();
 };
 
 } // namespace ROS

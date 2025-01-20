@@ -9,12 +9,12 @@
       setpoint:
         ramp:
           enabled: true
-          magnitude: 0.2
+          magnitude: 0.05
       output:
         minimum: -1.0
         maximum: 1.0
         change:
-          enabled: true
+          enabled: false
           magnitude: 0.001
       limit:
         integral:

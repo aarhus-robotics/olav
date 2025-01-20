@@ -257,6 +257,18 @@ void PIDController::SetDeadbandUpperThreshold(
 
 const bool& PIDController::UseDeadbandFilter() { return use_deadband_filter_; }
 
+void PIDController::UseErrorThreshold(const bool& use_error_threshold) {
+    use_error_threshold_ = use_error_threshold;
+}
+
+const bool& PIDController::UseErrorThreshold() { return use_error_threshold_; }
+
+void PIDController::SetErrorThreshold(const double& error_threshold) {
+    error_threshold_ = error_threshold;
+}
+
+const double& PIDController::GetErrorThreshold() { return error_threshold_; }
+
 void PIDController::Tick() {
     // Ramp the setpoint used for calculations if user has opted to do so
     double ramped_setpoint = (use_setpoint_ramping_)
@@ -265,13 +277,22 @@ void PIDController::Tick() {
                                   feedback_ + maximum_setpoint_change_)
         : setpoint_;
 
-    // Store the last tracking error and compute the new one based on the plant
-    // feedback.
+    // Check if the feedback is sufficiently close to the setpoint, mock the
+    // feedback if we are within tolerance to avoid oscillations around the
+    // equilibrium point.
+    if(boost::math::sign(feedback_) == boost::math::sign(ramped_setpoint)) {
+        feedback_ = (std::abs(ramped_setpoint - feedback_) < error_threshold_)
+            ? ramped_setpoint
+            : feedback_;
+    }
+
+    // Store the last tracking error and compute the new one based on the
+    // plant feedback.
     double error = ramped_setpoint - feedback_;
     last_feedback_ = feedback_;
 
-    // Compute the feedforward term. Note how the output change sign is computed
-    // in order to select the correct feedforward offset.
+    // Compute the feedforward term. Note how the output change sign is
+    // computed in order to select the correct feedforward offset.
     auto feedforward_sign = boost::math::sign(ramped_setpoint - feedback_);
     feedforward_term_ = feedforward_sign * feedforward_offset_ +
         feedforward_gain_ * unscaled_feedforward_term_;
@@ -279,16 +300,16 @@ void PIDController::Tick() {
     // Compute the proportional term.
     proportional_term_ = proportional_gain_ * error;
 
-    // If this is the first controller tick, we assume the last measurement was
-    // the same as the current one and the last controller output was the
-    // combination of the time-invariant terms.
+    // If this is the first controller tick, we assume the last measurement
+    // was the same as the current one and the last controller output was
+    // the combination of the time-invariant terms.
     if(is_first_tick_) {
         last_output_ = proportional_term_ + feedforward_term_;
         is_first_tick_ = false;
     }
 
-    // Compute the derivative term and update the last processed feedback for
-    // the next tick.
+    // Compute the derivative term and update the last processed feedback
+    // for the next tick.
     derivative_term_ = derivative_gain_ * (error - last_error_);
 
     // Compute the integral term.
@@ -299,26 +320,11 @@ void PIDController::Tick() {
         : integral_gain_ * cumulative_error_;
 
     // Compute the controller output.
-    output_ = feedforward_term_ + proportional_term_ + integral_term_ +
-        derivative_term_;
+    output_ = proportional_term_ + integral_term_ + derivative_term_;
 
-    // Enforce the bounds on the integral term.
-    // If we are outside of the output bounds due to imposed limits on the
-    // controller output or its output rate of change, reset the cumulative
-    // error to a reasonable value, specifically to the current error as to
-    // guarantee a smooth transition with the proportional action.
-    /*
-    if((use_output_limiter_ &&
-        !IsBounded(output_, minimum_output_, maximum_output_)) ||
-       (use_output_change_limiter_ &&
-        !IsBounded(output_,
-                   last_output_ - maximum_output_change_,
-                   last_output_ + maximum_output_change_))) {
-        cumulative_error_ = error;
-    */
     if(use_integral_term_limiter_) {
-        // Also limit the integral term, regardless of whether the controller
-        // output is within bounds.
+        // Also limit the integral term, regardless of whether the
+        // controller output is within bounds.
         cumulative_error_ = boost::algorithm::clamp(cumulative_error_ + error,
                                                     -maximum_cumulative_error_,
                                                     maximum_cumulative_error_);
@@ -333,18 +339,27 @@ void PIDController::Tick() {
                                     last_output_ - maximum_output_change_,
                                     last_output_ + maximum_output_change_);
     }
-    if(use_output_limiter_) {
-        output_ =
-            boost::algorithm::clamp(output_, minimum_output_, maximum_output_);
-    }
+
     if(use_output_filter_) {
         output_ = last_output_ * output_filter_weight_ +
             output_ * (1.0 - output_filter_weight_);
     }
+
+    // Add the feedforward term - this should be unaffected by the filters.
+    output_ += feedforward_term_;
+
     if(use_deadband_filter_) {
         is_deadbanding_ = (output_ > deadband_lower_threshold_ &&
                            output_ < deadband_upper_threshold_);
         output_ = is_deadbanding_ ? 0.0 : output_;
+    }
+
+    // Note that the output limiter should always override any previous
+    // manipulation of the controller output to ensure the output is within
+    // the allowed bounds.
+    if(use_output_limiter_) {
+        output_ =
+            boost::algorithm::clamp(output_, minimum_output_, maximum_output_);
     }
 
     // Update output.

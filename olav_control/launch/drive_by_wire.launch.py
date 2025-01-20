@@ -24,16 +24,19 @@ def generate_launch_description():
     # Launch arguments
     # ----------------
     # > Declare namespace launch argument
-    namespace_argument = DeclareLaunchArgument("namespace", default_value="olav")
+    namespace_argument = DeclareLaunchArgument("namespace",
+                                               default_value="olav")
 
     # > Declare parameter overrides launch argument
-    parameters_overrides_argument = DeclareLaunchArgument("parameters_overrides",
-                                                          default_value=Path(
-                                                              get_package_share_path("olav_launch") /
-                                                              "config/parameters/overrides_defaults.yaml").as_posix())
+    parameters_overrides_argument = DeclareLaunchArgument(
+        "parameters_overrides",
+        default_value=Path(
+            get_package_share_path("olav_launch") /
+            "config/parameters/overrides_defaults.yaml").as_posix())
 
     # > Declare log level launch argument
-    log_level_argument = DeclareLaunchArgument("log_level", default_value="INFO")
+    log_level_argument = DeclareLaunchArgument("log_level",
+                                               default_value="INFO")
 
     # Nodes
     # -----
@@ -44,11 +47,15 @@ def generate_launch_description():
         package="olav_control",
         #prefix="konsole -e gdb -ex=r --args",
         executable="olav_control_drive_by_wire_interface_node",
-        arguments=["--ros-args", "--log-level", LaunchConfiguration("log_level")],
+        arguments=[
+            "--ros-args", "--log-level",
+            LaunchConfiguration("log_level")
+        ],
         parameters=[
             Path(
                 get_package_share_path("olav_control") /
-                "config/parameters/drive_by_wire_interface_node_defaults.yaml").as_posix(),
+                "config/parameters/drive_by_wire_interface_node_defaults.yaml").
+            as_posix(),
             LaunchConfiguration("parameters_overrides"),
         ],
         remappings=[
@@ -90,10 +97,15 @@ def generate_launch_description():
         package="olav_sensors",
         #prefix="konsole -e gdb -ex=r --args",
         executable="olav_sensors_powertrain_interface_node",
-        arguments=["--ros-args", "--log-level", LaunchConfiguration("log_level")],
+        arguments=[
+            "--ros-args", "--log-level",
+            LaunchConfiguration("log_level")
+        ],
         parameters=[
-            Path(get_package_share_path("olav_sensors") /
-                 "config/parameters/powertrain_interface_node_defaults.yaml").as_posix(),
+            Path(
+                get_package_share_path("olav_sensors") /
+                "config/parameters/powertrain_interface_node_defaults.yaml").
+            as_posix(),
             LaunchConfiguration("parameters_overrides"),
         ],
         remappings=[
@@ -116,10 +128,15 @@ def generate_launch_description():
         package="olav_control",
         #prefix="konsole -e gdb -ex=r --args",
         executable="olav_control_control_multiplexer_node",
-        arguments=["--ros-args", "--log-level", LaunchConfiguration("log_level")],
+        arguments=[
+            "--ros-args", "--log-level",
+            LaunchConfiguration("log_level")
+        ],
         parameters=[
-            Path(get_package_share_path("olav_control") /
-                 "config/parameters/control_multiplexer_node_defaults.yaml").as_posix(),
+            Path(
+                get_package_share_path("olav_control") /
+                "config/parameters/control_multiplexer_node_defaults.yaml").
+            as_posix(),
             LaunchConfiguration("parameters_overrides"),
         ],
         remappings=[
@@ -159,10 +176,15 @@ def generate_launch_description():
         package="olav_control",
         #prefix="konsole -e gdb -ex=r --args",
         executable="olav_control_speed_controller_node",
-        arguments=["--ros-args", "--log-level", LaunchConfiguration("log_level")],
+        arguments=[
+            "--ros-args", "--log-level",
+            LaunchConfiguration("log_level")
+        ],
         parameters=[
-            Path(get_package_share_path("olav_control") /
-                 "config/parameters/speed_controller_node_defaults.yaml").as_posix(),
+            Path(
+                get_package_share_path("olav_control") /
+                "config/parameters/speed_controller_node_defaults.yaml").
+            as_posix(),
             LaunchConfiguration("parameters_overrides"),
         ],
         remappings=[
@@ -192,10 +214,15 @@ def generate_launch_description():
         package="olav_control",
         #prefix="konsole -e gdb -ex=r --args",
         executable="olav_control_steering_controller_node",
-        arguments=["--ros-args", "--log-level", LaunchConfiguration("log_level")],
+        arguments=[
+            "--ros-args", "--log-level",
+            LaunchConfiguration("log_level")
+        ],
         parameters=[
-            Path(get_package_share_path("olav_control") /
-                 "config/parameters/steering_controller_node_defaults.yaml").as_posix(),
+            Path(
+                get_package_share_path("olav_control") /
+                "config/parameters/steering_controller_node_defaults.yaml").
+            as_posix(),
             LaunchConfiguration("parameters_overrides"),
         ],
         remappings=[
@@ -203,7 +230,7 @@ def generate_launch_description():
             ("setpoint", "controllers/steering/angle"),
             ("feedback", "sensors/steering/angle"),
             # > Publishers
-            ("output", "commands/steering"),
+            ("output", "multiplexer/in/steering"),
             ("status", "controllers/steering/status"),
             # > Services
             ("start", "controllers/steering/start"),
@@ -226,8 +253,10 @@ def generate_launch_description():
         executable="aggregator_node",
         arguments=["--ros-args", "--log-level", "warn"],
         parameters=[
-            Path(get_package_share_path("olav_control") /
-                 "config/parameters/diagnostic_aggregator_node_defaults.yaml").as_posix(),
+            Path(
+                get_package_share_path("olav_control") /
+                "config/parameters/diagnostic_aggregator_node_defaults.yaml").
+            as_posix(),
             LaunchConfiguration("parameters_overrides"),
         ],
         remappings=[],

@@ -104,8 +104,8 @@ class SteeringControllerNode : public rclcpp::Node {
     // ----------
     std::shared_ptr<PIDController> controller_;
 
-    /** @brief Controller feedforward gain. */
-    double feedforward_gain_;
+    /** @brief Controller feedforward offset. */
+    double feedforward_offset_;
 
     /** @brief Controller proportional gain. */
     double proportional_gain_;
@@ -149,49 +149,6 @@ class SteeringControllerNode : public rclcpp::Node {
     /** @brief Shared pointer to the PID status publisher. */
     rclcpp::Publisher<olav_interfaces::msg::PIDStatus>::SharedPtr
         status_publisher_;
-
-    // Filtering
-    // ---------
-
-    /** @brief Whether or not to use the steering angle setpoint filter. */
-    bool use_steering_angle_setpoint_filter_;
-
-    /** @brief Savitzky-Golay filter to the steering angle setpoint
-     * measurements. */
-    std::shared_ptr<SavitzkyGolayFilter> steering_angle_setpoint_filter_;
-
-    /** @brief Window size for the steering angle setpoint Savitzky-Golay
-     * filter. */
-    double steering_angle_setpoint_filter_window_size_;
-
-    /** @brief Regression polynomial order for the steering angle setpoint
-     * Savitzky-Golay filter. */
-    int steering_angle_setpoint_filter_order_;
-
-    /** @brief Shared pointer to the circular buffer holding the latest steering
-     * angle setpoint. */
-    std::shared_ptr<boost::circular_buffer<double>>
-        steering_angle_setpoint_buffer_;
-
-    /** @brief Whether or not to use the steering angle feedback filter. */
-    bool use_steering_angle_feedback_filter_;
-
-    /** @brief Savitzky-Golay filter to the steering angle feedback
-     * measurements. */
-    std::shared_ptr<SavitzkyGolayFilter> steering_angle_feedback_filter_;
-
-    /** @brief Window size for the steering angle feedback Savitzky-Golay
-     * filter. */
-    double steering_angle_feedback_filter_window_size_;
-
-    /** @brief Regression polynomial order for the steering angle feedback
-     * Savitzky-Golay filter. */
-    int steering_angle_feedback_filter_order_;
-
-    /** @brief Shared pointer to the circular buffer holding the latest steering
-     * angle feedback. */
-    std::shared_ptr<boost::circular_buffer<double>>
-        steering_angle_feedback_buffer_;
 
     // Service servers
     // ---------------

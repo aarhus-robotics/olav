@@ -60,6 +60,10 @@ void SteeringControllerNode::GetParameters() {
     declare_parameter("controller.rate", 100.0, read_only_descriptor);
     control_rate_ = get_parameter("controller.rate").as_double();
 
+    declare_parameter("controller.feedforward.offset", 0.3);
+    feedforward_offset_ =
+        get_parameter("controller.feedforward.offset").as_double();
+
     // Declare and retrieve the steering controller proportional gain.
     declare_parameter("controller.gains.proportional", 1.0, gain_descriptor);
     proportional_gain_ =
@@ -73,33 +77,8 @@ void SteeringControllerNode::GetParameters() {
     declare_parameter("controller.gains.derivative", 0.01, gain_descriptor);
     derivative_gain_ = get_parameter("controller.gains.derivative").as_double();
 
-    // Declare and retrieve the steering controller setpoint filter switch.
-    declare_parameter("controller.setpoint.filter.enabled",
-                      true,
-                      read_only_descriptor);
-    use_steering_angle_setpoint_filter_ =
-        get_parameter("controller.setpoint.filter.enabled").as_bool();
-
-    // Declare and retrieve the steering controller setpoint filter window size.
-    declare_parameter("controller.setpoint.filter.window",
-                      10,
-                      read_only_descriptor);
-    steering_angle_setpoint_filter_window_size_ =
-        get_parameter("controller.setpoint.filter.window").as_int();
-
-    // Declare and retrieve the steering controller setpoint filter order.
-    declare_parameter("controller.setpoint.filter.order",
-                      3,
-                      read_only_descriptor);
-    steering_angle_setpoint_filter_order_ =
-        get_parameter("controller.setpoint.filter.order").as_int();
-
-    declare_parameter("controller.setpoint.ramp.enabled", true);
-    use_setpoint_ramping_ =
-        get_parameter("controller.setpoint.ramp.enabled").as_bool();
-
     rcl_interfaces::msg::FloatingPointRange setpoint_ramp_range;
-    setpoint_ramp_range.set__from_value(0.000).set__to_value(0.100).set__step(
+    setpoint_ramp_range.set__from_value(0.000).set__to_value(0.500).set__step(
         0.001);
     rcl_interfaces::msg::ParameterDescriptor setpoint_ramp_descriptor;
     setpoint_ramp_descriptor.floating_point_range = {setpoint_ramp_range};
@@ -108,27 +87,6 @@ void SteeringControllerNode::GetParameters() {
                       setpoint_ramp_descriptor);
     maximum_setpoint_change_ =
         get_parameter("controller.setpoint.ramp.magnitude").as_double();
-
-    // Declare and retrieve the steering controller feedback filter switch.
-    declare_parameter("controller.feedback.filter.enabled",
-                      true,
-                      read_only_descriptor);
-    use_steering_angle_feedback_filter_ =
-        get_parameter("controller.feedback.filter.enabled").as_bool();
-
-    // Declare and retrieve the steering controller feedback filter window size.
-    declare_parameter("controller.feedback.filter.window",
-                      10,
-                      read_only_descriptor);
-    steering_angle_feedback_filter_window_size_ =
-        get_parameter("controller.feedback.filter.window").as_int();
-
-    // Declare and retrieve the steering controller feedback filter order.
-    declare_parameter("controller.feedback.filter.order",
-                      3,
-                      read_only_descriptor);
-    steering_angle_feedback_filter_order_ =
-        get_parameter("controller.feedback.filter.order").as_int();
 
     // Declare and retrieve the steering controller minimum output.
     declare_parameter("controller.output.minimum", -1.0);
@@ -196,6 +154,7 @@ void SteeringControllerNode::GetParameters() {
 void SteeringControllerNode::Initialize() {
     // Initialize the steering PID controller.
     controller_ = std::make_shared<PIDController>();
+    controller_->SetFeedforwardOffset(feedforward_offset_);
     controller_->SetProportionalGain(proportional_gain_);
     controller_->SetIntegralGain(integral_gain_);
     controller_->SetDerivativeGain(derivative_gain_);
@@ -209,34 +168,6 @@ void SteeringControllerNode::Initialize() {
     controller_->UseDeadbandFilter(use_deadband_filter_);
     controller_->SetDeadbandLowerThreshold(deadband_lower_threshold_);
     controller_->SetDeadbandUpperThreshold(deadband_upper_threshold_);
-
-    // Initialize the steering angle filter.
-    if(use_steering_angle_feedback_filter_) {
-        // Check that the specified window size is sufficiently large for the
-        // chosen fitting polynomial order.
-        size_t buffer_size = (2 * steering_angle_feedback_filter_window_size_ +
-                              1) > steering_angle_feedback_filter_order_ + 1
-            ? 2 * steering_angle_feedback_filter_window_size_ + 1
-            : steering_angle_feedback_filter_order_ + 1;
-
-        // Initialize the steering angle buffer with null values.
-        steering_angle_feedback_buffer_ =
-            std::make_shared<boost::circular_buffer<double>>(buffer_size, 0.0);
-
-        // Initialize the Savitzky-Golay filter settings - here we specify the
-        // filter is evaluated at the end of the buffer and no derivative
-        // information is used.
-        auto savitzky_golay_filter_settings =
-            SavitzkyGolayFilterSettings(std::floor(buffer_size / 2) - 1,
-                                        std::floor(buffer_size / 2) - 1,
-                                        steering_angle_feedback_filter_order_,
-                                        0,
-                                        1.0);
-
-        // Instantiate the steering angle Savitzky-Golay filter.
-        steering_angle_feedback_filter_ = std::make_shared<SavitzkyGolayFilter>(
-            savitzky_golay_filter_settings);
-    }
 
     // Initialize the controller atomic flags.
     has_feedback_ = false;
@@ -341,18 +272,7 @@ void SteeringControllerNode::FeedbackCallback(
     if(is_stopped_) { return; }
 
     // Filter the feedback.
-    auto feedback = std::numeric_limits<double>::quiet_NaN();
-    if(use_steering_angle_feedback_filter_) {
-        steering_angle_feedback_buffer_->pop_front();
-        steering_angle_feedback_buffer_->push_back(feedback_message->setpoint);
-        feedback = steering_angle_feedback_filter_
-                       ->filter<boost::circular_buffer<double>>(
-                           *steering_angle_feedback_buffer_);
-    } else {
-        feedback = feedback_message->setpoint;
-    }
-
-    controller_->SetFeedback(feedback);
+    controller_->SetFeedback(feedback_message->setpoint);
 
     if(!has_feedback_) {
         has_feedback_ = true;

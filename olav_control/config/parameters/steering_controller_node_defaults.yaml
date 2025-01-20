@@ -3,22 +3,13 @@
     controller:
       rate: 100.0
       gains:
-        proportional: 1.0
-        integral: 0.1
-        derivative: 0.001
+        proportional: 0.05
+        integral: 0.005
+        derivative: 0.0
       setpoint:
-        filter:
-          enabled: true
-          window: 10
-          order: 3
         ramp:
           enabled: true
-          magnitude: 0.001
-      feedback:
-        filter:
-          enabled: true
-          window: 10
-          order: 3
+          magnitude: 0.2
       output:
         minimum: -1.0
         maximum: 1.0
@@ -28,10 +19,10 @@
       limit:
         integral:
           enabled: true
-          magnitude: 50.0
+          magnitude: 0.3
       deadband:
         filter:
-          enabled: true
+          enabled: false
           thresholds:
             lower: -0.3
             upper: 0.3

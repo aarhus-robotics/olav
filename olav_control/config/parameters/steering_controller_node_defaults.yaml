@@ -2,6 +2,8 @@
   ros__parameters:
     controller:
       rate: 100.0
+      feedforward:
+        offset: 0.3
       gains:
         proportional: 0.05
         integral: 0.005
@@ -22,7 +24,7 @@
           magnitude: 0.3
       deadband:
         filter:
-          enabled: false
+          enabled: true
           thresholds:
             lower: -0.3
             upper: 0.3

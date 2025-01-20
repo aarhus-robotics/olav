@@ -74,6 +74,8 @@ class ControlMultiplexerNode : public rclcpp::Node {
 
     void StartTimers();
 
+    void RunPostActivateHooks();
+
     void Reset();
 
     // Thread safety

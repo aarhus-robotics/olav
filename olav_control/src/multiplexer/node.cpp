@@ -47,7 +47,7 @@ void ControlMultiplexerNode::Configure() {
 }
 
 void ControlMultiplexerNode::GetParameters() {
-    declare_parameter("initial.mode", "manual");
+    declare_parameter("initial_mode", "manual");
 }
 
 void ControlMultiplexerNode::Initialize() {
@@ -56,7 +56,7 @@ void ControlMultiplexerNode::Initialize() {
     subscriptions_callback_group_ =
         create_callback_group(rclcpp::CallbackGroupType::Reentrant);
 
-    active_control_mode_ = get_parameter("initial.mode").as_string();
+    active_control_mode_ = get_parameter("initial_mode").as_string();
 }
 
 void ControlMultiplexerNode::Activate() {
@@ -66,6 +66,7 @@ void ControlMultiplexerNode::Activate() {
     CreateTimers();
     CreatePublishers();
     StartTimers();
+    RunPostActivateHooks();
 }
 
 void ControlMultiplexerNode::CreateSubscriptions() {
@@ -194,6 +195,11 @@ void ControlMultiplexerNode::CreatePublishers() {
 }
 
 void ControlMultiplexerNode::StartTimers() { diagnostic_timer_->reset(); }
+
+void ControlMultiplexerNode::RunPostActivateHooks() {
+    StartSteeringController();
+    if(active_control_mode_ == "autonomous") { StartSpeedController(); }
+}
 
 void ControlMultiplexerNode::Reset() { // TODO: Implement a reset function.
 }

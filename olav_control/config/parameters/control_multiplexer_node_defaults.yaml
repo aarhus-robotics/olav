@@ -10,4 +10,5 @@
       setpoint:
         speed: 4.17
         steering_angle: 0.576
+    initial_mode: "manual"
     brake_threshold: 0.95

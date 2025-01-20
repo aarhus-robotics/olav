@@ -96,6 +96,8 @@ class DriveByWireSetpoint {
 
     int16_t steering_ = 0;
 
+    double steering_offset_ = 0.17;
+
     double steering_scale_factor_ = 1500.0;
 
     int16_t gear_ = 1;

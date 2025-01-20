@@ -39,12 +39,12 @@ namespace ROS {
 DriveByWireSetpoint::DriveByWireSetpoint() {}
 
 DriveByWireSetpoint::DriveByWireSetpoint(const double& throttle,
-                        const double& brake,
-                        const double& steering,
-                        const int& gear,
-                        const bool& ignition,
-                        const bool& engine_starter,
-                        const int& emergency_stop)
+                                         const double& brake,
+                                         const double& steering,
+                                         const int& gear,
+                                         const bool& ignition,
+                                         const bool& engine_starter,
+                                         const int& emergency_stop)
     : throttle_(throttle),
       brake_(brake),
       steering_(steering),
@@ -95,8 +95,8 @@ void DriveByWireSetpoint::SetSteering(double steering) {
         throw OLAV::Exceptions::DriveByWireInterfaceException(
             "Steering value is outside of the valid range (-1.0 - 1.0).");
     }
-    steering_ =
-        static_cast<int16_t>(std::round(steering * steering_scale_factor_));
+    steering_ = static_cast<int16_t>(
+        std::round((steering + steering_offset_) * steering_scale_factor_));
 }
 
 void DriveByWireSetpoint::SetSteeringRaw(int16_t steering) {

@@ -12,9 +12,10 @@ from pathlib import Path
 
 from ament_index_python.packages import get_package_share_path
 from launch import LaunchDescription, LaunchService
-from launch.actions import DeclareLaunchArgument, Shutdown
+from launch.actions import DeclareLaunchArgument, GroupAction, IncludeLaunchDescription, Shutdown
 from launch.substitutions import LaunchConfiguration
-from launch_ros.actions import Node
+from launch.launch_description_sources import PythonLaunchDescriptionSource
+from launch_ros.actions import Node, PushRosNamespace
 
 
 def generate_launch_description():
@@ -38,27 +39,25 @@ def generate_launch_description():
 
     # Nodes
     # -----
-    # > Load cell interface node
-    load_cell_interface_node = Node(
+    # > Heartbeat node
+    heartbeat_node = Node(
         namespace=LaunchConfiguration("namespace"),
-        name="load_cell_interface",
-        package="olav_sensors",
+        name="heart",
+        package="navi_core",
         #prefix="konsole -e gdb -ex=r --args",
-        executable="olav_sensors_load_cell_interface_node",
+        executable="navi_core_heart_node",
         arguments=[
             "--ros-args", "--log-level",
             LaunchConfiguration("log_level")
         ],
         parameters=[
             Path(
-                get_package_share_path("olav_sensors") /
-                "config/parameters/load_cell_interface_node_defaults.yaml").
-            as_posix(),
+                get_package_share_path("navi_core") /
+                "config/parameters/heart_node_defaults.yaml").as_posix(),
             LaunchConfiguration("parameters_overrides"),
         ],
         remappings=[
-            # > Publishers
-            ("load", "sensors/dynamometer/load"),
+            ("heartbeat", "multiplexer/in/heartbeat"),
         ],
         emulate_tty=True,
         output={
@@ -67,13 +66,34 @@ def generate_launch_description():
         on_exit=Shutdown(),
     )
 
+    # Launch descriptions
+    # -------------------
+    navi_group_action = GroupAction(actions=[
+        PushRosNamespace("olav"),
+        IncludeLaunchDescription(
+            PythonLaunchDescriptionSource(
+                Path(
+                    get_package_share_path("avt_341") /
+                    "launch/avt_341.launch.py").as_posix()),
+            launch_arguments={
+                "namespace": "autonomy",
+                "topic/in/odometry":
+                "/olav/sensors/inertial_navigation_system/filter/odometry",
+                "topic/in/steering_angle": "/olav/sensors/steering/angle",
+                "topic/in/lidar": "/olav/sensors/lidar/points",
+                "topic/in/camera": "/olav/sensors/roof_camera/image/raw",
+                "topic/out/drive": "/olav/multiplexer/in/drive",
+            }.items()),
+    ], )
+
     return LaunchDescription([
         # > Launch arguments
         namespace_argument,
         log_level_argument,
         parameters_overrides_argument,
-        # > Nodes
-        load_cell_interface_node,
+        # > Group actions
+        heartbeat_node,
+        navi_group_action
     ])
 
 

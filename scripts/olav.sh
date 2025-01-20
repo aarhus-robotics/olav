@@ -22,7 +22,7 @@ function interrupt() {
 }
 
 check-ros-version() {
-    if [ ${ROS_VERSION} != 2 ]; then
+    if [ -z "${ROS_VERSION}" || ${ROS_VERSION} != 2 ]; then
         prettyprint "Wrong ROS version of environment not sourced!"
     fi
 }
@@ -94,21 +94,21 @@ if [ "${1}" = "sessions" ]; then
         if is_in_list "${VALID_SESSIONS}" ${3}; then
             prettyprint "Starting session \"${3}\" session ..."
             if [ "${3}" = "description" ]; then
-                ros2 launch olav_description description.launch.py
+                ros2 launch olav_description description.launch.py parameters_overrides:=${HOME}/ROS/config/parameters/olav_parameters_overrides.yaml
             elif [ "${3}" = "drive-by-wire" ]; then
-                ros2 launch olav_control drive_by_wire.launch.py
+                ros2 launch olav_control drive_by_wire.launch.py parameters_overrides:=${HOME}/ROS/config/parameters/olav_parameters_overrides.yaml
             elif [ "${3}" = "perception" ]; then
-                ros2 launch olav_sensors perception.launch.py
+                ros2 launch olav_sensors perception.launch.py parameters_overrides:=${HOME}/ROS/config/parameters/olav_parameters_overrides.yaml
             elif [ "${3}" = "navigation" ]; then
-                ros2 launch olav_sensors navigation.launch.py
+                ros2 launch olav_sensors navigation.launch.py parameters_overrides:=${HOME}/ROS/config/parameters/olav_parameters_overrides.yaml
             elif [ "${3}" = "mapping" ]; then
-                ros2 launch olav_sensors mapping.launch.py
+                ros2 launch olav_sensors mapping.launch.py parameters_overrides:=${HOME}/ROS/config/parameters/olav_parameters_overrides.yaml
             elif [ "${3}" = "drawbar" ]; then
-                ros2 launch olav_sensors drawbar.launch.py
+                ros2 launch olav_sensors drawbar.launch.py parameters_overrides:=${HOME}/ROS/config/parameters/olav_parameters_overrides.yaml
             elif [ "${3}" = "datalogger" ]; then
-                ros2 launch olav_utilities datalogger.launch.py
+                ros2 launch olav_utilities datalogger.launch.py parameters_overrides:=${HOME}/ROS/config/parameters/olav_parameters_overrides.yaml
             elif [ "${3}" = "peripherals" ]; then
-                ros2 launch olav_peripherals peripherals.launch.py
+                ros2 launch olav_peripherals peripherals.launch.py parameters_overrides:=${HOME}/ROS/config/parameters/olav_parameters_overrides.yaml
             else
                 prettyprint "Invalid session name \"${3}\"!"
             fi

@@ -12,7 +12,7 @@ from pathlib import Path
 
 from ament_index_python.packages import get_package_share_path
 from launch import LaunchDescription, LaunchService
-from launch.actions import DeclareLaunchArgument, IncludeLaunchDescription, Shutdown
+from launch.actions import DeclareLaunchArgument, IncludeLaunchDescription
 from launch.launch_description_sources import PythonLaunchDescriptionSource
 from launch.substitutions import Command, LaunchConfiguration
 from launch_ros.actions import ComposableNodeContainer, LoadComposableNodes
@@ -85,8 +85,8 @@ def generate_launch_description():
                         Command([
                             "xacro", " ",
                             Path(
-                                get_package_share_path("depthai_descriptions")
-                                / "urdf/depthai_descr.urdf.xacro").as_posix(),
+                                get_package_share_path("depthai_descriptions") /
+                                "urdf/depthai_descr.urdf.xacro").as_posix(),
                             " ", "camera_name:=", "roof_camera", " ",
                             "camera_model:=", "OAK-D-POE", " ", "base_frame:=",
                             "roof_camera_frame", " ", "parent_frame:=",
@@ -122,8 +122,8 @@ def generate_launch_description():
                         Command([
                             "xacro", " ",
                             Path(
-                                get_package_share_path("depthai_descriptions")
-                                / "urdf/depthai_descr.urdf.xacro").as_posix(),
+                                get_package_share_path("depthai_descriptions") /
+                                "urdf/depthai_descr.urdf.xacro").as_posix(),
                             " ", "camera_name:=", "bumper_camera", " ",
                             "camera_model:=", "OAK-D-PRO", " ", "base_frame:=",
                             "bumper_camera_frame", " ", "parent_frame:=",

@@ -18,12 +18,22 @@ set -e
 # Capture interrupt signals.
 trap interrupt INT
 function interrupt() {
-    exit
+    exit 1
+}
+
+autorossource() {
+    source /opt/ros/humble/setup.zsh && \
+    source ${HOME}/ROS/install/setup.zsh && \
+    export ROS_LOG_DIR=\"${HOME}/ROS/log/run\" && \
+    export RMW_IMPLEMENTATION=rmw_cyclonedds_cpp && \
+    export CYCLONEDDS_URI=file://${HOME}/ROS/config/cyclonedds/cyclonedds.xml
+
 }
 
 check-ros-version() {
-    if [ -z "${ROS_VERSION}" || ${ROS_VERSION} != 2 ]; then
-        prettyprint "Wrong ROS version of environment not sourced!"
+    if [ -z "${ROS_VERSION}" ]; then
+        prettyprint "Sourcing ROS environment ..."
+        autorossource
     fi
 }
 
@@ -54,6 +64,7 @@ is_in_list() {
 ros-git-fetch() {
     timeout 10s git -C ${HOME}/ROS/src/${1} fetch
     git -C ${HOME}/ROS/src/${1} reset --hard origin/main
+    return 0
 }
 
 LIST_OF_REPOSITORIES=("aarhus-robotics/roto" "aarhus-robotics/olav" "aarhus-robotics/navi")
@@ -81,7 +92,7 @@ elif [ "$(cat /etc/hostname)" = "thor" ]; then
     VALID_SESSIONS=(${LIST_OF_THOR_SESSIONS})
 else
     prettyprint "Invalid hostname.\n"
-    exit
+    exit 1
 fi
 
 if [ "${1}" = "sessions" ]; then
@@ -95,22 +106,31 @@ if [ "${1}" = "sessions" ]; then
             prettyprint "Starting session \"${3}\" session ..."
             if [ "${3}" = "description" ]; then
                 ros2 launch olav_description description.launch.py parameters_overrides:=${HOME}/ROS/config/parameters/olav_parameters_overrides.yaml
+                exit 0
             elif [ "${3}" = "drive-by-wire" ]; then
                 ros2 launch olav_control drive_by_wire.launch.py parameters_overrides:=${HOME}/ROS/config/parameters/olav_parameters_overrides.yaml
+                exit 0
             elif [ "${3}" = "perception" ]; then
                 ros2 launch olav_sensors perception.launch.py parameters_overrides:=${HOME}/ROS/config/parameters/olav_parameters_overrides.yaml
+                exit 0
             elif [ "${3}" = "navigation" ]; then
                 ros2 launch olav_sensors navigation.launch.py parameters_overrides:=${HOME}/ROS/config/parameters/olav_parameters_overrides.yaml
+                exit 0
             elif [ "${3}" = "mapping" ]; then
                 ros2 launch olav_sensors mapping.launch.py parameters_overrides:=${HOME}/ROS/config/parameters/olav_parameters_overrides.yaml
+                exit 0
             elif [ "${3}" = "drawbar" ]; then
                 ros2 launch olav_sensors drawbar.launch.py parameters_overrides:=${HOME}/ROS/config/parameters/olav_parameters_overrides.yaml
+                exit 0
             elif [ "${3}" = "datalogger" ]; then
                 ros2 launch olav_utilities datalogger.launch.py parameters_overrides:=${HOME}/ROS/config/parameters/olav_parameters_overrides.yaml
+                exit 0
             elif [ "${3}" = "peripherals" ]; then
                 ros2 launch olav_peripherals peripherals.launch.py parameters_overrides:=${HOME}/ROS/config/parameters/olav_parameters_overrides.yaml
+                exit 0
             else
                 prettyprint "Invalid session name \"${3}\"!"
+                exit 1
             fi
         fi
 
@@ -121,10 +141,10 @@ if [ "${1}" = "sessions" ]; then
         if is_in_list "${VALID_SESSIONS}" ${3}; then
             prettyprint "Stopping session \"${3}\"..."
             tmux send-keys -t ${3} C-c >/dev/null 2>&1
-            exit
+            exit 0
         else
             prettyprint "Invalid session name \"${3}\"!"
-            exit
+            exit 1
         fi
 
     ############################
@@ -136,10 +156,10 @@ if [ "${1}" = "sessions" ]; then
         if is_in_list "${VALID_SESSIONS}" ${3}; then
             prettyprint "Attaching to session \"${3}\" ..."
             tmux attach -t ${3}
-            exit
+            exit 0
         else
             prettyprint "Invalid session name \"${3}\"!"
-            exit
+            exit 1
         fi
 
     ####################
@@ -148,11 +168,11 @@ if [ "${1}" = "sessions" ]; then
     elif [ "${2}" = "mux" ]; then
         if is_in_list "${VALID_SESSIONS}" ${3}; then
             prettyprint "Muxing session \"${3}\" ..."
-            tmux new-session -d -s ${3} "olav start ${3}"
-            exit
+            tmux new-session -d -s ${3} "olav sessions start ${3}"
+            exit 0
         else
             prettyprint "Invalid session name \"${3}\"!"
-            exit
+            exit 1
         fi
 
     ######################
@@ -161,10 +181,12 @@ if [ "${1}" = "sessions" ]; then
     elif [ "${2}" = "list" ]; then
         prettyprint "Listing open sessions ..."
         tmux list-sessions | lolcat
+        exit 0
 
     elif [ "${2}" = "kill" ]; then
         prettyprint "Killing all sessions ..."
         tmux kill-server
+        exit 0
     fi
 
 ###################
@@ -175,7 +197,7 @@ elif [ "${1}" = "update" ]; then
         prettyprint "Updating repository \"$(echo ${repository} | cut -d '/' -f2)\" ..."
         ros-git-fetch ${repository} | lolcat
     done
-    exit
+    exit 0
 
 ##################
 # Build packages #
@@ -184,7 +206,7 @@ elif [ "${1}" = "build" ]; then
     prettyprint "Building ROS packages ..."
     cd ${HOME}/ROS
     colcon --log-base ${HOME}/ROS/log/build build >/dev/null | lolcat
-    exit
+    exit 0
 
 # GUI
 elif [ "${1}" = "gui" ]; then
@@ -195,7 +217,7 @@ elif [ "${1}" = "gui" ]; then
         prettyprint "Launching Foxglove Studio ..."
         export ROS_PACKAGE_PATH=${HOME}/ROS/install
         foxglove-studio
-        exit
+        exit 0
 
     #################################
     # navi cheatsheet menu terminal #
@@ -203,7 +225,7 @@ elif [ "${1}" = "gui" ]; then
     elif [ "${2}" = "navi" ]; then
         prettyprint "Launching navi menu ..."
         konsole -e olav menu
-        exit
+        exit 0
 
     ###############
     # PlotJuggler #
@@ -211,7 +233,7 @@ elif [ "${1}" = "gui" ]; then
     elif [ "${2}" = "plotjuggler" ]; then
         prettyprint "Launching PlotJuggler ..."
         ros2 run plotjuggler plotjuggler -- -n
-        exit
+        exit 0
 
     ###########
     # RQt GUI #
@@ -225,7 +247,7 @@ elif [ "${1}" = "gui" ]; then
             --lock-perspective \
             --perspective-file "${HOME}/ROS/src/aarhus-robotics/olav/config/rqt_gui/olav.perspective" \
             --qt-binding pyqt
-        exit
+        exit 0
 
     ##################
     # RQt Image View #
@@ -236,7 +258,7 @@ elif [ "${1}" = "gui" ]; then
             --qt-binding pyqt \
             --clear-config \
             --hide-title
-        exit
+        exit 0
 
     ########
     # RViz #
@@ -247,7 +269,7 @@ elif [ "${1}" = "gui" ]; then
         export QT_ENABLE_HIGHDPI_SCALING=0
         export QT_SCREEN_SCALE_FACTORS=1
         ros2 run rviz2 rviz2 -- -d ${HOME}/ROS/src/aarhus-robotics/olav/config/rviz/olav.rviz
-        exit
+        exit 0
     fi
 
 #############
@@ -260,14 +282,14 @@ elif [ "${1}" = "menu" ]; then
         prettyprint "\nPress any key to return to the menu."
         read
     done
-    exit
+    exit 0
 
 elif [ "${1}" = "parameter" ]; then
 
     if [ ${2} = "get" ]; then
         prettyprint "Getting parameter \"${3}\" value...\n"
         prettyprint "%s.%s = %s" $(ros2 param get ${3} ${4} --hide-type)
-        exit
+        exit 0
     fi
 
 elif [ "${1}" = "publish" ]; then
@@ -280,7 +302,7 @@ elif [ "${1}" = "publish" ]; then
             "{"header": {"frame_id": "autonomy", "stamp": "now"}, "drive": {"speed": "${3}", "steering_angle": $((${4} * 3.141592 / 180))}}" \
             -r ${5} \
             >/dev/null 2>&1
-        exit
+        exit 0
 
     elif [ "${2}" = "heartbeat" ]; then
         prettyprint "Sending heartbeat ..."
@@ -290,7 +312,7 @@ elif [ "${1}" = "publish" ]; then
             "{"frame_id": "${3}", "stamp": "now"}" \
             -r ${4} \
             >/dev/null 2>&1
-        exit
+        exit 0
 
     elif [ "${2}" = "setpoint" ]; then
         prettyprint "Sending setpoint ..."
@@ -298,7 +320,7 @@ elif [ "${1}" = "publish" ]; then
         ros2 topic pub /olav/controls/${3} \
             olav_interfaces/msg/SetpointStamped \
             "{"header": {"frame_id": "console", "stamp": "now"}, "setpoint": ${4}}"
-        exit
+        exit 0
     fi
 
 #######################
@@ -315,7 +337,7 @@ elif [ "${1}" = "record" ]; then
             std_srvs/srv/Trigger \
             "{}" \
             >/dev/null 2>&1 &
-        exit
+        exit 0
 
     ###########################################
     # > Stop the current datalogger recording #
@@ -326,7 +348,7 @@ elif [ "${1}" = "record" ]; then
             std_srvs/srv/Trigger \
             "{}" \
             >/dev/null 2>&1 &
-        exit
+        exit 0
 
     ###########################################
     # > Upload a datalogger recording to ERDA #
@@ -340,7 +362,7 @@ elif [ "${1}" = "record" ]; then
         if [ "${3}" = "all" ]; then
             prettyprint "Uploading all recordings ..."
             rsync -aPu ${HOME}/ROS/bags/** ${HOME}/ERDA/Inbox/
-            exit
+            exit 0
 
         #####################################################
         # >> Upload a specific datalogger recording to ERDA #
@@ -348,7 +370,7 @@ elif [ "${1}" = "record" ]; then
         else
             prettyprint "Uploading recording ${3} ..."
             rsync -aPu ${HOME}/ROS/bags/${3} ${HOME}/ERDA/Inbox/
-            exit
+            exit 0
         fi
 
     ###################################
@@ -359,12 +381,12 @@ elif [ "${1}" = "record" ]; then
         if [ "${3}" = "all" ]; then
             prettyprint "Deleting all recordings ..."
             rm -rf ${HOME}/ROS/bags/** >/dev/null 2>&1
-            exit
+            exit 0
 
         else
             prettyprint "Deleting recording ${3}..."
             rm -rf ${HOME}/ROS/bags/${3} >/dev/null 2>&1
-            exit
+            exit 0
         fi
 
     ##############################################
@@ -378,7 +400,7 @@ elif [ "${1}" = "record" ]; then
         if [ "${3}" = "get" ]; then
             prettyprint "Retrieving datalogger topics..."
             ros2 param get /olav/datalogger topics --hide-type | sed 's:^.\(.*\).$:\1:' | tr "," "\n" | tr -d " "
-            exit
+            exit 0
 
         ##############################################
         # >> Set the datalogger recorded topics list #
@@ -386,7 +408,7 @@ elif [ "${1}" = "record" ]; then
         elif [ "${3}" = "set" ]; then
             prettyprint "Setting datalogger topics..."
             ros2 param set /olav/datalogger topics "$(cat ${HOME}/ROS/config/datalogger/${4})"
-            exit
+            exit 0
         fi
 
     ##############################################
@@ -395,11 +417,11 @@ elif [ "${1}" = "record" ]; then
     elif [ "${2}" = "storage" ]; then
         prettyprint "Available space: %s" \
             $(df -H ${HOME}/ROS/bags | tail -1 | awk '{print $4}')
-        exit
+        exit 0
 
     else
         prettyprint "No valid verb received - accepted verbs are <start>, <stop>, <upload>, <delete>, <topics> or <storage>."
-        exit
+        exit 1
     fi
 
 elif [ "${1}" = "sensors" ]; then
@@ -409,11 +431,11 @@ elif [ "${1}" = "sensors" ]; then
         if [ "${3}" = "reset" ]; then
             prettyprint "Resetting EKF ..."
             ros2 service call /olav/sensors/inertial_navigation_system/filter/reset std_srvs/srv/Empty "{}"
-            exit
+            exit 0
 
         else
             prettyprint "Invalid inertial navigation system command."
-            exit
+            exit 1
         fi
 
     ########################
@@ -427,7 +449,7 @@ elif [ "${1}" = "sensors" ]; then
         if [ "${3}" = "status" ]; then
             prettyprint "Getting LiDAR status ..."
             echo "get_sensor_info" | netcat -N saga.lan 7501 | python3 -m json.tool | lolcat
-            exit
+            exit 0
 
         ###################################################
         # > Set the LiDAR sensor operating mode to NORMAL #
@@ -436,7 +458,7 @@ elif [ "${1}" = "sensors" ]; then
             prettyprint "Starting LiDAR sensor ..."
             echo "set_config_param operating_mode NORMAL" | netcat -N saga.lan 7501 >/dev/null 2>&1
             echo "reinitialize" | netcat -N saga.lan 7501 >/dev/null 2>&1
-            exit
+            exit 0
 
         ####################################################
         # > Set the LiDAR sensor operating mode to STANDBY #
@@ -445,15 +467,15 @@ elif [ "${1}" = "sensors" ]; then
             prettyprint "Stopping LiDAR sensor ..."
             echo "set_config_param operating_mode STANDBY" | netcat -N saga.lan 7501 >/dev/null 2>&1
             echo "reinitialize" | netcat -N saga.lan 7501 >/dev/null 2>&1
-            exit
+            exit 0
 
         else
             prettyprint "Invalid verb - must be one of the following: (<start>, <stop>, <status>)."
-            exit
+            exit 1
         fi
     else
         prettyprint "Invalid sensor name: ${2}."
-        exit
+        exit 1
     fi
 
 ########################
@@ -468,7 +490,7 @@ elif [ "${1}" = "time" ]; then
     if [ "${2}" = "sources" ]; then
         prettyprint "Displaying time sources...\n"
         watch -n 1 "chronyc sources -v"
-        exit
+        exit 0
 
     #######################
     # Tracking statistics #
@@ -476,7 +498,7 @@ elif [ "${1}" = "time" ]; then
     elif [ "${2}" = "tracking" ]; then
         prettyprint "Displaying tracking statistics...\n"
         watch -n 1 "chronyc tracking -v"
-        exit
+        exit 0
     fi
 
 ###################
@@ -486,7 +508,7 @@ elif [ "${1}" = "system" ]; then
 
     if [ "$(cat /etc/hostname)" != "thor" ]; then
         prettyprint "System commands may only be used from thor.olavnet!"
-        exit
+        exit 1
     fi
 
     #######################

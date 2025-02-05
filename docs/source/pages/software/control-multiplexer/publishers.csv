@@ -1,0 +1,4 @@
+"Topic", "Message type", "Description"
+"throttle", "std_msgs/Float64", "Multiplexed throttle effort"
+"brake", "std_msgs/Float64", "Multiplexed brake effort"
+"steering", "std_msgs/Float64", "Multiplexed steering effort"

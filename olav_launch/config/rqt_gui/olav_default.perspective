@@ -1,0 +1,195 @@
+{
+  "keys": {},
+  "groups": {
+    "mainwindow": {
+      "keys": {
+        "geometry": {
+          "repr(QByteArray.hex)": "QtCore.QByteArray(b'01d9d0cb00030000000000460000001b000005ff0000035f0000004600000040000005ff0000035f000000000000000006000000004600000040000005ff0000035f')",
+          "type": "repr(QByteArray.hex)",
+          "pretty-print": "     F     _ F @   _      F @   _"
+        },
+        "state": {
+          "repr(QByteArray.hex)": "QtCore.QByteArray(b'000000ff00000000fd0000000100000003000005ba000002f4fc0100000007fb00000062006d006900630072006f00730074007200610069006e005f0069006e00650072007400690061006c005f007200710074005f005f0051007500690063006b0076006900650077005f005f0032005f005f0051007500690063006b007600690065007701000000000000040f0000000000000000fc00000000000002230000000000fffffffa000000000200000001fb00000062006d006900630072006f00730074007200610069006e005f0069006e00650072007400690061006c005f007200710074005f005f0051007500690063006b0076006900650077005f005f0031005f005f0051007500690063006b00760069006500770100000000ffffffff0000000000000000fb00000042007200710074005f007300720076005f005f00530065007200760069006300650073005f005f0031005f005f006d0065007300730061006700650073002e007500690100000366000002540000000000000000fc00000000000005ba0000000000fffffffc0200000003fb00000068006d006900630072006f00730074007200610069006e005f0069006e00650072007400690061006c005f007200710074005f005f00530065006e0073006f007200200044006100740061005f005f0031005f005f00530065006e0073006f007200440061007400610100000016000000a10000000000000000fb00000068006d006900630072006f00730074007200610069006e005f0069006e00650072007400690061006c005f007200710074005f005f00460069006c00740065007200200044006100740061005f005f0031005f005f00460069006c00740065007200440061007400610100000016000001a60000000000000000fb00000058006d006900630072006f00730074007200610069006e005f0069006e00650072007400690061006c005f007200710074005f005f0047005100370020004c00450044005f005f0031005f005f004700510037004c004500440100000016000002f40000000000000000fb00000064006d006900630072006f00730074007200610069006e005f0069006e00650072007400690061006c005f007200710074005f005f00520054004b0020005300740061007400750073005f005f0031005f005f00520054004b00530074006100740075007303000002be0000006c00000182000002f4fb0000004c007200710074005f0074006f007000690063005f005f0054006f0070006900630050006c007500670069006e005f005f0031005f005f0054006f007000690063005700690064006700650074010000000000000168000000d700fffffffc0000016e0000044c0000044c00fffffffc0200000002fc00000016000001b90000010400fffffffc0100000002fb00000072007200710074005f0073006500720076006900630065005f00630061006c006c00650072005f005f005300650072007600690063006500430061006c006c00650072005f005f0031005f005f005300650072007600690063006500430061006c006c00650072005700690064006700650074010000016e000002230000022300fffffffb00000072007200710074005f0073006500720076006900630065005f00630061006c006c00650072005f005f005300650072007600690063006500430061006c006c00650072005f005f0032005f005f005300650072007600690063006500430061006c006c006500720057006900640067006500740100000397000002230000022300fffffffb00000058007200710074005f007000750062006c00690073006800650072005f005f005000750062006c00690073006800650072005f005f0031005f005f005000750062006c0069007300680065007200570069006400670065007401000001d5000001350000008c00ffffff000005ba0000000000000004000000040000000800000008fc00000001000000030000000100000036004d0069006e0069006d0069007a006500640044006f0063006b00570069006400670065007400730054006f006f006c0062006100720000000000ffffffff0000000000000000')",
+          "type": "repr(QByteArray.hex)",
+          "pretty-print": "                 bmicrostrain_inertial_rqt__Quickview__2__Quickview            #                                                                                                          f T                 hmicrostrain_inertial_rqt__Sensor Data__1__SensorData          hmicrostrain_inertial_rqt__Filter Data__1__FilterData          Xmicrostrain_inertial_rqt__GQ7 LED__1__GQ7LED          dmicrostrain_inertial_rqt__RTK Status__1__RTKStatus          Lrqt_topic__TopicPlugin__1__TopicWidget          n L L                  rrqt_service_caller__ServiceCaller__1__ServiceCallerWidget          rrqt_service_caller__ServiceCaller__2__ServiceCallerWidget          Xrqt_publisher__Publisher__1__PublisherWidget                            6MinimizedDockWidgetsToolbar        "
+        }
+      },
+      "groups": {
+        "toolbar_areas": {
+          "keys": {
+            "MinimizedDockWidgetsToolbar": {
+              "repr": "8",
+              "type": "repr"
+            }
+          },
+          "groups": {}
+        }
+      }
+    },
+    "pluginmanager": {
+      "keys": {
+        "running-plugins": {
+          "repr": "{'rqt_publisher/Publisher': [1], 'rqt_service_caller/ServiceCaller': [1, 2], 'rqt_topic/TopicPlugin': [1]}",
+          "type": "repr"
+        }
+      },
+      "groups": {
+        "plugin__microstrain_inertial_rqt__Quickview__1": {
+          "keys": {},
+          "groups": {
+            "dock_widget__Quickview": {
+              "keys": {
+                "dock_widget_title": {
+                  "repr": "'Quickview'",
+                  "type": "repr"
+                },
+                "dockable": {
+                  "repr": "'true'",
+                  "type": "repr"
+                },
+                "parent": {
+                  "repr": "None",
+                  "type": "repr"
+                }
+              },
+              "groups": {}
+            }
+          }
+        },
+        "plugin__rqt_publisher__Publisher__1": {
+          "keys": {},
+          "groups": {
+            "dock_widget__PublisherWidget": {
+              "keys": {
+                "dock_widget_title": {
+                  "repr": "'Message Publisher'",
+                  "type": "repr"
+                },
+                "dockable": {
+                  "repr": "True",
+                  "type": "repr"
+                },
+                "parent": {
+                  "repr": "None",
+                  "type": "repr"
+                }
+              },
+              "groups": {}
+            },
+            "plugin": {
+              "keys": {
+                "publishers": {
+                  "repr": "'[]'",
+                  "type": "repr"
+                }
+              },
+              "groups": {}
+            }
+          }
+        },
+        "plugin__rqt_service_caller__ServiceCaller__1": {
+          "keys": {},
+          "groups": {
+            "dock_widget__ServiceCallerWidget": {
+              "keys": {
+                "dock_widget_title": {
+                  "repr": "'Service Caller'",
+                  "type": "repr"
+                },
+                "dockable": {
+                  "repr": "True",
+                  "type": "repr"
+                },
+                "parent": {
+                  "repr": "None",
+                  "type": "repr"
+                }
+              },
+              "groups": {}
+            },
+            "plugin": {
+              "keys": {
+                "current_service_name": {
+                  "repr": "'/olav/set_relative_position_reference'",
+                  "type": "repr"
+                },
+                "splitter_orientation": {
+                  "repr": "2",
+                  "type": "repr"
+                }
+              },
+              "groups": {}
+            }
+          }
+        },
+        "plugin__rqt_service_caller__ServiceCaller__2": {
+          "keys": {},
+          "groups": {
+            "dock_widget__ServiceCallerWidget": {
+              "keys": {
+                "dock_widget_title": {
+                  "repr": "'Service Caller (2)'",
+                  "type": "repr"
+                },
+                "dockable": {
+                  "repr": "True",
+                  "type": "repr"
+                },
+                "parent": {
+                  "repr": "None",
+                  "type": "repr"
+                }
+              },
+              "groups": {}
+            },
+            "plugin": {
+              "keys": {
+                "current_service_name": {
+                  "repr": "'/olav/device_report'",
+                  "type": "repr"
+                },
+                "splitter_orientation": {
+                  "repr": "2",
+                  "type": "repr"
+                }
+              },
+              "groups": {}
+            }
+          }
+        },
+        "plugin__rqt_topic__TopicPlugin__1": {
+          "keys": {},
+          "groups": {
+            "dock_widget__TopicWidget": {
+              "keys": {
+                "dock_widget_title": {
+                  "repr": "'Topic Monitor'",
+                  "type": "repr"
+                },
+                "dockable": {
+                  "repr": "True",
+                  "type": "repr"
+                },
+                "parent": {
+                  "repr": "None",
+                  "type": "repr"
+                }
+              },
+              "groups": {}
+            },
+            "plugin": {
+              "keys": {
+                "tree_widget_header_state": {
+                  "repr(QByteArray.hex)": "QtCore.QByteArray(b'000000ff000000000000000100000000000000050100000000000000000000000620000000010000000500000064000004cf000000060101000100000000000000000600000064ffffffff000000810000000300000006000001270000000100000003000001cc00000001000000030000006800000001000000030000003900000001000000030000013b0000000100000003000000000000000100000003000003e80000000064')",
+                  "type": "repr(QByteArray.hex)",
+                  "pretty-print": "                      d                                                            d"
+                }
+              },
+              "groups": {}
+            }
+          }
+        }
+      }
+    }
+  }
+}

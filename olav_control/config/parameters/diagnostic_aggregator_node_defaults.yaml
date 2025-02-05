@@ -1,0 +1,32 @@
+"/**":
+  ros__parameters:
+    olav:
+      pub_rate: 2.0
+      type: diagnostic_aggregator/AnalyzerGroup
+      path: olav
+      analyzers:
+        drive-by-wire:
+          type: diagnostic_aggregator/GenericAnalyzer
+          path: drive-by-wire
+          startswith: ["olav/drive-by-wire/"]
+          find_and_remove_prefix: ["olav/drive-by-wire"]
+        multiplexer:
+          type: diagnostic_aggregator/GenericAnalyzer
+          path: multiplexer
+          startswith: ["olav/multiplexer/"]
+          find_and_remove_prefix: ["olav/multiplexer"]
+        powertrain:
+          type: diagnostic_aggregator/GenericAnalyzer
+          path: powertrain
+          startswith: ["olav/powertrain/"]
+          find_and_remove_prefix: ["olav/powertrain"]
+        speed_controller:
+          type: diagnostic_aggregator/GenericAnalyzer
+          path: speed_controller
+          startswith: ["olav/speed_controller/"]
+          find_and_remove_prefix: ["olav/speed_controller"]
+        steering_controller:
+          type: diagnostic_aggregator/GenericAnalyzer
+          path: steering_controller
+          startswith: ["olav/steering_controller/"]
+          find_and_remove_prefix: ["olav/steering_controller"]

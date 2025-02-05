@@ -1,0 +1,20 @@
+"/**":
+  ros__parameters:
+    host: 127.0.0.1
+    port: 0
+    mountpoint: mountpoint
+    ntrip_version: None
+    authenticate: false
+    username: user
+    password: password
+    ssl: False
+    cert: None
+    key: None
+    ca_cert: None
+    rtcm_frame_id: odom
+    nmea_max_length: 82
+    nmea_min_length: 3
+    rtcm_message_package: rtcm_msgs
+    reconnect_attempt_max: 120
+    reconnect_attempt_wait_seconds: 5
+    rtcm_timeout_seconds: 4

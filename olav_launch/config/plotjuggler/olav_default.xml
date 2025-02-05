@@ -1,0 +1,328 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<root>
+ <tabbed_widget parent="main_window" name="Main Window">
+  <Tab tab_name="Acceleration" containers="1">
+   <Container>
+    <DockSplitter orientation="|" sizes="0.500485;0.499515" count="2">
+     <DockSplitter orientation="-" sizes="0.332836;0.334328;0.332836" count="3">
+      <DockArea name="...">
+       <plot style="Lines" mode="TimeSeries" flip_x="false" flip_y="false">
+        <range bottom="0.031042" left="4.594315" top="0.055437" right="9.771306"/>
+        <limitY/>
+        <curve color="#1f77b4" name="/olav/imu/data/linear_acceleration/x"/>
+        <curve color="#17becf" name="/olav/nav/filtered_imu/data/linear_acceleration/x">
+         <transform alias="/olav/nav/filtered_imu/data/linear_acceleration/x[Moving Average]" name="Moving Average">
+          <options compensate_offset="true" value="10"/>
+         </transform>
+        </curve>
+       </plot>
+      </DockArea>
+      <DockArea name="...">
+       <plot style="Lines" mode="TimeSeries" flip_x="false" flip_y="false">
+        <range bottom="-0.215640" left="4.594315" top="-0.198888" right="9.771306"/>
+        <limitY/>
+        <curve color="#d62728" name="/olav/imu/data/linear_acceleration/y"/>
+        <curve color="#bcbd22" name="/olav/nav/filtered_imu/data/linear_acceleration/y">
+         <transform alias="/olav/nav/filtered_imu/data/linear_acceleration/y[Moving Average]" name="Moving Average">
+          <options compensate_offset="true" value="10"/>
+         </transform>
+        </curve>
+       </plot>
+      </DockArea>
+      <DockArea name="...">
+       <plot style="Lines" mode="TimeSeries" flip_x="false" flip_y="false">
+        <range bottom="-9.822800" left="4.594315" top="-9.810215" right="9.771306"/>
+        <limitY/>
+        <curve color="#1ac938" name="/olav/imu/data/linear_acceleration/z"/>
+        <curve color="#1f77b4" name="/olav/nav/filtered_imu/data/linear_acceleration/z"/>
+       </plot>
+      </DockArea>
+     </DockSplitter>
+     <DockSplitter orientation="-" sizes="0.332836;0.334328;0.332836" count="3">
+      <DockArea name="...">
+       <plot style="Lines" mode="TimeSeries" flip_x="false" flip_y="false">
+        <range bottom="-0.002025" left="4.594315" top="0.001210" right="9.771306"/>
+        <limitY/>
+        <curve color="#ff7f0e" name="/olav/imu/data/angular_velocity/x"/>
+        <curve color="#d62728" name="/olav/nav/filtered_imu/data/angular_velocity/x"/>
+       </plot>
+      </DockArea>
+      <DockArea name="...">
+       <plot style="Lines" mode="TimeSeries" flip_x="false" flip_y="false">
+        <range bottom="-0.001794" left="4.594315" top="0.001877" right="9.771306"/>
+        <limitY/>
+        <curve color="#f14cc1" name="/olav/imu/data/angular_velocity/y"/>
+        <curve color="#1ac938" name="/olav/nav/filtered_imu/data/angular_velocity/y"/>
+       </plot>
+      </DockArea>
+      <DockArea name="...">
+       <plot style="Lines" mode="TimeSeries" flip_x="false" flip_y="false">
+        <range bottom="-0.001367" left="4.594315" top="0.001154" right="9.771306"/>
+        <limitY/>
+        <curve color="#9467bd" name="/olav/imu/data/angular_velocity/z"/>
+        <curve color="#ff7f0e" name="/olav/nav/filtered_imu/data/angular_velocity/z"/>
+       </plot>
+      </DockArea>
+     </DockSplitter>
+    </DockSplitter>
+   </Container>
+  </Tab>
+  <Tab tab_name="Pose (Absolute)" containers="1">
+   <Container>
+    <DockSplitter orientation="-" sizes="1" count="1">
+     <DockSplitter orientation="|" sizes="0.500485;0.499515" count="2">
+      <DockSplitter orientation="-" sizes="0.332836;0.334328;0.332836" count="3">
+       <DockArea name="...">
+        <plot style="Lines" mode="TimeSeries" flip_x="false" flip_y="false">
+         <range bottom="-0.000000" left="4.792276" top="0.000000" right="9.701491"/>
+         <limitY/>
+         <curve color="#f14cc1" name="/olav/nav/odom/pose/pose/position/x"/>
+        </plot>
+       </DockArea>
+       <DockArea name="...">
+        <plot style="Lines" mode="TimeSeries" flip_x="false" flip_y="false">
+         <range bottom="-0.000000" left="4.792276" top="0.000000" right="9.701491"/>
+         <limitY/>
+         <curve color="#9467bd" name="/olav/nav/odom/pose/pose/position/y"/>
+        </plot>
+       </DockArea>
+       <DockArea name="...">
+        <plot style="Lines" mode="TimeSeries" flip_x="false" flip_y="false">
+         <range bottom="-0.001059" left="4.792276" top="0.000003" right="9.701491"/>
+         <limitY/>
+         <curve color="#17becf" name="/olav/nav/odom/pose/pose/position/z"/>
+        </plot>
+       </DockArea>
+      </DockSplitter>
+      <DockSplitter orientation="-" sizes="0.332836;0.334328;0.332836" count="3">
+       <DockArea name="...">
+        <plot style="Lines" mode="TimeSeries" flip_x="false" flip_y="false">
+         <range bottom="-0.048870" left="9.489360" top="-0.039116" right="14.488311"/>
+         <limitY/>
+        </plot>
+       </DockArea>
+       <DockArea name="...">
+        <plot style="Lines" mode="TimeSeries" flip_x="false" flip_y="false">
+         <range bottom="-0.177849" left="7.688124" top="-0.169264" right="12.589544"/>
+         <limitY/>
+        </plot>
+       </DockArea>
+       <DockArea name="...">
+        <plot style="Lines" mode="TimeSeries" flip_x="false" flip_y="false">
+         <range bottom="-22.622974" left="4.792276" top="-21.727532" right="9.701491"/>
+         <limitY/>
+         <curve color="#1ac938" name="/olav/nav/odom/pose/pose/orientation/yaw_deg"/>
+        </plot>
+       </DockArea>
+      </DockSplitter>
+     </DockSplitter>
+    </DockSplitter>
+   </Container>
+  </Tab>
+  <Tab tab_name="Twist (Absolute)" containers="1">
+   <Container>
+    <DockSplitter orientation="-" sizes="1" count="1">
+     <DockSplitter orientation="|" sizes="0.500485;0.499515" count="2">
+      <DockSplitter orientation="-" sizes="0.332836;0.334328;0.332836" count="3">
+       <DockArea name="...">
+        <plot style="Lines" mode="TimeSeries" flip_x="false" flip_y="false">
+         <range bottom="-0.100000" left="4.792276" top="0.100000" right="9.701491"/>
+         <limitY/>
+         <curve color="#bcbd22" name="/olav/nav/odom/twist/twist/linear/x"/>
+        </plot>
+       </DockArea>
+       <DockArea name="...">
+        <plot style="Lines" mode="TimeSeries" flip_x="false" flip_y="false">
+         <range bottom="-0.100000" left="4.792276" top="0.100000" right="9.701491"/>
+         <limitY/>
+         <curve color="#1f77b4" name="/olav/nav/odom/twist/twist/linear/y"/>
+        </plot>
+       </DockArea>
+       <DockArea name="...">
+        <plot style="Lines" mode="TimeSeries" flip_x="false" flip_y="false">
+         <range bottom="-0.100000" left="4.792276" top="0.100000" right="9.701491"/>
+         <limitY/>
+         <curve color="#d62728" name="/olav/nav/odom/twist/twist/linear/z"/>
+        </plot>
+       </DockArea>
+      </DockSplitter>
+      <DockSplitter orientation="-" sizes="0.332836;0.334328;0.332836" count="3">
+       <DockArea name="...">
+        <plot style="Lines" mode="TimeSeries" flip_x="false" flip_y="false">
+         <range bottom="-0.000620" left="4.792276" top="-0.000025" right="9.701491"/>
+         <limitY/>
+         <curve color="#9467bd" name="/olav/nav/odom/twist/twist/angular/x"/>
+        </plot>
+       </DockArea>
+       <DockArea name="...">
+        <plot style="Lines" mode="TimeSeries" flip_x="false" flip_y="false">
+         <range bottom="-0.000307" left="4.792276" top="0.000508" right="9.701491"/>
+         <limitY/>
+         <curve color="#17becf" name="/olav/nav/odom/twist/twist/angular/y"/>
+        </plot>
+       </DockArea>
+       <DockArea name="...">
+        <plot style="Lines" mode="TimeSeries" flip_x="false" flip_y="false">
+         <range bottom="-0.000465" left="4.792276" top="0.000261" right="9.701491"/>
+         <limitY/>
+         <curve color="#bcbd22" name="/olav/nav/odom/twist/twist/angular/z"/>
+        </plot>
+       </DockArea>
+      </DockSplitter>
+     </DockSplitter>
+    </DockSplitter>
+   </Container>
+  </Tab>
+  <Tab tab_name="Pose (Relative)" containers="1">
+   <Container>
+    <DockSplitter orientation="-" sizes="1" count="1">
+     <DockSplitter orientation="|" sizes="0.500485;0.499515" count="2">
+      <DockSplitter orientation="-" sizes="0.332836;0.334328;0.332836" count="3">
+       <DockArea name="...">
+        <plot style="Lines" mode="TimeSeries" flip_x="false" flip_y="false">
+         <range bottom="5.000000" left="4.792324" top="5.000093" right="9.701553"/>
+         <limitY/>
+         <curve color="#1f77b4" name="/olav/nav/relative_pos/odom/pose/pose/position/x"/>
+        </plot>
+       </DockArea>
+       <DockArea name="...">
+        <plot style="Lines" mode="TimeSeries" flip_x="false" flip_y="false">
+         <range bottom="-4.000000" left="4.792324" top="-4.000000" right="9.701553"/>
+         <limitY/>
+         <curve color="#d62728" name="/olav/nav/relative_pos/odom/pose/pose/position/y"/>
+        </plot>
+       </DockArea>
+       <DockArea name="...">
+        <plot style="Lines" mode="TimeSeries" flip_x="false" flip_y="false">
+         <range bottom="-6378132.000003" left="4.792324" top="-6378131.998941" right="9.701553"/>
+         <limitY/>
+         <curve color="#1ac938" name="/olav/nav/relative_pos/odom/pose/pose/position/z"/>
+        </plot>
+       </DockArea>
+      </DockSplitter>
+      <DockSplitter orientation="-" sizes="0.332836;0.334328;0.332836" count="3">
+       <DockArea name="...">
+        <plot style="Lines" mode="TimeSeries" flip_x="false" flip_y="false">
+         <range bottom="-0.424430" left="4.792324" top="-0.413501" right="9.701553"/>
+         <limitY/>
+         <curve color="#ff7f0e" name="/olav/nav/relative_pos/odom/pose/pose/orientation/roll_deg"/>
+        </plot>
+       </DockArea>
+       <DockArea name="...">
+        <plot style="Lines" mode="TimeSeries" flip_x="false" flip_y="false">
+         <range bottom="0.186494" left="4.792324" top="0.192362" right="9.701553"/>
+         <limitY/>
+         <curve color="#f14cc1" name="/olav/nav/relative_pos/odom/pose/pose/orientation/pitch_deg"/>
+        </plot>
+       </DockArea>
+       <DockArea name="...">
+        <plot style="Lines" mode="TimeSeries" flip_x="false" flip_y="false">
+         <range bottom="-22.622974" left="4.792324" top="-21.727532" right="9.701553"/>
+         <limitY/>
+         <curve color="#9467bd" name="/olav/nav/relative_pos/odom/pose/pose/orientation/yaw_deg"/>
+        </plot>
+       </DockArea>
+      </DockSplitter>
+     </DockSplitter>
+    </DockSplitter>
+   </Container>
+  </Tab>
+  <Tab tab_name="Twist (Relative)" containers="1">
+   <Container>
+    <DockSplitter orientation="-" sizes="1" count="1">
+     <DockSplitter orientation="|" sizes="0.500485;0.499515" count="2">
+      <DockSplitter orientation="-" sizes="0.332836;0.334328;0.332836" count="3">
+       <DockArea name="...">
+        <plot style="Lines" mode="TimeSeries" flip_x="false" flip_y="false">
+         <range bottom="-0.100000" left="4.792324" top="0.100000" right="9.701553"/>
+         <limitY/>
+         <curve color="#17becf" name="/olav/nav/relative_pos/odom/twist/twist/linear/x"/>
+        </plot>
+       </DockArea>
+       <DockArea name="...">
+        <plot style="Lines" mode="TimeSeries" flip_x="false" flip_y="false">
+         <range bottom="-0.100000" left="4.792324" top="0.100000" right="9.701553"/>
+         <limitY/>
+         <curve color="#bcbd22" name="/olav/nav/relative_pos/odom/twist/twist/linear/y"/>
+        </plot>
+       </DockArea>
+       <DockArea name="...">
+        <plot style="Lines" mode="TimeSeries" flip_x="false" flip_y="false">
+         <range bottom="-0.100000" left="4.792324" top="0.100000" right="9.701553"/>
+         <limitY/>
+         <curve color="#1f77b4" name="/olav/nav/relative_pos/odom/twist/twist/linear/z"/>
+        </plot>
+       </DockArea>
+      </DockSplitter>
+      <DockSplitter orientation="-" sizes="0.332836;0.334328;0.332836" count="3">
+       <DockArea name="...">
+        <plot style="Lines" mode="TimeSeries" flip_x="false" flip_y="false">
+         <range bottom="-0.000620" left="4.792324" top="-0.000025" right="9.701553"/>
+         <limitY/>
+         <curve color="#d62728" name="/olav/nav/relative_pos/odom/twist/twist/angular/x"/>
+        </plot>
+       </DockArea>
+       <DockArea name="...">
+        <plot style="Lines" mode="TimeSeries" flip_x="false" flip_y="false">
+         <range bottom="-0.000307" left="4.792324" top="0.000508" right="9.701553"/>
+         <limitY/>
+         <curve color="#1ac938" name="/olav/nav/relative_pos/odom/twist/twist/angular/y"/>
+        </plot>
+       </DockArea>
+       <DockArea name="...">
+        <plot style="Lines" mode="TimeSeries" flip_x="false" flip_y="false">
+         <range bottom="-0.000465" left="4.792324" top="0.000261" right="9.701553"/>
+         <limitY/>
+         <curve color="#ff7f0e" name="/olav/nav/relative_pos/odom/twist/twist/angular/z"/>
+        </plot>
+       </DockArea>
+      </DockSplitter>
+     </DockSplitter>
+    </DockSplitter>
+   </Container>
+  </Tab>
+  <currentTabIndex index="0"/>
+ </tabbed_widget>
+ <use_relative_time_offset enabled="1"/>
+ <!-- - - - - - - - - - - - - - - -->
+ <!-- - - - - - - - - - - - - - - -->
+ <Plugins>
+  <plugin ID="DataLoad CSV">
+   <default time_axis="" delimiter="0"/>
+  </plugin>
+  <plugin ID="DataLoad MCAP"/>
+  <plugin ID="DataLoad ROS2 bags">
+   <use_header_stamp value="false"/>
+   <discard_large_arrays value="true"/>
+   <max_array_size value="100"/>
+   <boolean_strings_to_number value="true"/>
+   <remove_suffix_from_strings value="true"/>
+  </plugin>
+  <plugin ID="DataLoad ULog"/>
+  <plugin ID="ROS2 Topic Subscriber">
+   <use_header_stamp value="false"/>
+   <discard_large_arrays value="true"/>
+   <max_array_size value="5000"/>
+   <boolean_strings_to_number value="true"/>
+   <remove_suffix_from_strings value="true"/>
+  </plugin>
+  <plugin ID="UDP Server"/>
+  <plugin ID="WebSocket Server"/>
+  <plugin ID="ZMQ Subscriber"/>
+  <plugin ID="Fast Fourier Transform"/>
+  <plugin ID="Quaternion to RPY"/>
+  <plugin ID="Reactive Script Editor">
+   <library code="--[[ Helper function to create a series from arrays&#xa;&#xa; new_series: a series previously created with ScatterXY.new(name)&#xa; prefix:     prefix of the timeseries, before the index of the array&#xa; suffix_X:   suffix to complete the name of the series containing the X value. If [nil], use the index of the array.&#xa; suffix_Y:   suffix to complete the name of the series containing the Y value&#xa; timestamp:   usually the tracker_time variable&#xa;              &#xa; Example:&#xa; &#xa; Assuming we have multiple series in the form:&#xa; &#xa;   /trajectory/node.{X}/position/x&#xa;   /trajectory/node.{X}/position/y&#xa;   &#xa; where {N} is the index of the array (integer). We can create a reactive series from the array with:&#xa; &#xa;   new_series = ScatterXY.new(&quot;my_trajectory&quot;) &#xa;   CreateSeriesFromArray( new_series, &quot;/trajectory/node&quot;, &quot;position/x&quot;, &quot;position/y&quot;, tracker_time );&#xa;--]]&#xa;&#xa;function CreateSeriesFromArray( new_series, prefix, suffix_X, suffix_Y, timestamp )&#xa;  &#xa;  --- clear previous values&#xa;  new_series:clear()&#xa;  &#xa;  --- Append points to new_series&#xa;  index = 0&#xa;  while(true) do&#xa;&#xa;    x = index;&#xa;    -- if not nil, get the X coordinate from a series&#xa;    if suffix_X ~= nil then &#xa;      series_x = TimeseriesView.find( string.format( &quot;%s.%d/%s&quot;, prefix, index, suffix_X) )&#xa;      if series_x == nil then break end&#xa;      x = series_x:atTime(timestamp)&#x9; &#xa;    end&#xa;    &#xa;    series_y = TimeseriesView.find( string.format( &quot;%s.%d/%s&quot;, prefix, index, suffix_Y) )&#xa;    if series_y == nil then break end &#xa;    y = series_y:atTime(timestamp)&#xa;    &#xa;    new_series:push_back(x,y)&#xa;    index = index+1&#xa;  end&#xa;end&#xa;&#xa;--[[ Similar to the built-in function GetSeriesNames(), but select only the names with a give prefix. --]]&#xa;&#xa;function GetSeriesNamesByPrefix(prefix)&#xa;  -- GetSeriesNames(9 is a built-in function&#xa;  all_names = GetSeriesNames()&#xa;  filtered_names = {}&#xa;  for i, name in ipairs(all_names)  do&#xa;    -- check the prefix&#xa;    if name:find(prefix, 1, #prefix) then&#xa;      table.insert(filtered_names, name);&#xa;    end&#xa;  end&#xa;  return filtered_names&#xa;end&#xa;&#xa;--[[ Modify an existing series, applying offsets to all their X and Y values&#xa;&#xa; series: an existing timeseries, obtained with TimeseriesView.find(name)&#xa; delta_x: offset to apply to each x value&#xa; delta_y: offset to apply to each y value &#xa;  &#xa;--]]&#xa;&#xa;function ApplyOffsetInPlace(series, delta_x, delta_y)&#xa;  -- use C++ indeces, not Lua indeces&#xa;  for index=0, series:size()-1 do&#xa;    x,y = series:at(index)&#xa;    series:set(index, x + delta_x, y + delta_y)&#xa;  end&#xa;end&#xa;"/>
+   <scripts/>
+  </plugin>
+  <plugin ID="CSV Exporter"/>
+  <plugin ID="ROS2 Topic Re-Publisher"/>
+ </Plugins>
+ <!-- - - - - - - - - - - - - - - -->
+ <previouslyLoaded_Datafiles/>
+ <previouslyLoaded_Streamer name="ROS2 Topic Subscriber"/>
+ <!-- - - - - - - - - - - - - - - -->
+ <customMathEquations/>
+ <snippets/>
+ <!-- - - - - - - - - - - - - - - -->
+</root>

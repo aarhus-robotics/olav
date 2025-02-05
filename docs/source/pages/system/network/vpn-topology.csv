@@ -1,0 +1,4 @@
+"Device name","Description","VPN address"
+"freyr","Virtual private server","10.8.69.1"
+"heimdall","Teltonika RUT955 router","10.8.69.2"
+"balder","Lenovo ThinkPad P16 guest laptop","10.8.69.3"

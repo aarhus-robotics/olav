@@ -1,0 +1,5 @@
+"Topic","Message type","Description"
+"speed/start","std_srvs/srv/Trigger","Start the speed controller."
+"speed/stop","std_srvs/srv/Trigger","Stop the speed controller and reset all cumulated terms and setpoints."
+"steering/start","std_srvs/srv/Trigger","Start the steering controller."
+"steering/stop","std_srvs/srv/Trigger","Stop the steering controller and reset all cumulated terms and setpoints."

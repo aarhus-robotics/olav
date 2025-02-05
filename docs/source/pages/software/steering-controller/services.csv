@@ -1,0 +1,4 @@
+"Topic","Message type","Description"
+"start","std_srvs/srv/Trigger","Enable the steering controller"
+"stop","std_srvs/srv/Trigger","Disable the steering controller. A full reset of the controller state is also performed."
+"reset","std_srvs/srv/Trigger","Reset the steering controller internal state, including setpoints, feedback values and cumulative terms"

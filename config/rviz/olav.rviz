@@ -1,0 +1,667 @@
+Panels:
+  - Class: rviz_common/Displays
+    Help Height: 127
+    Name: Displays
+    Property Tree Widget:
+      Expanded:
+        - /Grid1
+        - /OLAV1/LiDAR1/Autocompute Value Bounds1
+        - /AUTON1
+        - /AUTON1/MPP1
+        - /AUTON1/MPP1/MPP Path1
+        - /AUTON1/MPP1/MPP Goal1
+      Splitter Ratio: 0.5
+    Tree Height: 349
+  - Class: rviz_common/Selection
+    Name: Selection
+  - Class: rviz_common/Tool Properties
+    Expanded:
+      - /2D Goal Pose1
+      - /Publish Point1
+    Name: Tool Properties
+    Splitter Ratio: 0.5886790156364441
+  - Class: rviz_common/Views
+    Expanded:
+      - /Current View1
+    Name: Views
+    Splitter Ratio: 0.5
+  - Class: rviz_common/Time
+    Experimental: false
+    Name: Time
+    SyncMode: 0
+    SyncSource: LiDAR
+Visualization Manager:
+  Class: ""
+  Displays:
+    - Alpha: 0.5
+      Cell Size: 1
+      Class: rviz_default_plugins/Grid
+      Color: 56; 61; 63
+      Enabled: true
+      Line Style:
+        Line Width: 0.029999999329447746
+        Value: Billboards
+      Name: Grid
+      Normal Cell Count: 0
+      Offset:
+        X: 10
+        Y: 0
+        Z: -1.2000000476837158
+      Plane: XY
+      Plane Cell Count: 25
+      Reference Frame: base_link
+      Value: true
+    - Class: rviz_default_plugins/TF
+      Enabled: true
+      Frame Timeout: 15
+      Frames:
+        All Enabled: true
+        base_footprint:
+          Value: true
+        base_link:
+          Value: true
+        chassis_link:
+          Value: true
+        cog_link:
+          Value: true
+        earth:
+          Value: true
+        front_axle_link:
+          Value: true
+        front_left_wheel_link:
+          Value: true
+        front_mono_camera_frame:
+          Value: true
+        front_mono_camera_imu_frame:
+          Value: true
+        front_mono_camera_left_camera_frame:
+          Value: true
+        front_mono_camera_left_camera_optical_frame:
+          Value: true
+        front_mono_camera_link:
+          Value: true
+        front_mono_camera_model_origin:
+          Value: true
+        front_mono_camera_rgb_camera_frame:
+          Value: true
+        front_mono_camera_rgb_camera_optical_frame:
+          Value: true
+        front_mono_camera_right_camera_frame:
+          Value: true
+        front_mono_camera_right_camera_optical_frame:
+          Value: true
+        front_right_wheel_link:
+          Value: true
+        front_stereo_camera_frame:
+          Value: true
+        front_stereo_camera_imu_frame:
+          Value: true
+        front_stereo_camera_left_camera_frame:
+          Value: true
+        front_stereo_camera_left_camera_optical_frame:
+          Value: true
+        front_stereo_camera_link:
+          Value: true
+        front_stereo_camera_model_origin:
+          Value: true
+        front_stereo_camera_rgb_camera_frame:
+          Value: true
+        front_stereo_camera_rgb_camera_optical_frame:
+          Value: true
+        front_stereo_camera_right_camera_frame:
+          Value: true
+        front_stereo_camera_right_camera_optical_frame:
+          Value: true
+        gnss_ins_antenna_1_link:
+          Value: true
+        gnss_ins_antenna_2_link:
+          Value: true
+        gnss_ins_link:
+          Value: true
+        lidar_imu:
+          Value: true
+        lidar_link:
+          Value: true
+        lidar_pcl:
+          Value: true
+        local_map:
+          Value: true
+        map:
+          Value: true
+        odometer_link:
+          Value: true
+        rear_axle_link:
+          Value: true
+        rear_left_wheel_link:
+          Value: true
+        rear_ptz_camera_link:
+          Value: true
+        rear_right_wheel_link:
+          Value: true
+        top_stereo_baro_link:
+          Value: true
+        top_stereo_camera_center:
+          Value: true
+        top_stereo_camera_link:
+          Value: true
+        top_stereo_imu_link:
+          Value: true
+        top_stereo_left_camera_frame:
+          Value: true
+        top_stereo_left_camera_optical_frame:
+          Value: true
+        top_stereo_mag_link:
+          Value: true
+        top_stereo_right_camera_frame:
+          Value: true
+        top_stereo_right_camera_optical_frame:
+          Value: true
+        top_stereo_temp_left_link:
+          Value: true
+        top_stereo_temp_right_link:
+          Value: true
+      Marker Scale: 1
+      Name: Transforms
+      Show Arrows: true
+      Show Axes: true
+      Show Names: true
+      Tree:
+        earth:
+          map:
+            base_link:
+              base_footprint:
+                {}
+              chassis_link:
+                cog_link:
+                  {}
+                front_axle_link:
+                  front_left_wheel_link:
+                    {}
+                  front_right_wheel_link:
+                    {}
+                rear_axle_link:
+                  rear_left_wheel_link:
+                    {}
+                  rear_right_wheel_link:
+                    {}
+              front_mono_camera_link:
+                front_mono_camera_frame:
+                  front_mono_camera_imu_frame:
+                    {}
+                  front_mono_camera_left_camera_frame:
+                    front_mono_camera_left_camera_optical_frame:
+                      {}
+                  front_mono_camera_model_origin:
+                    {}
+                  front_mono_camera_rgb_camera_frame:
+                    front_mono_camera_rgb_camera_optical_frame:
+                      {}
+                  front_mono_camera_right_camera_frame:
+                    front_mono_camera_right_camera_optical_frame:
+                      {}
+              front_stereo_camera_link:
+                front_stereo_camera_frame:
+                  front_stereo_camera_imu_frame:
+                    {}
+                  front_stereo_camera_left_camera_frame:
+                    front_stereo_camera_left_camera_optical_frame:
+                      {}
+                  front_stereo_camera_model_origin:
+                    {}
+                  front_stereo_camera_rgb_camera_frame:
+                    front_stereo_camera_rgb_camera_optical_frame:
+                      {}
+                  front_stereo_camera_right_camera_frame:
+                    front_stereo_camera_right_camera_optical_frame:
+                      {}
+              gnss_ins_link:
+                gnss_ins_antenna_1_link:
+                  {}
+                gnss_ins_antenna_2_link:
+                  {}
+                odometer_link:
+                  {}
+              lidar_link:
+                lidar_imu:
+                  {}
+                lidar_pcl:
+                  {}
+              rear_ptz_camera_link:
+                {}
+              top_stereo_camera_link:
+                top_stereo_camera_center:
+                  top_stereo_baro_link:
+                    {}
+                  top_stereo_left_camera_frame:
+                    top_stereo_imu_link:
+                      {}
+                    top_stereo_left_camera_optical_frame:
+                      {}
+                    top_stereo_temp_left_link:
+                      {}
+                  top_stereo_mag_link:
+                    {}
+                  top_stereo_right_camera_frame:
+                    top_stereo_right_camera_optical_frame:
+                      {}
+                    top_stereo_temp_right_link:
+                      {}
+            local_map:
+              {}
+      Update Interval: 0
+      Value: true
+    - Class: rviz_common/Group
+      Displays:
+        - Alpha: 1
+          Autocompute Intensity Bounds: true
+          Autocompute Value Bounds:
+            Max Value: 25
+            Min Value: 0
+            Value: false
+          Axis: Z
+          Channel Name: intensity
+          Class: rviz_default_plugins/PointCloud2
+          Color: 255; 255; 255
+          Color Transformer: AxisColor
+          Decay Time: 0
+          Enabled: true
+          Invert Rainbow: false
+          Max Color: 255; 255; 255
+          Max Intensity: 4096
+          Min Color: 0; 0; 0
+          Min Intensity: 0
+          Name: LiDAR
+          Position Transformer: XYZ
+          Selectable: false
+          Size (Pixels): 1
+          Size (m): 0.009999999776482582
+          Style: Points
+          Topic:
+            Depth: 5
+            Durability Policy: Volatile
+            Filter size: 10
+            History Policy: Keep Last
+            Reliability Policy: Reliable
+            Value: /olav/lidar/points
+          Use Fixed Frame: false
+          Use rainbow: true
+          Value: true
+        - Angle Tolerance: 0.20000000298023224
+          Class: rviz_default_plugins/Odometry
+          Covariance:
+            Orientation:
+              Alpha: 0.5
+              Color: 255; 255; 127
+              Color Style: Unique
+              Frame: Local
+              Offset: 1
+              Scale: 1
+              Value: true
+            Position:
+              Alpha: 0.02500000037252903
+              Color: 53; 70; 26
+              Scale: 1
+              Value: true
+            Value: true
+          Enabled: true
+          Keep: 1
+          Name: GNSS/INS filter odometry
+          Position Tolerance: 0.25
+          Shape:
+            Alpha: 1
+            Axes Length: 1
+            Axes Radius: 0.10000000149011612
+            Color: 111; 138; 50
+            Head Length: 0.6000000238418579
+            Head Radius: 0.30000001192092896
+            Shaft Length: 3
+            Shaft Radius: 0.10000000149011612
+            Value: Arrow
+          Topic:
+            Depth: 5
+            Durability Policy: Volatile
+            Filter size: 10
+            History Policy: Keep Last
+            Reliability Policy: Reliable
+            Value: /olav/gnss_ins/filter/odometry
+          Value: true
+        - Alpha: 1
+          Class: rviz_default_plugins/Effort
+          Enabled: true
+          History Length: 1
+          Joints:
+            front_axle_to_front_left_wheel_revolute:
+              Value: true
+            front_axle_to_front_right_wheel_revolute:
+              Value: true
+          Name: Steering Actuator
+          Robot Description: /olav/model/description
+          Scale: 1
+          TF Prefix: ""
+          Topic:
+            Depth: 5
+            Durability Policy: Volatile
+            Filter size: 10
+            History Policy: Keep Last
+            Reliability Policy: Reliable
+            Value: /olav/model/joints/steering
+          Value: true
+          Width: 0.019999999552965164
+        - Alpha: 1
+          Class: rviz_default_plugins/RobotModel
+          Collision Enabled: false
+          Description File: ""
+          Description Source: Topic
+          Description Topic:
+            Depth: 5
+            Durability Policy: Volatile
+            History Policy: Keep Last
+            Reliability Policy: Reliable
+            Value: /olav/model/description
+          Enabled: true
+          Links:
+            All Links Enabled: true
+            Expand Joint Details: false
+            Expand Link Details: false
+            Expand Tree: false
+            Link Tree Style: Links in Alphabetic Order
+            base_footprint:
+              Alpha: 1
+              Show Axes: false
+              Show Trail: false
+            base_link:
+              Alpha: 1
+              Show Axes: false
+              Show Trail: false
+            chassis_link:
+              Alpha: 1
+              Show Axes: false
+              Show Trail: false
+              Value: true
+            cog_link:
+              Alpha: 1
+              Show Axes: false
+              Show Trail: false
+              Value: true
+            front_axle_link:
+              Alpha: 1
+              Show Axes: false
+              Show Trail: false
+              Value: true
+            front_left_wheel_link:
+              Alpha: 1
+              Show Axes: false
+              Show Trail: false
+              Value: true
+            front_mono_camera_link:
+              Alpha: 1
+              Show Axes: false
+              Show Trail: false
+              Value: true
+            front_right_wheel_link:
+              Alpha: 1
+              Show Axes: false
+              Show Trail: false
+              Value: true
+            front_stereo_camera_link:
+              Alpha: 1
+              Show Axes: false
+              Show Trail: false
+              Value: true
+            gnss_ins_antenna_1_link:
+              Alpha: 1
+              Show Axes: false
+              Show Trail: false
+              Value: true
+            gnss_ins_antenna_2_link:
+              Alpha: 1
+              Show Axes: false
+              Show Trail: false
+              Value: true
+            gnss_ins_link:
+              Alpha: 1
+              Show Axes: false
+              Show Trail: false
+              Value: true
+            lidar_link:
+              Alpha: 1
+              Show Axes: false
+              Show Trail: false
+              Value: true
+            rear_axle_link:
+              Alpha: 1
+              Show Axes: false
+              Show Trail: false
+              Value: true
+            rear_left_wheel_link:
+              Alpha: 1
+              Show Axes: false
+              Show Trail: false
+              Value: true
+            rear_ptz_camera_link:
+              Alpha: 1
+              Show Axes: false
+              Show Trail: false
+              Value: true
+            rear_right_wheel_link:
+              Alpha: 1
+              Show Axes: false
+              Show Trail: false
+              Value: true
+            top_stereo_camera_link:
+              Alpha: 1
+              Show Axes: false
+              Show Trail: false
+              Value: true
+          Mass Properties:
+            Inertia: false
+            Mass: false
+          Name: Vehicle Model
+          TF Prefix: ""
+          Update Interval: 0
+          Value: true
+          Visual Enabled: true
+      Enabled: true
+      Name: OLAV
+    - Class: rviz_common/Group
+      Displays:
+        - Class: rviz_common/Group
+          Displays:
+            - Alpha: 1
+              Buffer Length: 1
+              Class: rviz_default_plugins/Path
+              Color: 25; 255; 0
+              Enabled: true
+              Head Diameter: 0.30000001192092896
+              Head Length: 0.20000000298023224
+              Length: 0.30000001192092896
+              Line Style: Lines
+              Line Width: 0.029999999329447746
+              Name: MPP Path
+              Offset:
+                X: 0
+                Y: 0
+                Z: 0
+              Pose Color: 255; 85; 255
+              Pose Style: Arrows
+              Radius: 0.029999999329447746
+              Shaft Diameter: 0.10000000149011612
+              Shaft Length: 0.10000000149011612
+              Topic:
+                Depth: 5
+                Durability Policy: Volatile
+                Filter size: 10
+                History Policy: Keep Last
+                Reliability Policy: Reliable
+                Value: /auton/planner/mpc/path
+              Value: true
+            - Class: rviz_default_plugins/MarkerArray
+              Enabled: true
+              Name: MPP Obstacles
+              Namespaces:
+                model_predictive_planner: true
+              Topic:
+                Depth: 5
+                Durability Policy: Volatile
+                History Policy: Keep Last
+                Reliability Policy: Reliable
+                Value: /auton/planner/mpc/markers
+              Value: true
+            - Alpha: 1
+              Axes Length: 1
+              Axes Radius: 0.10000000149011612
+              Class: rviz_default_plugins/Pose
+              Color: 255; 25; 0
+              Enabled: true
+              Head Length: 0.30000001192092896
+              Head Radius: 0.10000000149011612
+              Name: MPP Goal
+              Shaft Length: 1
+              Shaft Radius: 0.5
+              Shape: Arrow
+              Topic:
+                Depth: 5
+                Durability Policy: Volatile
+                Filter size: 10
+                History Policy: Keep Last
+                Reliability Policy: Reliable
+                Value: /auton/planner/mpc/goal
+              Value: true
+          Enabled: true
+          Name: MPP
+      Enabled: true
+      Name: AUTON
+  Enabled: true
+  Global Options:
+    Background Color: 255; 255; 255
+    Fixed Frame: map
+    Frame Rate: 30
+  Name: root
+  Tools:
+    - Class: rviz_default_plugins/Interact
+      Hide Inactive Objects: true
+    - Class: rviz_default_plugins/MoveCamera
+    - Class: rviz_default_plugins/Select
+    - Class: rviz_default_plugins/FocusCamera
+    - Class: rviz_default_plugins/Measure
+      Line color: 128; 128; 0
+    - Class: rviz_default_plugins/SetInitialPose
+      Covariance x: 0.25
+      Covariance y: 0.25
+      Covariance yaw: 0.06853891909122467
+      Topic:
+        Depth: 5
+        Durability Policy: Volatile
+        History Policy: Keep Last
+        Reliability Policy: Reliable
+        Value: /initialpose
+    - Class: rviz_default_plugins/SetGoal
+      Topic:
+        Depth: 5
+        Durability Policy: Volatile
+        History Policy: Keep Last
+        Reliability Policy: Reliable
+        Value: /auton/planner/mpc/goal
+    - Class: rviz_default_plugins/PublishPoint
+      Single click: true
+      Topic:
+        Depth: 5
+        Durability Policy: Volatile
+        History Policy: Keep Last
+        Reliability Policy: Reliable
+        Value: /clicked_point
+  Transformation:
+    Current:
+      Class: rviz_default_plugins/TF
+  Value: true
+  Views:
+    Current:
+      Angle: 5.12000036239624
+      Class: rviz_default_plugins/TopDownOrtho
+      Enable Stereo Rendering:
+        Stereo Eye Separation: 0.05999999865889549
+        Stereo Focal Distance: 1
+        Swap Stereo Eyes: false
+        Value: false
+      Invert Z Axis: false
+      Name: Current View
+      Near Clip Distance: 0.009999999776482582
+      Scale: 14.463059425354004
+      Target Frame: base_link
+      Value: TopDownOrtho (rviz_default_plugins)
+      X: 0
+      Y: 0
+    Saved:
+      - Angle: 0
+        Class: rviz_default_plugins/TopDownOrtho
+        Enable Stereo Rendering:
+          Stereo Eye Separation: 0.05999999865889549
+          Stereo Focal Distance: 1
+          Swap Stereo Eyes: false
+          Value: false
+        Invert Z Axis: false
+        Name: Topside OLAV
+        Near Clip Distance: 0.009999999776482582
+        Scale: 66.46443176269531
+        Target Frame: base_link
+        Value: TopDownOrtho (rviz_default_plugins)
+        X: 0
+        Y: 0
+      - Class: rviz_default_plugins/ThirdPersonFollower
+        Distance: 7.5
+        Enable Stereo Rendering:
+          Stereo Eye Separation: 0.05999999865889549
+          Stereo Focal Distance: 1
+          Swap Stereo Eyes: false
+          Value: false
+        Focal Point:
+          X: 0
+          Y: 0
+          Z: 0
+        Focal Shape Fixed Size: true
+        Focal Shape Size: 0.05000000074505806
+        Invert Z Axis: false
+        Name: Follow OLAV
+        Near Clip Distance: 0.009999999776482582
+        Pitch: 0.38470497727394104
+        Target Frame: base_link
+        Value: ThirdPersonFollower (rviz_default_plugins)
+        Yaw: 3.140000104904175
+      - Class: rviz_default_plugins/Orbit
+        Distance: 10.838140487670898
+        Enable Stereo Rendering:
+          Stereo Eye Separation: 0.05999999865889549
+          Stereo Focal Distance: 1
+          Swap Stereo Eyes: false
+          Value: false
+        Focal Point:
+          X: 0
+          Y: 0
+          Z: 0
+        Focal Shape Fixed Size: true
+        Focal Shape Size: 0.05000000074505806
+        Invert Z Axis: false
+        Name: Orbit OLAV
+        Near Clip Distance: 0.009999999776482582
+        Pitch: 0
+        Target Frame: base_link
+        Value: Orbit (rviz_default_plugins)
+        Yaw: 0
+Window Geometry:
+  Displays:
+    collapsed: false
+  Height: 920
+  Hide Left Dock: false
+  Hide Right Dock: false
+  QMainWindow State: 000000ff00000000fd0000000400000000000001c9000002c9fc0200000008fb0000001200530065006c0065006300740069006f006e00000001e10000009b0000008000fffffffb0000001e0054006f006f006c002000500072006f00700065007200740069006500730100000056000000950000008000fffffffb000000120056006900650077007300200054006f006f02000001df000002110000018500000122fb000000200054006f006f006c002000500072006f0070006500720074006900650073003203000002880000011d000002210000017afb000000100044006900730070006c00610079007301000000ef000002300000011400fffffffb0000002000730065006c0065006300740069006f006e00200062007500660066006500720200000138000000aa0000023a00000294fb00000014005700690064006500530074006500720065006f02000000e6000000d2000003ee0000030bfb0000000c004b0069006e0065006300740200000186000001060000030c000002610000000100000176000002c9fc0200000003fb0000000a005600690065007700730100000056000002c9000000e200fffffffb0000001e0054006f006f006c002000500072006f00700065007200740069006500730100000041000000780000000000000000fb0000001200530065006c0065006300740069006f006e010000025a000000b200000000000000000000000200000490000000a9fc0100000001fb0000000a00560069006500770073030000004e00000080000002e10000019700000003000007800000004afc0100000002fb0000000800540069006d00650100000000000007800000035d00fffffffb0000000800540069006d0065010000000000000450000000000000000000000439000002c900000004000000040000000800000008fc0000000100000002000000010000000a0054006f006f006c00730100000000ffffffff0000000000000000
+  Selection:
+    collapsed: false
+  Time:
+    collapsed: false
+  Tool Properties:
+    collapsed: false
+  Views:
+    collapsed: false
+  Width: 1920
+  X: 0
+  Y: 64

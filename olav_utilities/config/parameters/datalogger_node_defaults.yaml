@@ -1,0 +1,11 @@
+"/**":
+  ros__parameters:
+    topics: [""]
+    regex: ""
+    excludes: ""
+    storage: mcap
+    max_cache_size: 1048576000
+    compression:
+      format: none
+    path: "ROS/bags"
+    record_on_start: false

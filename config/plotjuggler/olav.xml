@@ -1,0 +1,150 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<root>
+ <tabbed_widget name="Main Window" parent="main_window">
+  <Tab containers="1" tab_name="GNSS/inertial_navigation_system + Hall Effect Odometry">
+   <Container>
+    <DockSplitter sizes="1" count="1" orientation="-">
+     <DockSplitter sizes="0.5;0.5" count="2" orientation="|">
+      <DockSplitter sizes="0.500709;0.499291" count="2" orientation="-">
+       <DockArea name="GNSS/inertial_navigation_system Longitudinal Speed">
+        <plot mode="TimeSeries" style="Lines" flip_x="false" flip_y="false">
+         <range bottom="-1.000000" right="25.010744" top="7.500000" left="20.011554"/>
+         <limitY max="7.5" min="-1"/>
+         <curve color="#1f77b4" name="/olav/inertial_navigation_system/filter/odometry/twist/twist/linear/x"/>
+         <curve color="#1ac938" name="/olav/odometer/vehicle/speed/filtered/magnitude"/>
+        </plot>
+       </DockArea>
+       <DockSplitter sizes="0.50087;0.49913" count="2" orientation="|">
+        <DockSplitter sizes="0.501425;0.498575" count="2" orientation="-">
+         <DockArea name="INS Roll Rate">
+          <plot mode="TimeSeries" style="Lines" flip_x="false" flip_y="false">
+           <range bottom="-1.500000" right="25.010744" top="1.500000" left="20.011554"/>
+           <limitY max="1.5" min="-1.5"/>
+           <curve color="#1ac938" name="/olav/inertial_navigation_system/filter/odometry/twist/twist/angular/x"/>
+          </plot>
+         </DockArea>
+         <DockArea name="INS Roll">
+          <plot mode="TimeSeries" style="Lines" flip_x="false" flip_y="false">
+           <range bottom="-3.000000" right="25.010744" top="3.000000" left="20.011554"/>
+           <limitY max="3" min="-3"/>
+           <curve color="#9467bd" name="/olav/inertial_navigation_system/filter/odometry/pose/pose/orientation/roll">
+            <transform name="Scale/Offset" alias="/olav/inertial_navigation_system/filter/odometry/pose/pose/orientation/roll[Scale/Offset]">
+             <options value_scale="57.296" value_offset="-1.128" time_offset="0.0"/>
+            </transform>
+           </curve>
+          </plot>
+         </DockArea>
+        </DockSplitter>
+        <DockSplitter sizes="0.501425;0.498575" count="2" orientation="-">
+         <DockArea name="INS Pitch Rate">
+          <plot mode="TimeSeries" style="Lines" flip_x="false" flip_y="false">
+           <range bottom="-1.500000" right="25.010744" top="1.500000" left="20.011554"/>
+           <limitY max="1.5" min="-1.5"/>
+           <curve color="#ff7f0e" name="/olav/inertial_navigation_system/filter/odometry/twist/twist/angular/y"/>
+          </plot>
+         </DockArea>
+         <DockArea name="INS Pitch">
+          <plot mode="TimeSeries" style="Lines" flip_x="false" flip_y="false">
+           <range bottom="-3.000000" right="25.010744" top="3.000000" left="20.011554"/>
+           <limitY max="3" min="-3"/>
+           <curve color="#f14cc1" name="/olav/inertial_navigation_system/filter/odometry/pose/pose/orientation/pitch">
+            <transform name="Scale/Offset" alias="/olav/inertial_navigation_system/filter/odometry/pose/pose/orientation/pitch[Scale/Offset]">
+             <options value_scale="57.296" value_offset="0.450" time_offset="0.0"/>
+            </transform>
+           </curve>
+          </plot>
+         </DockArea>
+        </DockSplitter>
+       </DockSplitter>
+      </DockSplitter>
+      <DockSplitter sizes="0.500709;0.499291" count="2" orientation="-">
+       <DockSplitter sizes="0.50087;0.49913" count="2" orientation="|">
+        <DockArea name="Relative Trajectory">
+         <plot mode="XYPlot" style="Lines" flip_x="false" flip_y="false">
+          <range bottom="-5.442366" right="20.361667" top="-5.287056" left="20.234983"/>
+          <limitY/>
+          <curve color="#d62728" name="/olav/inertial_navigation_system/filter/odometry/pose/pose/position/[x;y]" curve_y="/olav/inertial_navigation_system/filter/odometry/pose/pose/position/y" curve_x="/olav/inertial_navigation_system/filter/odometry/pose/pose/position/x"/>
+         </plot>
+        </DockArea>
+        <DockArea name="...">
+         <plot mode="XYPlot" style="Lines" flip_x="false" flip_y="false">
+          <range bottom="10.187615" right="56.206182" top="10.187739" left="56.206098"/>
+          <limitY/>
+          <curve color="#1f77b4" name="/olav/inertial_navigation_system/antenna/left/coordinates/l[atitude;ongitude]" curve_y="/olav/inertial_navigation_system/antenna/left/coordinates/longitude" curve_x="/olav/inertial_navigation_system/antenna/left/coordinates/latitude"/>
+          <curve color="#d62728" name="/olav/inertial_navigation_system/antenna/right/coordinates/l[atitude;ongitude]" curve_y="/olav/inertial_navigation_system/antenna/right/coordinates/longitude" curve_x="/olav/inertial_navigation_system/antenna/right/coordinates/latitude"/>
+          <curve color="#1ac938" name="/olav/inertial_navigation_system/filter/coordinates/l[atitude;ongitude]" curve_y="/olav/inertial_navigation_system/filter/coordinates/longitude" curve_x="/olav/inertial_navigation_system/filter/coordinates/latitude"/>
+         </plot>
+        </DockArea>
+       </DockSplitter>
+       <DockSplitter sizes="0.50087;0.49913" count="2" orientation="|">
+        <DockArea name="INS Yaw Rate">
+         <plot mode="TimeSeries" style="Lines" flip_x="false" flip_y="false">
+          <range bottom="-1.500000" right="25.010744" top="1.500000" left="20.011554"/>
+          <limitY max="1.5" min="-1.5"/>
+          <curve color="#bcbd22" name="/olav/inertial_navigation_system/filter/odometry/twist/twist/angular/z"/>
+         </plot>
+        </DockArea>
+        <DockArea name="INS Yaw">
+         <plot mode="TimeSeries" style="Lines" flip_x="false" flip_y="false">
+          <range bottom="-90.000000" right="25.010744" top="90.000000" left="20.011554"/>
+          <limitY max="90" min="-90"/>
+          <curve color="#17becf" name="/olav/inertial_navigation_system/filter/odometry/pose/pose/orientation/yaw">
+           <transform name="Scale/Offset" alias="/olav/inertial_navigation_system/filter/odometry/pose/pose/orientation/yaw[Scale/Offset]">
+            <options value_scale="57.296" value_offset="0.0" time_offset="0.0"/>
+           </transform>
+          </curve>
+         </plot>
+        </DockArea>
+       </DockSplitter>
+      </DockSplitter>
+     </DockSplitter>
+    </DockSplitter>
+   </Container>
+  </Tab>
+  <currentTabIndex index="0"/>
+ </tabbed_widget>
+ <use_relative_time_offset enabled="1"/>
+ <!-- - - - - - - - - - - - - - - -->
+ <!-- - - - - - - - - - - - - - - -->
+ <Plugins>
+  <plugin ID="DataLoad CSV">
+   <parameters delimiter="0" time_axis=""/>
+  </plugin>
+  <plugin ID="DataLoad MCAP"/>
+  <plugin ID="DataLoad ROS2 bags">
+   <use_header_stamp value="false"/>
+   <discard_large_arrays value="true"/>
+   <max_array_size value="100"/>
+   <boolean_strings_to_number value="true"/>
+   <remove_suffix_from_strings value="true"/>
+   <selected_topics value="/olav/inertial_navigation_system/filter/odometry"/>
+  </plugin>
+  <plugin ID="DataLoad ULog"/>
+  <plugin ID="ROS2 Topic Subscriber">
+   <use_header_stamp value="false"/>
+   <discard_large_arrays value="true"/>
+   <max_array_size value="100"/>
+   <boolean_strings_to_number value="true"/>
+   <remove_suffix_from_strings value="true"/>
+   <selected_topics value="/olav/command/muxed/brake;/olav/command/muxed/speed;/olav/command/muxed/steering_angle;/olav/command/muxed/throttle;/olav/drive_by_wire/feedback/steering_angle;/olav/inertial_navigation_system/antenna/left/coordinates;/olav/inertial_navigation_system/antenna/right/coordinates;/olav/inertial_navigation_system/filter/coordinates;/olav/inertial_navigation_system/filter/imu;/olav/inertial_navigation_system/filter/odometry;/olav/odometer/vehicle/speed/filtered"/>
+  </plugin>
+  <plugin ID="UDP Server"/>
+  <plugin ID="WebSocket Server"/>
+  <plugin ID="ZMQ Subscriber"/>
+  <plugin ID="Fast Fourier Transform"/>
+  <plugin ID="Quaternion to RPY"/>
+  <plugin ID="Reactive Script Editor">
+   <library code="--[[ Helper function to create a series from arrays&#xa;&#xa; new_series: a series previously created with ScatterXY.new(name)&#xa; prefix:     prefix of the timeseries, before the index of the array&#xa; suffix_X:   suffix to complete the name of the series containing the X value. If [nil], use the index of the array.&#xa; suffix_Y:   suffix to complete the name of the series containing the Y value&#xa; timestamp:   usually the tracker_time variable&#xa;              &#xa; Example:&#xa; &#xa; Assuming we have multiple series in the form:&#xa; &#xa;   /trajectory/node.{X}/position/x&#xa;   /trajectory/node.{X}/position/y&#xa;   &#xa; where {N} is the index of the array (integer). We can create a reactive series from the array with:&#xa; &#xa;   new_series = ScatterXY.new(&quot;my_trajectory&quot;) &#xa;   CreateSeriesFromArray( new_series, &quot;/trajectory/node&quot;, &quot;position/x&quot;, &quot;position/y&quot;, tracker_time );&#xa;--]]&#xa;&#xa;function CreateSeriesFromArray( new_series, prefix, suffix_X, suffix_Y, timestamp )&#xa;  &#xa;  --- clear previous values&#xa;  new_series:clear()&#xa;  &#xa;  --- Append points to new_series&#xa;  index = 0&#xa;  while(true) do&#xa;&#xa;    x = index;&#xa;    -- if not nil, get the X coordinate from a series&#xa;    if suffix_X ~= nil then &#xa;      series_x = TimeseriesView.find( string.format( &quot;%s.%d/%s&quot;, prefix, index, suffix_X) )&#xa;      if series_x == nil then break end&#xa;      x = series_x:atTime(timestamp)&#x9; &#xa;    end&#xa;    &#xa;    series_y = TimeseriesView.find( string.format( &quot;%s.%d/%s&quot;, prefix, index, suffix_Y) )&#xa;    if series_y == nil then break end &#xa;    y = series_y:atTime(timestamp)&#xa;    &#xa;    new_series:push_back(x,y)&#xa;    index = index+1&#xa;  end&#xa;end&#xa;&#xa;--[[ Similar to the built-in function GetSeriesNames(), but select only the names with a give prefix. --]]&#xa;&#xa;function GetSeriesNamesByPrefix(prefix)&#xa;  -- GetSeriesNames(9 is a built-in function&#xa;  all_names = GetSeriesNames()&#xa;  filtered_names = {}&#xa;  for i, name in ipairs(all_names)  do&#xa;    -- check the prefix&#xa;    if name:find(prefix, 1, #prefix) then&#xa;      table.insert(filtered_names, name);&#xa;    end&#xa;  end&#xa;  return filtered_names&#xa;end&#xa;&#xa;--[[ Modify an existing series, applying offsets to all their X and Y values&#xa;&#xa; series: an existing timeseries, obtained with TimeseriesView.find(name)&#xa; delta_x: offset to apply to each x value&#xa; delta_y: offset to apply to each y value &#xa;  &#xa;--]]&#xa;&#xa;function ApplyOffsetInPlace(series, delta_x, delta_y)&#xa;  -- use C++ indeces, not Lua indeces&#xa;  for index=0, series:size()-1 do&#xa;    x,y = series:at(index)&#xa;    series:set(index, x + delta_x, y + delta_y)&#xa;  end&#xa;end&#xa;"/>
+   <scripts/>
+  </plugin>
+  <plugin ID="CSV Exporter"/>
+  <plugin ID="ROS2 Topic Re-Publisher"/>
+ </Plugins>
+ <!-- - - - - - - - - - - - - - - -->
+ <previouslyLoaded_Datafiles/>
+ <previouslyLoaded_Streamer name="ROS2 Topic Subscriber"/>
+ <!-- - - - - - - - - - - - - - - -->
+ <customMathEquations/>
+ <snippets/>
+ <!-- - - - - - - - - - - - - - - -->
+</root>

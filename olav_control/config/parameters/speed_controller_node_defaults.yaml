@@ -1,0 +1,38 @@
+"/**":
+  ros__parameters:
+    rate: 100.0
+    pid:
+      gains:
+        feedforward: 0.0
+        proportional: 1.0
+        integral: 0.0
+        derivative: 0.0
+      setpoint:
+        ramp:
+          enabled: false
+          magnitude: 0.1
+      output:
+        change:
+          enabled: true
+          magnitude: 0.1
+      limit:
+        integral:
+          enabled: false
+          magnitude: 1.0
+      feedforward:
+        offset:
+          positive: 0.18
+          negative: 0.18
+      deadband:
+        filter:
+          enabled: true
+          thresholds:
+            lower: -0.18
+            upper: 0.18
+    brake:
+      enabled: true
+      threshold: 0.3
+      limit: 0.5
+    speed:
+      limit:
+        minimum: 1.0

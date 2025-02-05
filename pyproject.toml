@@ -1,0 +1,43 @@
+ #############################################################################
+ #                            _     _     _     _                            #
+ #                           / \   / \   / \   / \                           #
+ #                          ( O ) ( L ) ( A ) ( V )                          #
+ #                           \_/   \_/   \_/   \_/                           #
+ #                                                                           #
+ #                  OLAV: Off-Road Light Autonomous Vehicle                  #
+ #############################################################################
+
+[tool.poetry]
+name = "pyolav"
+version = "1.0.0"
+description = "Interfaces and utilities for OLAV (Off-Road Light Autonomous Vehicle)"
+authors = ["Dario Sirangelo <dsi@aarhusrobotics.com>"]
+readme = "README.md"
+packages = [{include = "pyolav", from="pyolav"}]
+
+[tool.poetry.dependencies]
+coloredlogs = "^15.0.1"
+depthai = "^2.29.0"
+matplotlib = "^3.8.2"
+numpy = "^1.26.2"
+opencv-python = "^4.8.1.78"
+pygame = "^2.5.2"
+pylibmodbus = "^0.6.2"
+pyserial = "^3.5"
+python = "^3.10"
+pyzmq = "^25.1.1"
+reolinkapi = "^0.1.5"
+rosbags = "^0.10.7"
+scipy = "^1.11.4"
+tables = "^3.10.1"
+
+[tool.poetry.group.documentation.dependencies]
+furo = "^2023.9.10"
+sphinx = "^7.2.6"
+
+[tool.poetry.scripts]
+olav_utilities_converter = "pyolav.converter:main"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"

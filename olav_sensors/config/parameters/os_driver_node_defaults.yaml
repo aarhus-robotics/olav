@@ -1,0 +1,21 @@
+"/**":
+  ros__parameters:
+    sensor_hostname: "192.168.69.6"
+    udp_dest: "" # UDP packets IP address
+    mtp_dest: "" # Data packets IP address. empty: use first available interface
+    mtp_main: true # true: configure and reinitialize sensor, false: keep configuration
+    lidar_mode: "" # empty (unchanged), 512x10, 512x20, 1024x10, 1024x20, 2048x10, 4096x5
+    timestamp_mode: "TIME_FROM_PTP_1588" # TIME_FROM_INTERNAL_OSC, TIME_FROM_SYNC_PULSE_IN, TIME_FROM_PTP_1588, TIME_FROM_ROS_TIME (relative to first packet)
+    ptp_utc_tai_offset: -37.0 # UTC/TAI offset in seconds. Only used when TIME_FROM_PTP_1588 timestamp mode is used
+    udp_profile_lidar: "RNG19_RFL8_SIG16_NIR16" # LiDAR UDP packet profile (LEGACY, RNG19_RFL8_SIG16_NIR16_DUAL, RNG19_RFL8_SIG16_NIR16, RNG15_RFL8_NIR8)
+    metadata: "/home/olav/ROS/data/ouster/metadata.yaml" # Generated metadata file path (""~/.ros" if empty)
+    lidar_port: 7502 # 0: first available port
+    imu_port: 7503 # 0: first available port
+    sensor_frame: lidar_link # Mechanical housing frame
+    lidar_frame: lidar_pcl # Point cloud frame (reversed Y and Z)
+    imu_frame: lidar_imu # IMU frame
+    point_cloud_frame: lidar_pcl
+    proc_mask: PCL # (IMG|PCL|IMU|SCAN)
+    scan_ring: 0 # SCAN flag must be on, must be lower than sensor beam count
+    use_system_default_qos: false # "false" for production, "true" when playing back Rosbags
+    point_type: original # original (Ouster-specific), native (standard + ring + timestamp), xyz, xyzi , xyzir

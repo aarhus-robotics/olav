@@ -1,0 +1,316 @@
+# ----------------- #
+% <*.olavnet> System
+# ----------------- #
+# Bring the system up.
+olav system up
+
+# Bring the system down.
+olav system down
+
+
+# -------------------- #
+% <thor.olavnet> System
+# -------------------- #
+$ session: echo "peripherals" | tr ' ' '\n' --- --header "The session to summon."
+
+# Start a session.
+olav sessions start <session>
+
+# Mux into a session.
+olav sessions mux <session>
+
+# Attach to a session.
+olav sessions attach <session>
+
+# Terminate a session.
+olav sessions stop <session>
+
+# List muxed sessions.
+olav sessions list
+
+# Kill muxed sessions.
+olav sessions kill
+
+
+# -------------------- #
+% <odin.olavnet> System
+# -------------------- #
+$ session: echo "description drive-by-wire navigation perception datalogger autonomy" | tr ' ' '\n' --- --header "The session to summon."
+
+# Start a session.
+ssh -qt odin.lan "olav sessions start <session>"
+
+# Mux into a session.
+ssh -qt odin.lan "olav sessions mux <session>"
+
+# Attach to a session.
+ssh -qt odin.lan "olav sessions attach <session>"
+
+# Terminate a session.
+ssh -qt odin.lan "olav sessions stop <session>"
+
+# List muxed sessions.
+ssh -qt odin.lan "olav sessions list"
+
+# Kill muxed sessions.
+ssh -qt odin.lan "olav sessions kill"
+
+
+# ------------------- #
+% <thor.olavnet> Power
+# ------------------- #
+# Reboot.
+sudo reboot
+
+# Shutdown.
+sudo shutdown -h now
+
+
+# ------------------- #
+% <odin.olavnet> Power
+# ------------------- #
+# Wake-on-LAN (WoL).
+wakeonlan bc:0f:f3:c2:cd:22
+
+# Reboot.
+ssh -qt odin.lan "sudo reboot"
+
+# Shutdown.
+ssh -qt odin.lan "sudo shutdown -h now"
+
+
+# ------------------- #
+% <thor.olavnet> Shell
+# ------------------- #
+# Start an interactive shell.
+zsh
+
+# ------------------- #
+% <odin.olavnet> Shell
+# ------------------- #
+# Start an interactive shell.
+ssh odin.lan
+
+
+# ----------------------- #
+% <thor.olavnet> GUI tools
+# ----------------------- #
+# Launch a terminal emulator.
+olav gui terminal
+
+# Launch RViz.
+olav gui rviz
+
+# Launch PlotJuggler.
+olav gui plotjuggler
+
+# Launch RQt GUI.
+olav gui rqt_gui
+
+# Launch RQt image view.
+olav gui rqt_image_view
+
+# Launch Foxglove Studio.
+olav gui foxglove-studio
+
+
+# ------------------------ #
+% <thor.olavnet> Monitoring
+# ------------------------ #
+# Monitor network interfaces.
+bmon
+
+# Manage processes.
+sudo btop
+
+
+# ------------------------ #
+% <odin.olavnet> Monitoring
+# ------------------------ #
+# Monitor network interfaces.
+ssh -qt odin.lan "bmon"
+
+# Manage processes.
+ssh -qt odin.lan "sudo btop"
+
+
+# ------------------------ #
+% <odin.olavnet> Datalogger
+# ------------------------ #
+
+$ odin-bag: ssh -qt odin.lan "ls -1 /home/olav/ROS/bags" --- --header "Select a bag."
+
+# Delete a bag.
+ssh -qt odin.lan "rm -f /home/olav/ERDA/<odin-bag>"
+
+
+# ------------------------ #
+% <thor.olavnet> Datalogger
+# ------------------------ #
+$ erda-bag: ssh -qt odin.lan "ls -1 /home/olav/ERDA" --- --header "Select a bag."
+$ thor-bag: ls -1 /home/olav/ROS/bags 2> /dev/null --- --header "Select a bag."
+$ topics: ls -1 /home/olav/ROS/config/datalogger 2> /dev/null --- --header "Select a topics preset."
+
+# Start recording.
+olav record start
+
+# Stop recording.
+olav record stop
+
+# Delete a bag.
+olav record delete <thor-bag>
+
+# Delete all bags.
+olav record delete all
+
+# Get remaining space.
+olav record storage
+
+# List copied bags.
+#ls -1 /home/olav/ROS/bags && echo "\nPress ENTER to return to menu." && read 2> /dev/null
+
+# Examine bags.
+ranger /home/olav/ROS/bags
+
+# Decompress a bag locally
+#cd /home/olav/ROS/bags && mcapdec /home/olav/ROS/bags/<thor-bag> && cd -
+
+# Transfer a bag.
+rsync -aPu odin.lan:/home/olav/ROS/bags/<srv02-bag> /home/olav/ROS/bags/
+
+
+# ------------------------ #
+% <odin.olavnet> Datalogger
+# ------------------------ #
+$ remote-storage: echo "thor srv01" | tr " " "\n" --- --header "Select a remote."
+$ remote: echo "thor srv01 erda" | tr " " "\n" --- --header "Select a remote."
+$ datalogger-presets: ssh -qt odin.lan "ls -1 /home/olav/ROS/src/aarhus-robotics/olav/olav_utilities/olav_utilities/data/datalogger/presets | sed -e 's/\..*$//'" 2> /dev/null --- --header "Select a datalogger preset."
+$ srv02-bag: ssh -qt odin.lan "ls -1 /home/olav/ROS/bags" 2> /dev/null --- --header "Select a bag."
+
+# List bags.
+ssh -qt odin.lan "ls -1 /home/olav/ROS/bags"
+
+# Examine bags.
+ssh -qt odin.lan "ranger /home/olav/ROS/bags" 2> /dev/null
+
+# Upload all bags.
+ssh -qt odin.lan olav record upload all
+
+# Upload a bag.
+ssh -qt odin.lan olav record upload <srv02-bag>
+
+# Get remaining space.
+ssh -qt odin.lan "olav record storage"
+
+# Get recorded topics
+ssh -qt odin.lan "olav record topics get"
+
+# Set recorded topics
+ssh -qt odin.lan "olav record topics set <datalogger-presets>"
+
+
+# ---------------------- #
+% <LAV-ERD40> Datalogger
+# ---------------------- #
+
+# List uploaded bags.
+
+
+# ------------------- #
+% <saga.olavnet> Sensors
+# ------------------- #
+# Set LiDAR state to NORMAL.
+olav sensor lidar start
+
+# Set LiDAR state to STANDBY.
+olav sensor lidar stop
+
+# Get LiDAR status.
+olav sensor lidar status
+
+
+# ---------------- #
+% <thor.olavnet> Time
+# ---------------- #
+# Check time sources.
+olav time sources
+
+# Check system clock tracking statistics.
+olav time tracking
+
+
+# ---------------- #
+% <odin.olavnet> Time
+# ---------------- #
+# Check time sources.
+ssh -qt odin.lan "olav time sources"
+
+# Check system clock tracking statistics
+ssh -qt odin.lan "olav time tracking"
+
+
+# --------------------- #
+% <odin.olavnet> Publisher
+# --------------------- #
+$ heartbeat_authority: echo "autonomy gamepad internal" | tr ' ' '\n' --- --header "The authority of the heartbeat."
+$ setpoint_type: echo "throttle brake steering" | tr ' ' '\n' --- --header "The setpoint type."
+$ setpoint_magnitude: echo "0.5 1.0 1.5 2.0 2.5 3.0 3.5 4.0 4.5 5.0" | tr ' ' '\n'  --- --header "The setpoint magnitude."
+$ ackermann_speed: echo "0.5 1.0 1.5 2.0 2.5 3.0 3.5 4.0 4.5 5.0" | tr ' ' '\n'  --- --header "The desired speed in m/s."
+$ ackermann_steering: echo "0.0 -30.0 -20.0 -10.0 -5.0 5.0 10.0 20.0 30.0" | tr ' ' '\n' --- --header "The desired steering angle in degrees."
+$ ackermann_rate: echo "1.0 5.0 1.0 50.0 100.0 200.0" | tr ' ' '\n' --- --header "The desired publish rate."
+
+# Publish a std_msgs/msg/Header heartbeat message.
+olav publish heartbeat <heartbeat_authority>
+
+# Publish a olav_interfaces/msg/SetpointStamped message.
+olav publish setpoint <setpoint_type> <setpoint_magnitude>
+
+# Publish a ackermann_msgs/msg/AckermannDriveStamped message.
+olav publish ackermann <ackermann_speed> <ackermann_steering> <ackermann_rate>
+
+
+# --------------------- #
+% <odin.olavnet> Parameter
+# --------------------- #
+$ node: ros2 node list | tr ' ' '\n' --- --header "Provide a node name."
+$ parameter: ros2 param list <node> | xargs echo -n | tr ' ' '\n' --- --header "Provide a parameter name."
+$ value: --- --header "Provide a parameter value."
+
+# Get parameter value.
+olav parameter get <node> <parameter>
+
+# Set parameter value.
+olav parameter set <node> <parameter> <value>
+
+
+# ---------------------------- #
+% <odin.olavnet> Drive-by-wire
+# ---------------------------- #
+
+# Ready up
+ros2 service call /ready std_srvs/srv/Trigger "{}"
+
+# Cycle ignition
+ros2 service call /cycle_ignition std_srvs/srv/Trigger "{}"
+
+# Set ignition
+ros2 service call /cycle_ignition std_srvs/srv/Trigger "{}"
+
+# Start engine
+ros2 service call /start_engine std_srvs/srv/Trigger "{}"
+
+# Shift gear down
+ros2 service call /shift_gear_down std_srvs/srv/Trigger "{}"
+
+# Shift gear up
+ros2 service call /shift_gear_up std_srvs/srv/Trigger "{}"
+
+# Emergency stop
+ros2 service call /emergency_stop std_srvs/srv/Trigger "{}"
+
+# Start steering controller
+ros2 service call /steering/start std_srvs/srv/Trigger "{}"
+
+# Stop steering controller
+ros2 service call /steering/stop std_srvs/srv/Trigger "{}"
+

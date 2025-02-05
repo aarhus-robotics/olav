@@ -1,0 +1,25 @@
+"/**":
+  ros__parameters:
+    rate: 100.0
+    connection:
+      port: "/dev/powertrain"
+      baudrate: 9600
+      timeout: 5
+    wheel_radius: 0.3175
+    filter:
+      engine:
+        minimum: 0.0
+        maximum: 6350.0
+        change: 10.0
+        scale: 0.1
+        cutoff: 0.005
+        derivative_cutoff: 0.05
+        speed_coefficient: 0.005
+      axle:
+        minimum: 0.0
+        maximum: 36.11
+        change: 0.01
+        scale: 0.1
+        cutoff: 0.005
+        derivative_cutoff: 0.05
+        speed_coefficient: 0.005

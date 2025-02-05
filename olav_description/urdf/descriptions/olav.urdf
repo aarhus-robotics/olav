@@ -1,0 +1,339 @@
+ <!--
+ #############################################################################
+ #                            _     _     _     _                            #
+ #                           / \   / \   / \   / \                           #
+ #                          ( O ) ( L ) ( A ) ( V )                          #
+ #                           \_/   \_/   \_/   \_/                           #
+ #                                                                           #
+ #                  OLAV: Off-Road Light Autonomous Vehicle                  #
+ #############################################################################
+ -->
+<robot name="olav">
+    <!-- REFERENCES -->
+    <!-- BASE -->
+    <link name="base_link" />
+    <!-- FOOTPRINT -->
+    <link name="base_footprint" />
+    <!-- "BASE_LINK" TO "CHASSIS_LINK" -->
+    <joint name="link_to_footprint_fixed"
+           type="fixed">
+        <parent link="base_link" />
+        <child link="base_footprint" />
+        <origin xyz="+0.00 +0.00 -1.426"
+                rpy="+0.0 +0.0 +0.0" />
+    </joint>
+    <!-- CHASSIS -->
+    <link name="chassis_link">
+        <visual>
+            <origin xyz="-1.065 +0.000 +0.075"
+                    rpy="+0.0 +0.0 +0.0" />
+            <geometry>
+                <mesh filename="package://olav_description/urdf/meshes/olav_chassis.dae"
+                      scale="0.01 0.01 0.01" />
+            </geometry>
+        </visual>
+    </link>
+    <!-- "BASE_LINK" TO "CHASSIS_LINK" -->
+    <joint name="base_to_chassis_fixed"
+           type="fixed">
+        <parent link="base_link" />
+        <child link="chassis_link" />
+        <origin xyz="+2.1268 -0.1191 -1.0560"
+                rpy="+0.0 +0.0 +0.0" />
+    </joint>
+    <!-- COG -->
+    <link name="cog_link">
+        <visual>
+            <origin xyz="+0.0 +0.0 +0.0"
+                    rpy="+0.0 +0.0 +0.0" />
+            <geometry>
+                <sphere radius="0.05" />
+            </geometry>
+            <material name="cog-red">
+                <color rgba="1.0 0.0 0.0 1.0" />
+            </material>
+        </visual>
+    </link>
+    <!-- "CHASSIS_LINK" TO "COG_LINK" -->
+    <joint name="chassis_to_cog_fixed"
+           type="fixed">
+        <parent link="chassis_link" />
+        <child link="cog_link" />
+        <origin xyz="-1.256 -0.038 0.58"
+                rpy="+0.0 +0.0 +0.0" />
+    </joint>
+    <!-- VEHICLE -->
+    <!-- FRONT AXLE -->
+    <link name="front_axle_link">
+        <visual>
+            <origin xyz="+0.0 +0.0 +0.0"
+                    rpy="+1.571 +0.000 +0.000" />
+            <geometry>
+                <cylinder length="1.5"
+                          radius="0.025" />
+            </geometry>
+            <material name="blue">
+                <color rgba="0.0 0.0 1.0 1.0" />
+            </material>
+        </visual>
+    </link>
+    <!-- "CHASSIS_LINK" TO "FRONT_AXLE_LINK" -->
+    <joint name="chassis_to_front_axle_fixed"
+           type="fixed">
+        <parent link="chassis_link" />
+        <child link="front_axle_link" />
+        <origin xyz="+0.0 +0.0 -0.04"
+                rpy="+0.0 +0.0 0.0" />
+    </joint>
+    <!-- FRONT LEFT WHEEL -->
+    <link name="front_left_wheel_link">
+        <visual>
+            <geometry>
+                <mesh filename="package://olav_description/urdf/meshes/olav_wheel_left.dae"
+                      scale="0.01 0.01 0.01" />
+            </geometry>
+        </visual>
+    </link>
+    <!-- FRONT RIGHT WHEEL -->
+    <link name="front_right_wheel_link">
+        <!--
+        <visual>
+            <geometry>
+                <mesh filename="package://olav_description/urdf/meshes/olav_wheel_right.dae"
+                    scale="0.01 0.01 0.01" />
+            </geometry>
+        </visual>
+        -->
+    </link>
+    <!-- "FRONT_AXLE_LINK" TO "FRONT_LEFT_WHEEL_LINK" -->
+    <joint name="front_axle_to_front_left_wheel_revolute"
+           type="revolute">
+        <parent link="front_axle_link" />
+        <child link="front_left_wheel_link" />
+        <origin xyz="0.0000 +0.6320 -0.0000"
+                rpy="+0.0 +0.0 0.0" />
+        <axis xyz="0.0 0.0 1.0" />
+        <limit effort="1.0"
+               velocity="+1.0"
+               lower="-0.602"
+               upper="+0.602" />
+    </joint>
+    <!-- "FRONT_AXLE_LINK" TO "FRONT_RIGHT_WHEEL_LINK" -->
+    <joint name="front_axle_to_front_right_wheel_revolute"
+           type="revolute">
+        <parent link="front_axle_link" />
+        <child link="front_right_wheel_link" />
+        <origin xyz="+0.0000 -0.6320 0.0000"
+                rpy="+0.0 +0.0 0.0" />
+        <axis xyz="0.0 0.0 1.0" />
+        <limit effort="1.0"
+               velocity="+1.0"
+               lower="-0.602"
+               upper="+0.602" />
+    </joint>
+    <!-- REAR AXLE -->
+    <link name="rear_axle_link">
+        <visual>
+            <origin xyz="+0.0 +0.0 +0.0"
+                    rpy="+1.571 +0.000 +0.000" />
+            <geometry>
+                <cylinder length="1.5"
+                          radius="0.025" />
+            </geometry>
+            <material name="blue">
+                <color rgba="0.0 0.0 1.0 1.0" />
+            </material>
+        </visual>
+    </link>
+    <!-- "CHASSIS_LINK" TO "REAR_AXLE_LINK" -->
+    <joint name="chassis_to_rear_axle_fixed"
+           type="fixed">
+        <parent link="chassis_link" />
+        <child link="rear_axle_link" />
+        <origin xyz="-2.06 +0.00 -0.0290"
+                rpy="+0.0 +0.0 +0.0" />
+    </joint>
+    <!-- REAR LEFT WHEEL -->
+    <link name="rear_left_wheel_link">
+        <visual>
+            <geometry>
+                <mesh filename="package://olav_description/urdf/meshes/olav_wheel_left.dae"
+                      scale="0.01 0.01 0.01" />
+            </geometry>
+        </visual>
+    </link>
+    <!-- REAR RIGHT WHEEL -->
+    <link name="rear_right_wheel_link">
+        <visual>
+            <geometry>
+                <mesh filename="package://olav_description/urdf/meshes/olav_wheel_right.dae"
+                      scale="0.01 0.01 0.01" />
+            </geometry>
+        </visual>
+    </link>
+    <!-- "REAR_AXLE_LINK" TO "REAR_LEFT_WHEEL_LINK" -->
+    <joint name="rear_axle_to_wheel_rear_left_fixed"
+           type="fixed">
+        <parent link="rear_axle_link" />
+        <child link="rear_left_wheel_link" />
+        <origin xyz="0.0000 +0.6320 -0.0000"
+                rpy="+0.0 +0.0 0.0" />
+    </joint>
+    <!-- "REAR_AXLE_LINK" TO "REAR_RIGHT_WHEEL_LINK" -->
+    <joint name="rear_axle_to_wheel_rear_right_fixed"
+           type="fixed">
+        <parent link="rear_axle_link" />
+        <child link="rear_right_wheel_link" />
+        <origin xyz="+0.0000 -0.6320 0.0000"
+                rpy="+0.0 +0.0 0.0" />
+    </joint>
+    <!-- SENSORS -->
+    <!-- LORD MICROSTRAIN GQ7 -->
+    <link name="gnss_ins_link">
+        <visual>
+            <origin xyz="+0.0 +0.0 +0.0"
+                    rpy="+0.0 +0.0 +0.0" />
+            <geometry>
+                <box size="0.0760 0.0686 0.0133" />
+            </geometry>
+            <material name="microstrain-grey">
+                <color rgba="0.204 0.204 0.204 1.000" />
+            </material>
+        </visual>
+    </link>
+    <!-- UBLOX ANN-MB ANTENNA #1 -->
+    <link name="gnss_ins_antenna_1_link">
+        <visual>
+            <origin xyz="+0.0 +0.0 +0.0"
+                    rpy="+0.0 +0.0 +0.0" />
+            <geometry>
+                <box size="0.0600 0.0820 0.0225" />
+            </geometry>
+            <material name="ublox-grey">
+                <color rgba="0.216 0.216 0.216 1.000" />
+            </material>
+        </visual>
+    </link>
+    <!-- UBLOX ANN-MB ANTENNA #2 -->
+    <link name="gnss_ins_antenna_2_link">
+        <visual>
+            <origin xyz="+0.0 +0.0 +0.0"
+                    rpy="+0.0 +0.0 +0.0" />
+            <geometry>
+                <box size="0.0600 0.0820 0.0225" />
+            </geometry>
+            <material name="ublox-grey">
+                <color rgba="0.216 0.216 0.216 1.000" />
+            </material>
+        </visual>
+    </link>
+    <!-- "BASE_LINK" TO "GNSS_INS_LINK" -->
+    <joint name="base_to_gnss_ins_fixed"
+           type="fixed">
+        <parent link="base_link" />
+        <child link="gnss_ins_link" />
+        <origin xyz="+0.0 +0.0 +0.0"
+                rpy="+0.0 +0.0 +0.0" />
+    </joint>
+    <!-- "GNSS_INS_LINK" TO "GNSS_INS_ANTENNA_1_LINK" -->
+    <joint name="gnss_ins_to_gnss_ins_antenna_1_fixed"
+           type="fixed">
+        <parent link="gnss_ins_link" />
+        <child link="gnss_ins_antenna_1_link" />
+        <origin xyz="+0.6038 +0.4229 +0.2503"
+                rpy="+0.0 +0.0 +0.0" />
+    </joint>
+    <!-- "GNSS_INS_LINK" TO "GNSS_INS_ANTENNA_2_LINK" -->
+    <joint name="gnss_ins_to_gnss_ins_antenna_2_fixed"
+           type="fixed">
+        <parent link="gnss_ins_link" />
+        <child link="gnss_ins_antenna_2_link" />
+        <origin xyz="+0.6038 -0.7043 +0.2503"
+                rpy="+0.0 +0.0 +0.0" />
+    </joint>
+    <!-- OUSTER OS-1 LIDAR -->
+    <link name="lidar_link">
+        <visual>
+            <origin xyz="+0.0 +0.0 +0.0"
+                    rpy="+0.0 +0.0 +0.0" />
+            <geometry>
+                <cylinder length="0.07300"
+                          radius="0.03977" />
+            </geometry>
+            <material name="ouster-silver">
+                <color rgba="0.875 0.875 0.875 1.000" />
+            </material>
+        </visual>
+    </link>
+    <!-- "BASE_LINK" TO "LIDAR_LINK" -->
+    <joint name="base_to_lidar_fixed"
+           type="fixed">
+        <parent link="base_link" />
+        <child link="lidar_link" />
+        <origin xyz="+1.0668 -0.1231 +0.668"
+                rpy="+0.000 +0.00872665 +0.000" />
+    </joint>
+    <!-- REOLINK CAMERA -->
+    <link name="rear_ptz_camera_link">
+        <visual>
+            <origin xyz="+0.0 +0.0 +0.0"
+                    rpy="+0.0 +0.0 +0.0" />
+            <geometry>
+                <box size="0.201 0.218 0.136" />
+            </geometry>
+            <material name="reolink-cyan">
+                <color rgba="0.427 0.745 0.796 1.000" />
+            </material>
+        </visual>
+    </link>
+    <!-- "BASE_LINK" TO "REAR_PTZ_CAMERA_LINK" -->
+    <joint name="base_to_rear_ptz_camera_fixed"
+           type="fixed">
+        <parent link="base_link" />
+        <child link="rear_ptz_camera_link" />
+        <origin xyz="-0.5032 +0.2641 -0.9817"
+                rpy="+0.00 +0.00 +3.14" />
+    </joint>
+    <!-- OAK-D STEREO CAMERA -->
+    <link name="camera_front_link">
+        <visual>
+            <origin xyz="+0.0 +0.0 +0.0"
+                    rpy="+0.0 +0.0 +0.0" />
+            <geometry>
+                <box size="0.0400 0.1110 0.0313" />
+            </geometry>
+            <material name="luxonis-violet">
+                <color rgba="0.235 0.075 0.698 1.000" />
+            </material>
+        </visual>
+    </link>
+    <!-- "BASE_LINK" TO "camera_front_LINK" -->
+    <joint name="base_to_camera_front_fixed"
+           type="fixed">
+        <parent link="base_link" />
+        <child link="camera_front_link" />
+        <origin xyz="+2.4468 -0.1191 -0.7511"
+                rpy="+0.0000 +0.1745 +0.0000" />
+    </joint>
+    <!-- OAK-1 W MONOCULAR CAMERA -->
+    <link name="camera_top_link">
+        <visual>
+            <origin xyz="+0.0 +0.0 +0.0"
+                    rpy="+0.0 +0.0 +0.0" />
+            <geometry>
+                <box size="0.025 0.05 0.05" />
+            </geometry>
+            <material name="luxonis-violet">
+                <color rgba="0.235 0.075 0.698 1.000" />
+            </material>
+        </visual>
+    </link>
+    <!-- "BASE_LINK" TO "camera_top_LINK" -->
+    <joint name="base_to_camera_top_fixed"
+           type="fixed">
+        <parent link="base_link" />
+        <child link="camera_top_link" />
+        <origin xyz="+1.1898 -0.1231 +0.5781"
+                rpy="+0.0000 +0.00872665 +0.0000" />
+    </joint>
+</robot>

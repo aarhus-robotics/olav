@@ -1,0 +1,75 @@
+topics:
+  ###############
+  # CONTROLLERS #
+  ###############
+  # > Drive-by-wire
+  - /olav/drive_by_wire/status
+  - /olav/sensors/steering/angle
+  # > Speed controller
+  - /olav/controllers/speed/speed
+  - /olav/controllers/speed/status
+  # > Steering controller
+  - /olav/controllers/steering/angle
+  - /olav/controllers/steering/status
+  ###########
+  # SENSORS #
+  ###########
+  # > Powertrain interface
+  - /olav/sensors/powertrain/engine/speed
+  - /olav/sensors/powertrain/tachometer/speed
+  # > Inertial navigation system
+  - /olav/sensors/inertial_navigation_system/device/device
+  - /olav/sensors/inertial_navigation_system/antenna/left/coordinates
+  - /olav/sensors/inertial_navigation_system/antenna/left/time
+  - /olav/sensors/inertial_navigation_system/antenna/right/coordinates
+  - /olav/sensors/inertial_navigation_system/imu/data
+  - /olav/sensors/inertial_navigation_system/filter/coordinates
+  - /olav/sensors/inertial_navigation_system/filter/imu
+  - /olav/sensors/inertial_navigation_system/filter/odometry
+  - /olav/sensors/inertial_navigation_system/filter/aiding
+  - /olav/sensors/inertial_navigation_system/rtk/nmea
+  - /olav/sensors/inertial_navigation_system/rtk/rtcm
+  - /olav/sensors/inertial_navigation_system/antenna/left/status/fix
+  - /olav/sensors/inertial_navigation_system/antenna/left/status/sbas
+  - /olav/sensors/inertial_navigation_system/antenna/right/status/fix
+  - /olav/sensors/inertial_navigation_system/antenna/right/status/sbas
+  - /olav/sensors/inertial_navigation_system/status/rtk
+  - /olav/sensors/inertial_navigation_system/filter/status
+  - /olav/sensors/inertial_navigation_system/antenna/dual/status
+  - /olav/sensors/inertial_navigation_system/status/aiding
+  - /olav/sensors/inertial_navigation_system/antenna/dual/offset_correction
+  # > LiDAR
+  # - /olav/sensors/lidar/points
+  # > Top camera
+  - /olav/sensors/camera/top/rgb/image_raw/compressed
+  - /olav/sensors/camera/top/camera_info
+  ####################
+  # MODEL DEFINITION #
+  ####################
+  - /olav/model/description
+  - /olav/model/joints/states
+  - /olav/model/joints/steering
+  ################
+  # SHARED BUSES #
+  ################
+  # > Controls
+  - /olav/controls/throttle
+  - /olav/controls/brake
+  - /olav/controls/steering
+  # > Signals
+  - /olav/signals/estop
+  - /olav/signals/heartbeat
+  - /olav/signals/ready
+  #####################
+  # ROS GLOBAL TOPICS #
+  #####################
+  # > Diagnostics
+  - /diagnostics
+  - /diagnostics_agg
+  - /diagnostics_toplevel_state
+  # > Transforms
+  - /tf
+  - /tf_static
+  # > Parameters and logging
+  - /parameter_events
+  - /rosout

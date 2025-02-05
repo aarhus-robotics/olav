@@ -1,0 +1,7 @@
+"Topic","Message type","Description"
+"engine/speed","std_msgs/Float64","Engine speed in revolutions per minute."
+"odometry","nav_msgs/msg/Odometry","Vehicle odometry from a wheel encoder or inertial navigation system. Only the longitudinal component of the twist message is used to perform checks on the vehicle longitudinal speed."
+"heartbeat","std_msgs/msg/Header","Heartbeat message from the active control authority. Must be published at a rate higher than the health check rate."
+"efforts/throttle","olav_interfaces/msg/SetpointStamped","Desired throttle effort in the range [0.0 - 1.0]."
+"efforts/brake","olav_interfaces/msg/SetpointStamped","Desired brake effort in the range [0.0 - 1.0]."
+"efforts/steering","olav_interfaces/msg/SetpointStamped","Desired steering effort in the range [-1.0 - 1.0]."

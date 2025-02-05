@@ -1,0 +1,47 @@
+ #############################################################################
+ #                            _     _     _     _                            #
+ #                           / \   / \   / \   / \                           #
+ #                          ( O ) ( L ) ( A ) ( V )                          #
+ #                           \_/   \_/   \_/   \_/                           #
+ #                                                                           #
+ #                  OLAV: Off-Road Light Autonomous Vehicle                  #
+ #############################################################################
+
+# This action instructs the drive-by-wire system to perform a gear shift towards
+# a chosen gear. If the gear selection fails, it returns a failure in the action
+# result. Conversely, if the gear shift (including its engagement) is performed
+# successfully, it returns a positive result.
+
+# Gear enumeration type definition.
+uint8 GEAR_PARK=1
+uint8 GEAR_REVERSE=2
+uint8 GEAR_NEUTRAL=3
+uint8 GEAR_LOW=4
+uint8 GEAR_HIGH=5
+
+# Goal definition
+
+# Target gear.
+uint8 gear
+
+---
+
+# RESULT
+# ------
+
+# Outcome of the gear shift.
+bool success
+
+# In case of failure, details on the error state.
+string message
+
+---
+
+# FEEDBACK
+# --------
+
+# Number of attempts.
+int32 retries
+
+# Last failed attempt error details.
+string message

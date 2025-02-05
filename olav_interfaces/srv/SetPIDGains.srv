@@ -1,0 +1,40 @@
+ #############################################################################
+ #                            _     _     _     _                            #
+ #                           / \   / \   / \   / \                           #
+ #                          ( O ) ( L ) ( A ) ( V )                          #
+ #                           \_/   \_/   \_/   \_/                           #
+ #                                                                           #
+ #                  OLAV: Off-Road Light Autonomous Vehicle                  #
+ #############################################################################
+
+# This service represents a request to a controller to set the
+# proportional-integral-derivative gains at initialization or on-the-fly. Please
+# note that some controllers (including the one in OLAV) may require a full
+# reset before gains are applied or before the dynamic adjustment of controller
+# gains is enabled or disabled.
+
+# REQUEST
+# -------
+
+# Whether the controller should allow setting gains on-the-fly or only at
+# controller initialization.
+bool use_dynamic_gains
+
+# The desired controller proportional gain.
+float64 proportional_gain
+
+# The desired controller integral gain.
+float64 integral_gain
+
+# The desired controller derivative gain.
+float64 derivative_gain
+---
+
+# RESULT
+# ------
+
+# Outcome of the controller gains set attempt.
+bool success
+
+# Status message and, in case of failure, details on the error.
+string message

@@ -1,0 +1,4 @@
+"Topic","Message type","Description"
+"feedback/steering_angle","olav_interfaces/msg/SetpointStamped","Steering wheel encoder angle, expressed in radians."
+"joints/steering","sensor_msgs/msg/JointState","Front axle steering joint state. To be used strictly for visualization purposes."
+"status","olav_interfaces/msg/DriveByWirePLCStatus","Status debug message for the drive-by-wire PLC register."

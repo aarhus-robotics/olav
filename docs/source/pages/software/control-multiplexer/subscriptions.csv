@@ -1,0 +1,7 @@
+"Topic", "Message type", "Description"
+"autonomous/throttle", "std_msgs/Float64", "Throttle effort from the autonomous navigation system"
+"autonomous/brake", "std_msgs/Float64", "Brake effort from the autonomous navigation system"
+"autonomous/steering", "std_msgs/Float64", "Steering effort from the autonomous navigation system"
+"manual/throttle", "std_msgs/Float64", "Throttle effort from the onboard controller"
+"manual/brake", "std_msgs/Float64", "Brake effort from the onboard controller"
+"manual/steering", "std_msgs/Float64", "Steering effort from the onboard controller"

@@ -1,0 +1,4 @@
+"Topic", "Message type", "Description"
+"engine/speed", "std_msgs/Float64", "Engine speed in revolutions per minute."
+"tachometer/speed", "std_msgs/Float64", "Estimated wheel speed in meters per second"
+"tachometer/odometry", "nav_msgs/Odometry", "Vehicle odometry in meters per second (includes only the linear X entry of the geometry_msgs/Twist message)"

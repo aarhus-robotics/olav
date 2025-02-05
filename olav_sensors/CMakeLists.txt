@@ -1,0 +1,41 @@
+# cmake-format: off
+ #############################################################################
+ #                            _     _     _     _                            #
+ #                           / \   / \   / \   / \                           #
+ #                          ( O ) ( L ) ( A ) ( V )                          #
+ #                           \_/   \_/   \_/   \_/                           #
+ #                                                                           #
+ #                  OLAV: Off-Road Light Autonomous Vehicle                  #
+ #############################################################################
+# cmake-format: on
+
+# CMake options
+# -------------
+cmake_minimum_required(VERSION 3.8)
+
+project(olav_sensors)
+
+# Compiler options
+# ----------------
+if(CMAKE_COMPILER_IS_GNUCXX OR CMAKE_CXX_COMPILER_ID MATCHES "Clang")
+  add_compile_options(-Wall -Wextra -Wpedantic)
+endif()
+
+# Package dependencies
+# --------------------
+find_package(ament_cmake REQUIRED)
+
+# Build subdirectories
+# --------------------
+add_subdirectory(src/inertial_postprocessor)
+add_subdirectory(src/load_cell)
+add_subdirectory(src/powertrain)
+add_subdirectory(src/serial)
+
+# Install targets
+# ---------------
+install(DIRECTORY "config" "launch" DESTINATION "share/${PROJECT_NAME}/")
+
+# Ament package options
+# ---------------------
+ament_package()

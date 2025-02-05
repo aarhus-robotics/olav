@@ -1,0 +1,73 @@
+"/**":
+  ros__parameters:
+    device: 5
+    mappings:
+      CYCLE:
+        function: service
+        type: set_control_mode
+        topic: set_control_mode
+      TRACK_LEFT:
+        function: parameter
+        topic: my_node
+        name: controller.output.minimum
+        type: double
+      RECORD:
+        function: service
+        type: trigger
+        topic: start_recording
+      STOP:
+        function: service
+        type: trigger
+        topic: stop_recording
+      CHANNEL_1_SOLO:
+        function: service
+        type: start_engine
+        topic: start_engine
+      CHANNEL_1_MUTE:
+        function: service
+        type: set_control_authority
+        topic: set_control_authority
+      CHANNEL_1_RECORD:
+        function: service
+        type: set_bool
+        topic: set_ignition
+        gain: 0.0
+      CHANNEL_1_PAN:
+        function: publisher
+        topic: efforts/steering
+        repeat: true
+        type: control_effort_stamped
+        gain: 2.0
+        offset: -1.0
+      CHANNEL_1_SLIDER:
+        function: publisher
+        type: control_effort_stamped
+        topic: efforts/throttle
+        repeat: true
+      CHANNEL_2_SOLO:
+        function: action
+        type: shift_gear
+        topic: shift_gear
+      CHANNEL_2_MUTE:
+        function: publisher
+        type: control_effort_stamped
+        topic: efforts/brake
+        repeat: true
+      CHANNEL_2_RECORD:
+        function: action
+        type: shift_gear
+        topic: shift_gear
+      CHANNEL_2_PAN:
+        function: publisher
+        topic: setpoints/steering
+        repeat: true
+        type: control_setpoint_stamped
+        gain: 0.576
+        symmetric: true
+      CHANNEL_2_SLIDER:
+        function: publisher
+        topic: setpoints/speed
+        repeat: true
+        type: control_setpoint_stamped
+        gain: 4.17
+    debug: false

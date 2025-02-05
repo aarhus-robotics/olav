@@ -1,0 +1,17 @@
+"/**":
+  ros__parameters:
+    connection:
+      address: "192.168.69.3"
+      port: 502
+    rates:
+      connect: 1.0
+      writer: 100.0
+      reader: 100.0
+      debug: 1.0
+      health_check: 1.0
+    safety:
+      limits:
+        engine_speed: 5000.0
+        longitudinal_speed: 8.33
+    debug:
+      log_throttle: 1.0

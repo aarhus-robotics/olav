@@ -1,0 +1,64 @@
+"/**":
+  ros__parameters:
+    topics: [
+        # Control multiplexer
+        "/olav/commands/input/ackermann_drive",
+        "/olav/controls/mux/brake",
+        "/olav/controls/mux/heartbeat",
+        "/olav/controls/mux/speed",
+        "/olav/controls/mux/steering",
+        "/olav/controls/mux/steering_angle",
+        "/olav/controls/mux/throttle",
+        "/olav/sensors/encoders/steering",
+        # Drive-by-wire debugging
+        "/olav/drive_by_wire/plc_status",
+        # Roof monocular camera
+        "/olav/sensors/camera/roof/rgb/camera_info",
+        "/olav/sensors/camera/roof/rgb/image_raw/compressed",
+
+        # Front stereo camera
+        "/olav/sensors/camera/front/rgb/camera_info",
+        "/olav/sensors/camera/front/rgb/image_raw/compressed",
+        "/olav/sensors/camera/front/stereo/camera_info",
+        "/olav/sensors/camera/front/stereo/image_raw/compressedDepth",
+        # > Front stereo camera debugging
+        "/olav/sensors/camera/front/imu/data",
+
+        "/olav/sensors/inertial_navigation_system/antenna/left/coordinates",
+        "/olav/sensors/inertial_navigation_system/antenna/left/velocity",
+        "/olav/sensors/inertial_navigation_system/antenna/right/coordinates",
+        "/olav/sensors/inertial_navigation_system/antenna/right/velocity",
+        "/olav/sensors/inertial_navigation_system/filter/coordinates",
+        "/olav/sensors/inertial_navigation_system/filter/imu",
+        "/olav/sensors/inertial_navigation_system/filter/odometry",
+        "/olav/sensors/inertial_navigation_system/imu",
+        # Inertial navigation system debugging
+        #"/olav/sensors/inertial_navigation_system/status/aiding",
+        #"/olav/sensors/inertial_navigation_system/status/dual_antenna",
+        #"/olav/sensors/inertial_navigation_system/status/offset_correction",
+        "/olav/sensors/lidar/points",
+        "/olav/sensors/lidar/metadata",
+        # LiDAR debugging
+        #"/olav/sensors/lidar/imu",
+        "/olav/model/description",
+        "/olav/model/joints",
+        "/olav/model/update/front_wheels",
+
+        "/olav/sensors/powertrain/engine/speed",
+        "/olav/sensors/powertrain/tachometer/speed",
+
+        # TF transform tree topics
+        "/tf",
+        "/tf_static",
+
+        # RViz topics
+        "/clicked_point",
+      ]
+    regex: ""
+    excludes: ""
+    storage: "mcap"
+    max_cache_size: 1048576000
+    compression:
+      format: "zstd"
+    path: "/home/olav/ROS/bags"
+    record_on_start: false

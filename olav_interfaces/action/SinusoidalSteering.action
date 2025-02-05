@@ -1,0 +1,11 @@
+## REQUEST
+float64 amplitude
+float64 frequency
+float64 speed
+---
+## RESPONSE
+bool success
+---
+## FEEDBACK
+bool has_speed
+float64 completion

@@ -240,7 +240,7 @@
            type="fixed">
         <parent link="gnss_ins_link" />
         <child link="gnss_ins_antenna_1_link" />
-        <origin xyz="+0.6038 +0.4229 +0.2503"
+        <origin xyz="+0.6038 -0.7043 +0.451"
                 rpy="+0.0 +0.0 +0.0" />
     </joint>
     <!-- "GNSS_INS_LINK" TO "GNSS_INS_ANTENNA_2_LINK" -->

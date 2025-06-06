@@ -302,10 +302,15 @@ void PIDController::Tick() {
 
     // Compute the feedforward term. Note how the output change sign is
     // computed in order to select the correct feedforward offset.
-    double feedforward_offset =
-        (boost::math::sign(ramped_setpoint - feedback_) >= 0)
-        ? feedforward_offset_
-        : -feedforward_offset_;
+    double feedforward_offset = 0.0;
+    auto output_direction = boost::math::sign(ramped_setpoint - feedback_);
+    if(std::abs(last_output_) < feedforward_offset_) {
+        if(output_direction > 0) {
+            feedforward_offset = feedforward_offset_;
+        } else if(output_direction < 0) {
+            feedforward_offset = -feedforward_offset_;
+        }
+    }
 
     /*
     feedforward_term_ =
@@ -361,8 +366,11 @@ void PIDController::Tick() {
     }
 
     // Add the feedforward term - this should be unaffected by the filters.
+    output_ += feedforward_offset;
     output_ += feedforward_term_;
 
+    // FIXME: The deadband filter does not apply the correct direction to the
+    //        output control.
     if(use_deadband_filter_) {
         if(output_ >= deadband_lower_threshold_ && output_ < deadband_center_) {
             output_ -= deadband_lower_threshold_;

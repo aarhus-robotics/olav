@@ -3,11 +3,11 @@
     rate: 100.0
     pid:
       feedforward:
-        offset: 0.225
+        offset: 0.3
       gains:
-        proportional: 1.4
-        integral: 0.003
-        derivative: 0.0
+        proportional: 1.5
+        integral: 0.004
+        derivative: 0.2
       setpoint:
         ramp:
           enabled: true
@@ -20,14 +20,14 @@
           magnitude: 0.001
       limit:
         integral:
-          enabled: true
+          enabled: false
           magnitude: 0.3
         error:
           enable: true
           magnitude: 0.02
       deadband:
         filter:
-          enabled: true
+          enabled: false
           thresholds:
             lower: -0.3
             upper: 0.3

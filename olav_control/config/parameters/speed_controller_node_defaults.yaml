@@ -25,7 +25,7 @@
           negative: 0.18
       deadband:
         filter:
-          enabled: true
+          enabled: false
           thresholds:
             lower: -0.225
             upper: 0.225

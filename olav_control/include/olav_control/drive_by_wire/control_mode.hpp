@@ -39,37 +39,57 @@ namespace OLAV {
 namespace ROS {
 
 enum class ControlModeIdentifier {
-    MULTIPLEXER_MODE_DISABLED = -1,
-    MULTIPLEXER_MODE_GAMEPAD = 0,
-    MULTIPLEXER_MODE_AUTONOMOUS = 1,
-    MULTIPLEXER_MODE_GENERIC_THROTTLE_BRAKE_STEER = 2,
-    MULTIPLEXER_MODE_GENERIC_SPEED_STEERING_ANGLE = 3
+    STANDBY = -1,
+    DRIVE_ACKERMANN = 0,
+    DRIVE_TBS = 1
+};
+
+enum class ControlAuthorityIdentifier {
+    SYSTEM = -1,
+    TERMINAL = 0,
+    GAMEPAD = 1,
+    AUTONOMY = 2
 };
 
 class ControlMode {
   public:
     ControlMode();
 
-    ControlMode(const ControlModeIdentifier& id);
+    ControlMode(const ControlModeIdentifier& mode_identifier,
+                const ControlAuthorityIdentifier& authority_identifier);
 
-    ControlMode(const std::string& name);
+    ControlMode(const std::string& mode_name,
+                const std::string& authority_name);
 
-    static std::string FromId(const ControlModeIdentifier& id);
+    static std::string
+    FromModeIdentifier(const ControlModeIdentifier& identifier);
 
-    static ControlModeIdentifier FromName(const std::string& name);
+    static ControlModeIdentifier FromModeName(const std::string& name);
+
+    static std::string
+    FromAuthorityIdentifier(const ControlAuthorityIdentifier& identifier);
+
+    static ControlAuthorityIdentifier
+    FromAuthorityName(const std::string& name);
 
     bool operator==(const ControlMode& mode);
 
-    ControlMode GetNext();
+    const ControlModeIdentifier& GetModeIdentifier() const;
 
-    const std::string& GetName() const;
+    const std::string& GetModeName() const;
 
-    const ControlModeIdentifier& GetId() const;
+    const ControlAuthorityIdentifier& GetAuthorityIdentifier() const;
+
+    const std::string& GetAuthorityName() const;
 
   private:
-    ControlModeIdentifier id_;
+    ControlModeIdentifier mode_identifier_;
 
-    std::string name_;
+    std::string mode_name_;
+
+    ControlAuthorityIdentifier authority_identifier_;
+
+    std::string authority_name_;
 };
 
 } // namespace ROS

@@ -8,7 +8,15 @@
  #############################################################################
 
 #
+
+#
 std_msgs/Header header
 
 #
-float64 setpoint
+float64 throttle
+
+#
+float64 brake
+
+#
+float64 steering

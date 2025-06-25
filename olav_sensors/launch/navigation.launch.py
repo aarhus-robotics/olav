@@ -31,7 +31,7 @@ def generate_launch_description():
                                                               "config/parameters/overrides_defaults.yaml").as_posix())
 
     # > Declare log level launch argument
-    log_level_argument = DeclareLaunchArgument("log_level", default_value="WARN")
+    log_level_argument = DeclareLaunchArgument("log_level", default_value="INFO")
 
     # Nodes
     # -----

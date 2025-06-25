@@ -93,8 +93,21 @@ void DriveByWireNode::GetParameters() {
     maximum_longitudinal_speed_ =
         get_parameter("safety.limits.longitudinal_speed").as_double();
 
-    declare_parameter("debug.log_throttle", 1.0);
-    log_throttle_delay_ = get_parameter("debug.log_throttle").as_double();
+    declare_parameter("controllers.rate", 1.0);
+    controllers_period_ = 1.0 / get_parameter("controllers.rate").as_double();
+
+    declare_parameter("debug.use_mock_interface", false);
+    use_mock_interface_ = get_parameter("debug.use_mock_interface").as_bool();
+
+    GetSpeedControllerParameters();
+    GetSteeringControllerParameters();
+
+    // Add the "on set parameters" event callback for runtime parameter
+    // reconfiguration.
+    on_set_parameters_callback_handle_ = add_on_set_parameters_callback(
+        std::bind(&DriveByWireNode::OnSetParametersCallback,
+                  this,
+                  std::placeholders::_1));
 }
 
 void DriveByWireNode::Initialize() {
@@ -109,6 +122,8 @@ void DriveByWireNode::Initialize() {
     subscriptions_callback_group_ =
         create_callback_group(rclcpp::CallbackGroupType::MutuallyExclusive);
     writer_callback_group_ =
+        create_callback_group(rclcpp::CallbackGroupType::MutuallyExclusive);
+    controllers_callback_group_ =
         create_callback_group(rclcpp::CallbackGroupType::MutuallyExclusive);
     reader_callback_group_ =
         create_callback_group(rclcpp::CallbackGroupType::MutuallyExclusive);
@@ -126,12 +141,17 @@ void DriveByWireNode::Initialize() {
     interface_ = std::make_shared<DriveByWireInterface>(connection_address_,
                                                         connection_port_);
 
+    InitializeSpeedController();
+    InitializeSteeringController();
+
     // Initialize the time references for the health checks.
     last_engine_speed_time_ =
         get_clock()->now() - rclcpp::Duration(health_check_period_, 0);
     last_odometry_time_ =
         get_clock()->now() - rclcpp::Duration(health_check_period_, 0);
     last_heartbeat_time_ =
+        get_clock()->now() - rclcpp::Duration(health_check_period_, 0);
+    last_control_time_ =
         get_clock()->now() - rclcpp::Duration(health_check_period_, 0);
 }
 
@@ -146,8 +166,7 @@ void DriveByWireNode::Activate() {
 void DriveByWireNode::CreateSubscriptions() {
     // Instantiate a common set of subscription options to group all command and
     // health check subscriptions under the same re-entrant callback group.
-    rclcpp::SubscriptionOptions subscription_options;
-    subscription_options.callback_group = subscriptions_callback_group_;
+    subscription_options_.callback_group = subscriptions_callback_group_;
 
     engine_speed_subscription_ =
         create_subscription<olav_interfaces::msg::SetpointStamped>(
@@ -156,7 +175,7 @@ void DriveByWireNode::CreateSubscriptions() {
             std::bind(&DriveByWireNode::EngineSpeedCallback,
                       this,
                       std::placeholders::_1),
-            subscription_options);
+            subscription_options_);
 
     odometry_subscription_ = create_subscription<nav_msgs::msg::Odometry>(
         "feedback/odometry",
@@ -164,42 +183,30 @@ void DriveByWireNode::CreateSubscriptions() {
         std::bind(&DriveByWireNode::OdometryCallback,
                   this,
                   std::placeholders::_1),
-        subscription_options);
+        subscription_options_);
 
+    throttle_brake_steering_subscription_ =
+        create_subscription<olav_interfaces::msg::ThrottleBrakeSteering>(
+            "controls/tbs",
+            RMW_QOS_POLICY_RELIABILITY_SYSTEM_DEFAULT,
+            std::bind(&DriveByWireNode::ThrottleBrakeSteeringCallback,
+                      this,
+                      std::placeholders::_1),
+            subscription_options_);
+}
+
+void DriveByWireNode::CreateHeartbeatSubscription() {
     heartbeat_subscription_ = create_subscription<std_msgs::msg::Header>(
         "signals/heartbeat",
         RMW_QOS_POLICY_RELIABILITY_SYSTEM_DEFAULT,
         std::bind(&DriveByWireNode::HeartbeatCallback,
                   this,
                   std::placeholders::_1),
-        subscription_options);
+        subscription_options_);
+}
 
-    throttle_subscription_ =
-        create_subscription<olav_interfaces::msg::SetpointStamped>(
-            "controls/throttle",
-            RMW_QOS_POLICY_RELIABILITY_SYSTEM_DEFAULT,
-            std::bind(&DriveByWireNode::ThrottleCallback,
-                      this,
-                      std::placeholders::_1),
-            subscription_options);
-
-    brake_subscription_ =
-        create_subscription<olav_interfaces::msg::SetpointStamped>(
-            "controls/brake",
-            RMW_QOS_POLICY_RELIABILITY_SYSTEM_DEFAULT,
-            std::bind(&DriveByWireNode::BrakeCallback,
-                      this,
-                      std::placeholders::_1),
-            subscription_options);
-
-    steering_subscription_ =
-        create_subscription<olav_interfaces::msg::SetpointStamped>(
-            "controls/steering",
-            RMW_QOS_POLICY_RELIABILITY_SYSTEM_DEFAULT,
-            std::bind(&DriveByWireNode::SteeringCallback,
-                      this,
-                      std::placeholders::_1),
-            subscription_options);
+void DriveByWireNode::DestroyHeartbeatSubscription() {
+    heartbeat_subscription_.reset();
 }
 
 void DriveByWireNode::CreatePublishers() {
@@ -223,6 +230,16 @@ void DriveByWireNode::CreatePublishers() {
     plc_status_publisher_ =
         create_publisher<olav_interfaces::msg::DriveByWirePLCStatus>(
             "status",
+            RMW_QOS_POLICY_RELIABILITY_SYSTEM_DEFAULT);
+
+    speed_controller_status_publisher_ =
+        create_publisher<olav_interfaces::msg::PIDStatus>(
+            "status/controllers/speed",
+            RMW_QOS_POLICY_RELIABILITY_SYSTEM_DEFAULT);
+
+    steering_controller_status_publisher_ =
+        create_publisher<olav_interfaces::msg::PIDStatus>(
+            "status/controllers/steering",
             RMW_QOS_POLICY_RELIABILITY_SYSTEM_DEFAULT);
 
     diagnostics_publisher_ =
@@ -254,6 +271,12 @@ void DriveByWireNode::CreateTimers() {
                           reader_callback_group_);
     reader_timer_->cancel();
 
+    controllers_timer_ = create_wall_timer(
+        std::chrono::duration<double>(controllers_period_),
+        std::bind(&DriveByWireNode::ControllersCallback, this),
+        controllers_callback_group_);
+    controllers_timer_->cancel();
+
     debug_timer_ =
         create_wall_timer(std::chrono::duration<double>(debug_period_),
                           std::bind(&DriveByWireNode::DebugCallback, this),
@@ -274,6 +297,14 @@ void DriveByWireNode::CreateServices() {
                   this,
                   std::placeholders::_1,
                   std::placeholders::_2));
+
+    set_control_mode_service_ =
+        create_service<olav_interfaces::srv::SetControlMode>(
+            "set_control_mode",
+            std::bind(&DriveByWireNode::SetControlMode,
+                      this,
+                      std::placeholders::_1,
+                      std::placeholders::_2));
 
     set_ignition_service_ = create_service<std_srvs::srv::SetBool>(
         "set_ignition",
@@ -333,10 +364,13 @@ void DriveByWireNode::CreateServices() {
 }
 
 void DriveByWireNode::StartTimers() {
+    RCLCPP_INFO(get_logger(), "Starting timers ...");
+
     connect_timer_->reset();
     health_check_timer_->reset();
     writer_timer_->reset();
     reader_timer_->reset();
+    controllers_timer_->reset();
     debug_timer_->reset();
     diagnostics_timer_->reset();
 }
@@ -359,6 +393,7 @@ void DriveByWireNode::InitializeRegisters() {
 
 void DriveByWireNode::WriterCallback() {
     if(!is_connected_) return;
+    if(use_mock_interface_) return;
 
     DriveByWireSetpoint setpoint;
 
@@ -386,6 +421,7 @@ void DriveByWireNode::WriterCallback() {
 
 void DriveByWireNode::ReaderCallback() {
     if(!is_connected_) return;
+    if(use_mock_interface_) return;
 
     DriveByWireFeedback feedback;
 
@@ -426,9 +462,81 @@ void DriveByWireNode::ReaderCallback() {
     }
 }
 
+void DriveByWireNode::ControllersCallback() {
+    if(!IsHealthy()) {
+        speed_controller_->Reset();
+        steering_controller_->Reset();
+        return;
+    }
+
+    /* TODO: Implement the speed controller feedforward offset.
+    // Compute the current feedforward value to be fed to the controller.
+    controller_->SetFeedforwardOffset(feedforward_offset);
+    double feedforward_offset =
+        feedforward_spline_->Evaluate(current_setpoint_);
+    */
+
+    double steering_angle;
+    {
+        std::unique_lock<std::shared_mutex> feedback_lock(feedback_mutex_);
+        steering_angle =
+            drive_by_wire_feedback_->GetSteeringActuatorPositionInDegrees();
+    }
+
+    double speed_controller_output;
+    double steering_controller_output;
+    {
+        const std::lock_guard<std::mutex> controller_lock(controllers_mutex_);
+        // TODO: The vehicle speed and odometry needs its own mutex.
+        speed_controller_->SetFeedback(vehicle_speed_);
+        speed_controller_->Tick();
+        speed_controller_output = speed_controller_->GetOutput();
+
+        steering_controller_->SetFeedback(steering_angle);
+        steering_controller_->Tick();
+        steering_controller_output = steering_controller_->GetOutput();
+    }
+
+    {
+        std::unique_lock<std::shared_mutex> setpoint_lock(setpoint_mutex_);
+
+        const double throttle_effort =
+            speed_controller_output > 0.0 ? speed_controller_output : 0.0;
+        const double brake_effort = speed_controller_output < 0.0
+            ? std::min(brake_threshold_, std::abs(speed_controller_output))
+            // TODO: This should instead be set as a minimum output of the speed
+            // controller at -brake_threshold! This check is still useful just
+            // in case ...
+            : 0.0;
+
+        drive_by_wire_setpoint_->SetThrottle(throttle_effort);
+        drive_by_wire_setpoint_->SetBrake(brake_effort);
+        drive_by_wire_setpoint_->SetSteering(steering_controller_output);
+    }
+
+    /* TODO: This goes in the DEBUG publisher callback.
+    if(publish_status_) {
+        const std::lock_guard<std::mutex> controller_lock(controllers_mutex_);
+        olav_interfaces::msg::PIDStatus pid_status_message;
+        pid_status_message.setpoint = controller_->GetSetpoint();
+        pid_status_message.feedback = controller_->GetFeedback();
+        pid_status_message.output = controller_->GetOutput();
+        pid_status_message.feedforward_term = controller_->GetFeedforwardTerm();
+        pid_status_message.proportional_term =
+            controller_->GetProportionalTerm();
+        pid_status_message.integral_term = controller_->GetIntegralTerm();
+        pid_status_message.derivative_term = controller_->GetDerivativeTerm();
+        status_publisher_->publish(pid_status_message);
+    }
+    */
+}
+
 void DriveByWireNode::DebugCallback() {
     if(!is_connected_) return;
+
     PublishPLCStatus();
+    PublishSpeedControllerStatus();
+    PublishSteeringControllerStatus();
 }
 
 void DriveByWireNode::DiagnosticsCallback() {
@@ -437,6 +545,32 @@ void DriveByWireNode::DiagnosticsCallback() {
     diagnostic_array_message->header.stamp = get_clock()->now(),
     GetDiagnostics(diagnostic_array_message);
     diagnostics_publisher_->publish(*diagnostic_array_message);
+}
+
+std::shared_ptr<olav_interfaces::msg::PIDStatus>
+DriveByWireNode::GetControllerStatusMessage(
+    std::shared_ptr<PIDController> controller) {
+    auto message = std::make_shared<olav_interfaces::msg::PIDStatus>();
+
+    message->setpoint = controller->GetSetpoint();
+    message->feedback = controller->GetFeedback();
+    message->output = controller->GetOutput();
+    message->feedforward_term = controller->GetFeedforwardTerm();
+    message->proportional_term = controller->GetProportionalTerm();
+    message->integral_term = controller->GetIntegralTerm();
+    message->derivative_term = controller->GetDerivativeTerm();
+
+    return message;
+}
+
+void DriveByWireNode::PublishSpeedControllerStatus() {
+    speed_controller_status_publisher_->publish(
+        *GetControllerStatusMessage(speed_controller_));
+}
+
+void DriveByWireNode::PublishSteeringControllerStatus() {
+    steering_controller_status_publisher_->publish(
+        *GetControllerStatusMessage(steering_controller_));
 }
 
 void DriveByWireNode::PublishPLCStatus() {
@@ -522,6 +656,12 @@ void DriveByWireNode::PublishSteeringAngle() {
 void DriveByWireNode::ConnectCallback() {
     if(is_connected_) return;
 
+    if(use_mock_interface_) {
+        is_connected_ = true;
+        RCLCPP_INFO(get_logger(), "CONNECTED");
+        return;
+    }
+
     try {
         interface_->Open();
     } catch(OLAV::Exceptions::DriveByWireInterfaceException& exception) {
@@ -537,6 +677,14 @@ void DriveByWireNode::ConnectCallback() {
 }
 
 void DriveByWireNode::Disconnect() {
+    if(use_mock_interface_) {
+        is_connected_ = false;
+        is_ready_ = false;
+        RCLCPP_INFO(get_logger(),
+                    "Successfully disconnected from the drive-by-wire "
+                    "mock interface!");
+    }
+
     if(!interface_->IsConnected()) {
         is_connected_ = false;
         is_ready_ = false;
@@ -557,6 +705,14 @@ void DriveByWireNode::Disconnect() {
 }
 
 void DriveByWireNode::HealthCheckCallback() {
+    if(use_mock_interface_) {
+        has_engine_speed_ = true;
+        engine_speed_ = 3000.0;
+        has_odometry_ = true;
+        vehicle_speed_ = 0.0;
+        return;
+    };
+
     auto current_time = get_clock()->now();
 
     if(is_connected_ && !interface_->IsConnected()) {
@@ -576,44 +732,50 @@ void DriveByWireNode::HealthCheckCallback() {
         ? false
         : true;
 
-    has_heartbeat_ =
-        (current_time - last_heartbeat_time_).seconds() >= health_check_period_
-        ? false
-        : true;
+    if(active_control_mode_.GetModeIdentifier() ==
+           ControlModeIdentifier::DRIVE_ACKERMANN &&
+       active_control_mode_.GetAuthorityIdentifier() ==
+           ControlAuthorityIdentifier::AUTONOMY)
+        has_heartbeat_ = (current_time - last_heartbeat_time_).seconds() >=
+                health_check_period_
+            ? false
+            : true;
+
+    if(!HasValidControl(current_time)) {
+        {
+            std::unique_lock<std::shared_mutex> setpoint_lock(setpoint_mutex_);
+
+            drive_by_wire_setpoint_->SetThrottle(0.0);
+            drive_by_wire_setpoint_->SetBrake(0.0);
+            drive_by_wire_setpoint_->SetSteering(0.0);
+
+            active_control_mode_ = ControlMode();
+        }
+    }
 }
 
 bool DriveByWireNode::IsHealthy() {
-    return is_connected_ && has_engine_speed_ && has_odometry_ &&
-        has_heartbeat_ && is_ready_;
+    return is_connected_ && has_engine_speed_ && has_odometry_ && is_ready_;
 }
 
-void DriveByWireNode::ThrottleCallback(
-    olav_interfaces::msg::SetpointStamped::ConstSharedPtr throttle_message) {
-    if(!IsHealthy()) return;
+void DriveByWireNode::ThrottleBrakeSteeringCallback(
+    olav_interfaces::msg::ThrottleBrakeSteering::ConstSharedPtr message) {
+    if(!IsHealthy()) { return; }
 
     {
         std::unique_lock<std::shared_mutex> setpoint_lock(setpoint_mutex_);
-        drive_by_wire_setpoint_->SetThrottle(throttle_message->setpoint);
+
+        drive_by_wire_setpoint_->SetBrake(message->brake);
+        drive_by_wire_setpoint_->SetThrottle(message->throttle);
     }
-}
 
-void DriveByWireNode::BrakeCallback(
-    olav_interfaces::msg::SetpointStamped::ConstSharedPtr brake_message) {
-    if(!IsHealthy()) return;
-
+    // TODO: Add a check on the maximum steering angle to ensure it is
+    // within bounds.
     {
-        std::unique_lock<std::shared_mutex> setpoint_lock(setpoint_mutex_);
-        drive_by_wire_setpoint_->SetBrake(brake_message->setpoint);
-    }
-}
+        std::unique_lock<std::mutex> controllers_lock(controllers_mutex_);
 
-void DriveByWireNode::SteeringCallback(
-    olav_interfaces::msg::SetpointStamped::ConstSharedPtr steering_message) {
-    if(!IsHealthy()) return;
-
-    {
-        std::unique_lock<std::shared_mutex> setpoint_lock(setpoint_mutex_);
-        drive_by_wire_setpoint_->SetSteering(steering_message->setpoint);
+        steering_controller_->SetSetpoint(message->steering *
+                                          maximum_steering_angle_);
     }
 }
 
@@ -667,34 +829,50 @@ void DriveByWireNode::CycleIgnition(
     std::shared_ptr<std_srvs::srv::Trigger::Response> response) {
     (void)request;
 
+    // Check that the drive-by-wire and all auxiliary systems are ready before
+    // cycling ignition.
     if(!is_ready_) {
         SetResponseFailError<std_srvs::srv::Trigger::Response>(
             response,
             "The drive-by-wire is not ready to receive a cycle ignition "
-            "command!!");
+            "command!");
         return;
     };
 
+    // Read the current ignition state from the PLC.
     bool ignition_state = false;
     {
         std::shared_lock<std::shared_mutex> feedback_lock(feedback_mutex_);
         ignition_state = drive_by_wire_feedback_->IsIgnitionOn();
     }
 
+    // Change the state of the ignition to its complement.
     try {
-        {
-            std::unique_lock<std::shared_mutex> setpoint_lock(setpoint_mutex_);
-            drive_by_wire_setpoint_->SetIgnition(!ignition_state);
-        }
+        const std::string current_ignition_state =
+            ignition_state ? "ON" : "OFF";
+        const std::string target_ignition_state =
+            !ignition_state ? "ON" : "OFF";
+
+        RCLCPP_INFO(get_logger(),
+                    "Changing ignition state from [%s] to [%s] ...",
+                    current_ignition_state.c_str(),
+                    target_ignition_state.c_str());
+
+        WriteIgnitionState(!ignition_state);
 
         SetResponseSuccessInfo<std_srvs::srv::Trigger::Response>(
             response,
-            "Ignition state set to " + std::to_string(ignition_state) + ".");
+            "Ignition state set to " + target_ignition_state + ".");
     } catch(OLAV::Exceptions::DriveByWireInterfaceException& exception) {
         SetResponseFailError<std_srvs::srv::Trigger::Response>(
             response,
             "Could not set ignition state: " + std::string(exception.what()));
     }
+}
+
+void DriveByWireNode::WriteIgnitionState(const bool& ignition_state) {
+    std::unique_lock<std::shared_mutex> setpoint_lock(setpoint_mutex_);
+    drive_by_wire_setpoint_->SetIgnition(ignition_state);
 }
 
 void DriveByWireNode::SetIgnition(
@@ -867,6 +1045,8 @@ void DriveByWireNode::Ready(
             return;
         }
 
+        WriteIgnitionState(true);
+
         is_ready_ = true;
         writer_timer_->reset();
         SetResponseSuccessInfo<std_srvs::srv::Trigger::Response>(
@@ -935,6 +1115,7 @@ void DriveByWireNode::ShiftGearDown(
 void DriveByWireNode::GetDiagnostics(
     diagnostic_msgs::msg::DiagnosticArray::SharedPtr diagnostic_array_message) {
     GetConnectionDiagnostics(diagnostic_array_message);
+    GetStateDiagnostics(diagnostic_array_message);
     GetEngineSpeedDiagnostics(diagnostic_array_message);
     GetOdometryDiagnostics(diagnostic_array_message);
     GetHeartbeatDiagnostics(diagnostic_array_message);
@@ -974,6 +1155,41 @@ void DriveByWireNode::GetReadyDiagnostics(
     diagnostic_array_message->status.push_back(*diagnostic_status);
 }
 
+void DriveByWireNode::SetControlMode(
+    const std::shared_ptr<olav_interfaces::srv::SetControlMode::Request>
+        request,
+    std::shared_ptr<olav_interfaces::srv::SetControlMode::Response> response) {
+    const auto target_control_mode = ControlMode(
+        static_cast<ControlModeIdentifier>(request->mode),
+        static_cast<ControlAuthorityIdentifier>(request->authority));
+
+    RCLCPP_INFO(
+        get_logger(),
+        "Set control mode request received: [MODE: %s | AUTHORITY: %s] => "
+        "[MODE: %s | AUTHORITY: %s]",
+        active_control_mode_.GetModeName().c_str(),
+        active_control_mode_.GetAuthorityName().c_str(),
+        target_control_mode.GetModeName().c_str(),
+        target_control_mode.GetAuthorityName().c_str());
+
+    active_control_mode_ = target_control_mode;
+
+    if(target_control_mode.GetModeIdentifier() ==
+           ControlModeIdentifier::DRIVE_ACKERMANN &&
+       target_control_mode.GetAuthorityIdentifier() ==
+           ControlAuthorityIdentifier::AUTONOMY) {
+        CreateHeartbeatSubscription();
+    } else if(active_control_mode_.GetModeIdentifier() ==
+                  ControlModeIdentifier::DRIVE_ACKERMANN &&
+              active_control_mode_.GetAuthorityIdentifier() ==
+                  ControlAuthorityIdentifier::AUTONOMY) {
+        DestroyHeartbeatSubscription();
+    }
+
+    response->success = true;
+    response->message = "Changed mode successfully";
+}
+
 void DriveByWireNode::GetHeartbeatDiagnostics(
     diagnostic_msgs::msg::DiagnosticArray::SharedPtr diagnostic_array_message) {
     auto diagnostic_status =
@@ -1002,6 +1218,32 @@ void DriveByWireNode::GetConnectionDiagnostics(
     diagnostic_array_message->status.push_back(*diagnostic_status);
 }
 
+void DriveByWireNode::GetStateDiagnostics(
+    diagnostic_msgs::msg::DiagnosticArray::SharedPtr diagnostic_array_message) {
+    auto diagnostic_status =
+        std::make_shared<diagnostic_msgs::msg::DiagnosticStatus>();
+    diagnostic_status->level = emergency_stop_
+        ? diagnostic_msgs::msg::DiagnosticStatus::ERROR
+        : diagnostic_msgs::msg::DiagnosticStatus::OK;
+    diagnostic_status->name = "olav/drive-by-wire/state";
+    diagnostic_status->message = emergency_stop_
+        ? "The system is in emergency state."
+        : "The system is in a valid state..";
+    diagnostic_status->hardware_id = hardware_id_;
+
+    diagnostic_msgs::msg::KeyValue mode_item;
+    mode_item.key = "state";
+    mode_item.value = active_control_mode_.GetModeName();
+    diagnostic_status->values.push_back(mode_item);
+
+    diagnostic_msgs::msg::KeyValue authority_item;
+    authority_item.key = "authority";
+    authority_item.value = active_control_mode_.GetAuthorityName();
+    diagnostic_status->values.push_back(authority_item);
+
+    diagnostic_array_message->status.push_back(*diagnostic_status);
+}
+
 void DriveByWireNode::GetOdometryDiagnostics(
     diagnostic_msgs::msg::DiagnosticArray::SharedPtr diagnostic_array_message) {
     auto diagnostic_status =
@@ -1017,6 +1259,375 @@ void DriveByWireNode::GetOdometryDiagnostics(
 }
 
 void DriveByWireNode::TriggerEmergencyStop() {}
+
+void DriveByWireNode::GetSpeedControllerParameters() {
+    declare_parameter("controllers.speed.rate", 100.0);
+
+    declare_parameter("controllers.speed.pid.gains.feedforward", 0.0);
+
+    declare_parameter("controllers.speed.pid.gains.proportional", 1.0);
+
+    declare_parameter("controllers.speed.pid.gains.integral", 0.1);
+
+    declare_parameter("controllers.speed.pid.gains.derivative", 0.0);
+
+    declare_parameter("controllers.speed.pid.setpoint.ramp.enabled", true);
+
+    declare_parameter("controllers.speed.pid.setpoint.ramp.magnitude", 0.001);
+
+    declare_parameter("controllers.speed.pid.output.change.enabled", true);
+
+    declare_parameter("controllers.speed.pid.output.change.magnitude", 0.001);
+
+    declare_parameter("controllers.speed.pid.limit.integral.enabled", true);
+
+    declare_parameter("controllers.speed.pid.limit.integral.magnitude", 40.0);
+
+    declare_parameter("controllers.speed.pid.feedforward.offset.positive", 1.0);
+
+    declare_parameter("controllers.speed.pid.feedforward.offset.negative", 1.0);
+
+    declare_parameter("controllers.speed.pid.deadband.filter.enabled", true);
+
+    declare_parameter("controllers.speed.pid.deadband.filter.thresholds.lower",
+                      -0.18);
+
+    declare_parameter("controllers.speed.pid.deadband.filter.thresholds.upper",
+                      0.3);
+
+    declare_parameter("controllers.speed.brake.enabled", false);
+
+    declare_parameter("controllers.speed.brake.threshold", 0.3);
+
+    declare_parameter("controllers.speed.pid.feedforward.curve.knots",
+                      std::vector<double>{0.0, 0.0, 0.0, 0.0});
+
+    declare_parameter("controllers.speed.pid.feedforward.curve.values",
+                      std::vector<double>{0.0, 0.0, 0.0, 0.0});
+
+    declare_parameter("controllers.speed.pid.feedforward.curve.degree", 3);
+}
+
+void DriveByWireNode::InitializeSpeedController() {
+    speed_controller_ = std::make_shared<PIDController>();
+
+    speed_controller_->SetFeedforwardGain(
+        get_parameter("controllers.speed.pid.gains.feedforward").as_double());
+
+    speed_controller_->SetProportionalGain(
+        get_parameter("controllers.speed.pid.gains.proportional").as_double());
+
+    speed_controller_->SetIntegralGain(
+        get_parameter("controllers.speed.pid.gains.integral").as_double());
+
+    speed_controller_->SetDerivativeGain(
+        get_parameter("controllers.speed.pid.gains.derivative").as_double());
+
+    speed_controller_->UseSetpointRamping(
+        get_parameter("controllers.speed.pid.setpoint.ramp.enabled").as_bool());
+
+    speed_controller_->SetMaximumSetpointChange(
+        get_parameter("controllers.speed.pid.setpoint.ramp.magnitude")
+            .as_double());
+
+    speed_controller_->UseOutputLimiter(true);
+
+    brake_threshold_ =
+        get_parameter("controllers.speed.brake.threshold").as_double();
+
+    speed_controller_->SetMinimumOutput(-brake_threshold_);
+
+    speed_controller_->SetMaximumOutput(1.0);
+
+    speed_controller_->UseOutputChangeLimiter(
+        get_parameter("controllers.speed.pid.output.change.enabled").as_bool());
+
+    speed_controller_->SetMaximumOutputChange(
+        get_parameter("controllers.speed.pid.output.change.magnitude")
+            .as_double());
+
+    speed_controller_->UseIntegralTermLimiter(
+        get_parameter("controllers.speed.pid.limit.integral.enabled")
+            .as_bool());
+
+    speed_controller_->SetMaximumIntegralTerm(
+        get_parameter("controllers.speed.pid.limit.integral.magnitude")
+            .as_double());
+
+    speed_controller_->UseDeadbandFilter(
+        get_parameter("controllers.speed.pid.deadband.filter.enabled")
+            .as_bool());
+
+    speed_controller_->SetDeadbandLowerThreshold(
+        get_parameter("controllers.speed.pid.deadband.filter.thresholds.lower")
+            .as_double());
+
+    speed_controller_->SetDeadbandUpperThreshold(
+        get_parameter("controllers.speed.pid.deadband.filter.thresholds.upper")
+            .as_double());
+
+    speed_controller_feedforward_spline_ = std::make_shared<CubicSpline>(
+        GetParameterVector(
+            get_parameter("controllers.speed.pid.feedforward.curve.knots")
+                .as_double_array()),
+        GetParameterVector(
+            get_parameter("controllers.speed.pid.feedforward.curve.values")
+                .as_double_array()),
+        get_parameter("controllers.speed.pid.feedforward.curve.degree")
+            .as_int());
+}
+
+void DriveByWireNode::GetSteeringControllerParameters() {
+    declare_parameter("controllers.steering.pid.feedforward.offset", 0.3);
+
+    declare_parameter("controllers.steering.pid.gains.proportional", 1.0);
+
+    declare_parameter("controllers.steering.pid.gains.integral", 0.1);
+
+    declare_parameter("controllers.steering.pid.gains.derivative", 0.01);
+
+    declare_parameter("controllers.steering.pid.setpoint.ramp.enabled", true);
+
+    declare_parameter("controllers.steering.pid.setpoint.ramp.magnitude",
+                      0.001);
+
+    declare_parameter("controllers.steering.pid.output.change.enabled", true);
+
+    declare_parameter("controllers.steering.pid.output.change.magnitude",
+                      0.001);
+
+    declare_parameter("controllers.steering.pid.limit.integral.enabled", true);
+
+    declare_parameter("controllers.steering.pid.limit.integral.magnitude",
+                      50.0);
+
+    declare_parameter("controllers.steering.pid.deadband.filter.enabled", true);
+
+    declare_parameter(
+        "controllers.steering.pid.deadband.filter.thresholds.lower",
+        -0.3);
+
+    declare_parameter(
+        "controllers.steering.pid.deadband.filter.thresholds.upper",
+        0.3);
+
+    declare_parameter("controllers.steering.pid.limit.error.enabled", true);
+
+    declare_parameter("controllers.steering.pid.limit.error.magnitude", 0.04);
+
+    declare_parameter("controllers.steering.max_steering_angle", 30.0);
+    maximum_steering_angle_ =
+        get_parameter("controllers.steering.max_steering_angle").as_double();
+}
+
+void DriveByWireNode::InitializeSteeringController() {
+    steering_controller_ = std::make_shared<PIDController>();
+
+    steering_controller_->SetFeedforwardOffset(
+        get_parameter("controllers.steering.pid.feedforward.offset")
+            .as_double());
+
+    steering_controller_->SetProportionalGain(
+        get_parameter("controllers.steering.pid.gains.proportional")
+            .as_double());
+
+    steering_controller_->SetIntegralGain(
+        get_parameter("controllers.steering.pid.gains.integral").as_double());
+
+    steering_controller_->SetDerivativeGain(
+        get_parameter("controllers.steering.pid.gains.derivative").as_double());
+
+    steering_controller_->UseSetpointRamping(
+        get_parameter("controllers.steering.pid.setpoint.ramp.enabled")
+            .as_bool());
+
+    steering_controller_->SetMaximumSetpointChange(
+        get_parameter("controllers.steering.pid.setpoint.ramp.magnitude")
+            .as_double());
+
+    steering_controller_->UseOutputLimiter(true);
+
+    steering_controller_->UseOutputChangeLimiter(
+        get_parameter("controllers.steering.pid.output.change.enabled")
+            .as_bool());
+
+    steering_controller_->SetMaximumOutputChange(
+        get_parameter("controllers.steering.pid.output.change.magnitude")
+            .as_double());
+
+    steering_controller_->SetMinimumOutput(-1.0);
+
+    steering_controller_->SetMaximumOutput(1.0);
+
+    steering_controller_->UseDeadbandFilter(
+        get_parameter("controllers.steering.pid.deadband.filter.enabled")
+            .as_bool());
+
+    steering_controller_->SetDeadbandLowerThreshold(
+        get_parameter(
+            "controllers.steering.pid.deadband.filter.thresholds.lower")
+            .as_double());
+
+    steering_controller_->SetDeadbandUpperThreshold(
+        get_parameter(
+            "controllers.steering.pid.deadband.filter.thresholds.upper")
+            .as_double());
+
+    steering_controller_->UseErrorThreshold(
+        get_parameter("controllers.steering.pid.limit.error.enabled")
+            .as_bool());
+
+    steering_controller_->SetErrorThreshold(
+        get_parameter("controllers.steering.pid.limit.error.magnitude")
+            .as_double());
+
+    steering_controller_->UseIntegralTermLimiter(
+        get_parameter("controllers.steering.pid.limit.integral.enabled")
+            .as_bool());
+
+    steering_controller_->SetMaximumIntegralTerm(
+        get_parameter("controllers.steering.pid.limit.integral.magnitude")
+            .as_double());
+}
+
+Eigen::RowVectorXd
+DriveByWireNode::GetParameterVector(std::vector<double> vector) {
+    Eigen::RowVectorXd row_vector =
+        Eigen::Map<Eigen::VectorXd>(vector.data(), vector.size());
+
+    return row_vector;
+}
+
+bool DriveByWireNode::HasValidControl(rclcpp::Time& time) {
+    if((time - last_control_time_).seconds() > control_timeout_) {
+        return false;
+    }
+
+    return true;
+}
+
+rcl_interfaces::msg::SetParametersResult
+DriveByWireNode::OnSetParametersCallback(
+    const std::vector<rclcpp::Parameter>& parameters) {
+    rcl_interfaces::msg::SetParametersResult result;
+    result.successful = false;
+
+    SetSpeedControllerParameters(parameters, result);
+    SetSteeringControllerParameters(parameters, result);
+
+    if(!result.successful) {
+        RCLCPP_WARN(get_logger(),
+                    "At least one of the provided parameters does not support "
+                    "runtime reconfiguration!");
+    }
+
+    return result;
+}
+
+void DriveByWireNode::SetSpeedControllerParameters(
+    const std::vector<rclcpp::Parameter>& parameters,
+    rcl_interfaces::msg::SetParametersResult& result) {
+    for(const auto& parameter : parameters) {
+        if(parameter.get_name() == "controllers.speed.pid.gains.feedforward") {
+            const std::lock_guard<std::mutex> lock(controllers_mutex_);
+            speed_controller_->SetFeedforwardGain(parameter.as_double());
+        } else if(parameter.get_name() ==
+                  "controllers.speed.pid.gains.proportional") {
+            const std::lock_guard<std::mutex> lock(controllers_mutex_);
+            speed_controller_->SetProportionalGain(parameter.as_double());
+        } else if(parameter.get_name() ==
+                  "controllers.speed.pid.gains.integral") {
+            const std::lock_guard<std::mutex> lock(controllers_mutex_);
+            speed_controller_->SetIntegralGain(parameter.as_double());
+        } else if(parameter.get_name() ==
+                  "controllers.speed.pid.gains.derivative") {
+            const std::lock_guard<std::mutex> lock(controllers_mutex_);
+            speed_controller_->SetDerivativeGain(parameter.as_double());
+        } else if(parameter.get_name() ==
+                  "controllers.speed.pid.setpoint.ramp.enabled") {
+            const std::lock_guard<std::mutex> lock(controllers_mutex_);
+            speed_controller_->UseSetpointRamping(parameter.as_bool());
+        } else if(parameter.get_name() ==
+                  "controllers.speed.pid.setpoint.ramp.magnitude") {
+            const std::lock_guard<std::mutex> lock(controllers_mutex_);
+            speed_controller_->SetMaximumSetpointChange(parameter.as_double());
+        } else if(parameter.get_name() ==
+                  "controllers.speed.pid.output.change.enabled") {
+            const std::lock_guard<std::mutex> lock(controllers_mutex_);
+            speed_controller_->UseOutputChangeLimiter(parameter.as_bool());
+        } else if(parameter.get_name() ==
+                  "controllers.speed.pid.output.change.magnitude") {
+            const std::lock_guard<std::mutex> lock(controllers_mutex_);
+            speed_controller_->SetMaximumOutputChange(parameter.as_double());
+        } else if(parameter.get_name() ==
+                  "controllers.speed.pid.limit.integral.enabled") {
+            const std::lock_guard<std::mutex> lock(controllers_mutex_);
+            speed_controller_->UseIntegralTermLimiter(parameter.as_bool());
+        } else if(parameter.get_name() ==
+                  "controllers.speed.pid.limit.integral.magnitude") {
+            const std::lock_guard<std::mutex> lock(controllers_mutex_);
+            speed_controller_->SetMaximumIntegralTerm(parameter.as_double());
+        } else if(parameter.get_name() ==
+                  "controllers.speed.pid.deadband.filter.enabled") {
+            const std::lock_guard<std::mutex> lock(controllers_mutex_);
+            speed_controller_->UseDeadbandFilter(parameter.as_bool());
+        } else if(parameter.get_name() ==
+                  "controllers.speed.pid.deadband.filter.thresholds.lower") {
+            const std::lock_guard<std::mutex> lock(controllers_mutex_);
+            speed_controller_->SetDeadbandLowerThreshold(parameter.as_double());
+        } else if(parameter.get_name() ==
+                  "controllers.speed.pid.deadband.filter.thresholds.upper") {
+            const std::lock_guard<std::mutex> lock(controllers_mutex_);
+            speed_controller_->SetDeadbandUpperThreshold(parameter.as_double());
+        } else {
+            return;
+        }
+
+        result.successful = true;
+        speed_controller_->Reset();
+    }
+}
+
+void DriveByWireNode::SetSteeringControllerParameters(
+    const std::vector<rclcpp::Parameter>& parameters,
+    rcl_interfaces::msg::SetParametersResult& result) {
+    for(const auto& parameter : parameters) {
+        if(parameter.get_name() ==
+           "controllers.steering.pid.gains.proportional") {
+            steering_controller_->SetProportionalGain(parameter.as_double());
+        } else if(parameter.get_name() ==
+                  "controllers.steering.pid.gains.integral") {
+            steering_controller_->SetIntegralGain(parameter.as_double());
+        } else if(parameter.get_name() ==
+                  "controllers.steering.pid.gains.derivative") {
+            steering_controller_->SetDerivativeGain(parameter.as_double());
+        } else if(parameter.get_name() ==
+                  "controllers.steering.pid.output.change.enabled") {
+            steering_controller_->UseOutputChangeLimiter(parameter.as_bool());
+        } else if(parameter.get_name() ==
+                  "controllers.steering.pid.output.change.magnitude") {
+            steering_controller_->SetMaximumOutputChange(parameter.as_double());
+        } else if(parameter.get_name() ==
+                  "controllers.steering.pid.setpoint.ramp.enabled") {
+            steering_controller_->UseSetpointRamping(parameter.as_bool());
+        } else if(parameter.get_name() ==
+                  "controllers.steering.pid.setpoint.ramp.magnitude") {
+            steering_controller_->SetMaximumSetpointChange(
+                parameter.as_double());
+        } else if(parameter.get_name() ==
+                  "controllers.steering.pid.limit.integral.enabled") {
+            steering_controller_->UseIntegralTermLimiter(parameter.as_bool());
+        } else if(parameter.get_name() ==
+                  "controllers.steering.pid.limit.integral.magnitude") {
+            steering_controller_->SetMaximumIntegralTerm(parameter.as_double());
+        } else {
+            return;
+        }
+    }
+
+    result.successful = true;
+    steering_controller_->Reset();
+}
 
 } // namespace ROS
 } // namespace OLAV

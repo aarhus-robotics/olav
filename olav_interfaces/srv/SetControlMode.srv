@@ -7,52 +7,43 @@
  #                  OLAV: Off-Road Light Autonomous Vehicle                  #
  #############################################################################
 
-# A service to set the inputs, outputs and switching logic for the control
-# multiplexer.
+# A service to set the inputs, outputs and switching logic for the
+# drive-by-wire.
 
 # Enumeration type for the control mode.
 #
 # The following types are available:
 #
-# - (-1) DISABLED: The control multiplexer does not forward any control message
-#    to the drive-by-wire system.
+# - (-1) STANDBY
 #
-# - (+0) GAMEPAD: The control multiplexer forwards throttle and brake efforts
-#   originating from the gamepad authority directly to the drive-by-wire system,
-#   and forwards a desired steering angle from the gamepad authority to the
-#   steering controller.
+# - (+0) DRIVE_ACKERMANN
 #
-# - (+1) AUTONOMOUS: The control multiplexer forwards a desired speed to the
-#   speed controller and a desired steering angle to the steering controller;
-#   the controls must be part of the same drive command and originate from the
-#   same autonomous authority.
-#
-# - (+2) GENERIC_THROTTLE_BRAKE_STEER: The control multiplexer forward throttle,
-#   brake and steering efforts to the drive-by-wire system.
-#
-# - (+3) GENERIC_SPEED_STEERING_ANGLE: The control multiplexer forward a desired
-#   speed to the speed controller and a desired steering angle to the steering
-#   controller; the controls may be separate and identified by any generic
-#   authority.
+# - (+1) DRIVE_TBS
 
-int8 DISABLED = -1
-int8 GAMEPAD = 0
-int8 AUTONOMOUS = 1
-int8 GENERIC_THROTTLE_BRAKE_STEER = 2
-int8 GENERIC_SPEED_STEERING_ANGLE = 3
+int8 MODE_STANDBY = -1
+int8 MODE_DRIVE_ACKERMANN = 0
+int8 MODE_DRIVE_TBS = 1
+
+#
+
+int8 AUTHORITHY_SYSTEM = -1
+int8 AUTHORITHY_TERMINAL = 0
+int8 AUTHORITHY_GAMEPAD = 1
+int8 AUTHORITHY_AUTONOMY = 2
 
 # REQUEST
 # -------
 
 # Target control mode
 int8 mode
+int8 authority
 
 ---
 
 # RESULT
 # ------
 
-# Whether or not the control multiplexer switched to the target control mode.
+# Whether or not the drive-by-wire switched to the target control mode.
 bool success
 
 # Status information or error message.

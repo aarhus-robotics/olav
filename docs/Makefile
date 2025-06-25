@@ -8,4 +8,5 @@
  #############################################################################
 
 %: Makefile
+	doxygen source/Doxyfile
 	@sphinx-build -M $@ "source" "build" $(O)

@@ -39,6 +39,7 @@ rosidl_generate_interfaces(
   "msg/OdometerMCUStatus.msg"
   "msg/PIDStatus.msg"
   "msg/SetpointStamped.msg"
+  "msg/ThrottleBrakeSteering.msg"
   # Services
   "srv/SetControlMode.srv"
   "srv/SetPIDGains.srv"

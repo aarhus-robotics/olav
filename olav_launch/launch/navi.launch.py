@@ -30,7 +30,7 @@ def generate_launch_description():
             get_package_share_path("olav_launch") /
             "config/parameters/overrides_defaults.yaml").as_posix())
     log_level_argument = DeclareLaunchArgument("log_level",
-                                               default_value="WARN")
+                                               default_value="INFO")
 
     # Launch descriptions
     # -------------------

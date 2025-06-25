@@ -40,16 +40,24 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #include <ackermann_msgs/msg/ackermann_drive_stamped.hpp>
 #include <rclcpp/rclcpp.hpp>
 #include <sensor_msgs/msg/joy.hpp>
+#include <sensor_msgs/msg/joy_feedback.hpp>
 #include <std_msgs/msg/header.hpp>
 #include <std_srvs/srv/set_bool.hpp>
 #include <std_srvs/srv/trigger.hpp>
 
 #include <olav_interfaces/action/shift_gear.hpp>
-#include <olav_interfaces/msg/setpoint_stamped.hpp>
+#include <olav_interfaces/msg/throttle_brake_steering.hpp>
 #include <olav_interfaces/srv/set_control_mode.hpp>
 
 namespace OLAV {
 namespace ROS {
+
+enum GamepadState {
+    STANDBY = -1,
+    CONTROL_TRIGGER_TBS = 0,
+    CONTROL_PAD_TBS = 1,
+    CONTROL_PAD_DRIVE = 2
+};
 
 enum GamepadAxes {
     LEFT_STICK_HORIZONTAL = 0, // +1.0 full left, -1.0 full right
@@ -59,7 +67,7 @@ enum GamepadAxes {
     RIGHT_STICK_VERTICAL = 4, // +1.0 full up, -1.0 full down
     RIGHT_TRIGGER = 5, // +1.0 fully released, -1.0 fully depressed
     DPAD_HORIZONTAL = 6, // +1 full left, -1 full right
-    DPAD_VERTICAL = 7 // +1 full left, -1 full right
+    DPAD_VERTICAL = 7 // +1 full up, -1 full down
 };
 
 enum GamepadButtons {
@@ -113,6 +121,11 @@ class GamepadInterfaceNode : public rclcpp::Node {
      */
     void TimerCallback();
 
+    // Gamepad state
+    // ------------------------------------------------------------------------
+    /** @brief Shared pointer to the joystick subscription. */
+    rclcpp::Subscription<sensor_msgs::msg::Joy>::SharedPtr joy_subscription_;
+
     /**
      * @brief Callback for the ROS joystick state.
      *
@@ -122,18 +135,16 @@ class GamepadInterfaceNode : public rclcpp::Node {
     void
     JoyStateCallback(const sensor_msgs::msg::Joy::ConstSharedPtr joy_message);
 
-    /** @brief Shared pointer to the joystick subscription. */
-    rclcpp::Subscription<sensor_msgs::msg::Joy>::SharedPtr joy_subscription_;
+    // Control commands
+    // ------------------------------------------------------------------------
+    rclcpp::Publisher<olav_interfaces::msg::ThrottleBrakeSteering>::SharedPtr
+        tbs_publisher_;
 
-    rclcpp::Publisher<std_msgs::msg::Header>::SharedPtr heartbeat_publisher_;
+    rclcpp::Publisher<ackermann_msgs::msg::AckermannDriveStamped>::SharedPtr
+        ackermann_drive_publisher_;
 
-    // Controls
-    // --------
-
-    /** @brief Shared pointer to the throttle effort publisher. */
-    rclcpp::Publisher<olav_interfaces::msg::SetpointStamped>::SharedPtr
-        throttle_publisher_;
-
+    // Throttle control
+    // ------------------------------------------------------------------------
     /** @brief Latest throttle effort. */
     double throttle_ = 0.0;
 
@@ -151,10 +162,8 @@ class GamepadInterfaceNode : public rclcpp::Node {
     /** @brief Throttle effort curve basis spline. */
     boost::math::interpolators::cardinal_cubic_b_spline<double> throttle_curve_;
 
-    /** @brief Shared pointer to the brake effort publisher. */
-    rclcpp::Publisher<olav_interfaces::msg::SetpointStamped>::SharedPtr
-        brake_publisher_;
-
+    // Brake control
+    // ------------------------------------------------------------------------
     /** @brief Latest brake effort. */
     double brake_ = 0.0;
 
@@ -171,14 +180,10 @@ class GamepadInterfaceNode : public rclcpp::Node {
 
     /** @brief Brake effort curve basis spline. */
     boost::math::interpolators::cardinal_cubic_b_spline<double> brake_curve_;
+    // ------------------------------------------------------------------------
 
-    /** @brief Shared pointer to the steering effort publisher. */
-    rclcpp::Publisher<ackermann_msgs::msg::AckermannDriveStamped>::SharedPtr
-        ackermann_drive_publisher_;
-
-    /** @brief Maximum steering angle achievable via the controller. */
-    double maximum_steering_angle_;
-
+    // Steering control
+    // ------------------------------------------------------------------------
     /** @brief Latest steering effort. */
     double steering_ = 0.0;
 
@@ -196,22 +201,19 @@ class GamepadInterfaceNode : public rclcpp::Node {
 
     /** @brief Steering effort curve basis spline. */
     boost::math::interpolators::cardinal_cubic_b_spline<double> steering_curve_;
+    // ------------------------------------------------------------------------
 
-    // Services
-    // --------
+    rclcpp::Client<olav_interfaces::srv::SetControlMode>::SharedPtr
+        set_control_mode_client_;
 
-    /** @brief Controller service buttons debounce interval in seconds. */
-    double slow_debounce_time_;
-
-    /** @brief Controller generic buttons debounce interval in seconds. */
-    double fast_debounce_time_;
-
+    // Start engine
+    // ------------------------------------------------------------------------
     /** @brief Shared pointer to the engine start service client. */
     rclcpp::Client<std_srvs::srv::Trigger>::SharedPtr start_engine_client_;
+    // ------------------------------------------------------------------------
 
-    /** @brief Last parsed engine start request time stamp. */
-    rclcpp::Time last_starter_request_time_;
-
+    // Gear up/down shifter
+    // ------------------------------------------------------------------------
     /** @brief Shared pointer to the downshift service client. */
     rclcpp::Client<std_srvs::srv::Trigger>::SharedPtr shift_gear_down_client_;
 
@@ -233,32 +235,10 @@ class GamepadInterfaceNode : public rclcpp::Node {
      */
     void ShiftGearUpCallback(
         rclcpp::Client<std_srvs::srv::Trigger>::SharedFuture future);
+    // ------------------------------------------------------------------------
 
-    /** @brief Last parsed gear shift request time stamp. */
-    rclcpp::Time last_shifter_request_time_;
-
-    rclcpp::Client<std_srvs::srv::Trigger>::SharedPtr
-        cycle_control_mode_client_;
-
-    rclcpp::Time last_control_mode_cycle_time_;
-
-    void CycleControlModeCallback(
-        rclcpp::Client<std_srvs::srv::Trigger>::SharedFuture future);
-
-    rclcpp::Client<olav_interfaces::srv::SetControlMode>::SharedPtr
-        set_control_mode_client_;
-
-    rclcpp::Time last_control_mode_set_time_;
-
-    void SetControlModeCallback(
-        rclcpp::Client<olav_interfaces::srv::SetControlMode>::SharedFuture
-            future);
-
-    rclcpp::TimerBase::SharedPtr controls_timer_;
-
-    /** @brief Last parsed ignition request time stamp. */
-    rclcpp::Time last_ignition_request_time_;
-
+    // Cycle ignition
+    // ------------------------------------------------------------------------
     /** @brief Shared pointer to the cycle ignition state service client.  */
     rclcpp::Client<std_srvs::srv::Trigger>::SharedPtr cycle_ignition_client_;
 
@@ -266,22 +246,176 @@ class GamepadInterfaceNode : public rclcpp::Node {
         rclcpp::Client<std_srvs::srv::Trigger>::SharedFuture future);
 
     rclcpp::Client<std_srvs::srv::Trigger>::SharedPtr emergency_stop_client_;
+    // ------------------------------------------------------------------------
 
+    // Trigger emergency stop
+    // ------------------------------------------------------------------------
     void TriggerEmergencyCallback(
         rclcpp::Client<std_srvs::srv::Trigger>::SharedFuture future);
+    // ------------------------------------------------------------------------
 
+    // Ready-to-run
+    // ------------------------------------------------------------------------
     rclcpp::Client<std_srvs::srv::Trigger>::SharedPtr ready_to_run_client_;
-
-    rclcpp::Time last_ready_to_run_time_;
 
     void ReadyToRunCallback(
         rclcpp::Client<std_srvs::srv::Trigger>::SharedFuture future);
+    // ------------------------------------------------------------------------
 
-    std::mutex controls_mutex_;
+    // Datalogger start/stop
+    // ------------------------------------------------------------------------
+    /** @brief Shared pointer to the datalogger start service client. */
+    rclcpp::Client<std_srvs::srv::Trigger>::SharedPtr start_datalogger_client_;
 
+    /** @brief Shared pointer to the datalogger stop service client. */
+    rclcpp::Client<std_srvs::srv::Trigger>::SharedPtr stop_datalogger_client_;
+    // ------------------------------------------------------------------------
+
+    // Node parameters
+    // ------------------------------------------------------------------------
     double rate_;
 
     std::string frame_id_ = "gamepad";
+
+    rclcpp::TimerBase::SharedPtr controls_timer_;
+
+    GamepadState state_ = GamepadState::STANDBY;
+    // ------------------------------------------------------------------------
+
+    // Thread safety
+    // ------------------------------------------------------------------------
+    std::mutex controls_mutex_;
+    // ------------------------------------------------------------------------
+
+    // Input handling
+    // ------------------------------------------------------------------------
+
+    void HandleTriggerRight(const double& position);
+
+    void HandleTriggerLeft(const double& position);
+
+    void HandleStickLeftHorizontal(const double& position);
+
+    void HandleLeftBumper();
+
+    void HandleRightBumper();
+
+    void HandleDirectionalPadHorizontal(const int& position);
+
+    void HandleDirectionalPadVertical(const int& position);
+
+    void HandleXboxButton();
+
+    void HandleMenuButton();
+
+    void HandleShareButton();
+
+    void HandleViewButton();
+
+    void HandleXButton();
+
+    void HandleYButton();
+
+    void HandleAButton();
+
+    void HandleBButton();
+
+    void ZeroTrims();
+
+    bool is_right_modifier_pressed_ = false;
+
+    bool is_left_modifier_pressed_ = false;
+
+    double shift_multiplier_;
+
+    // Debouncing
+    // ------------------------------------------------------------------------
+
+    bool CheckDebounce(rclcpp::Time& last_press_time, const double& period);
+
+    /** @brief Last parsed ignition request time stamp. */
+    rclcpp::Time last_ignition_request_time_;
+
+    /** @brief Last parsed engine start request time stamp. */
+    rclcpp::Time last_starter_request_time_;
+
+    double starter_debounce_period_;
+
+    /** @brief Last parsed gear shift request time stamp. */
+    rclcpp::Time last_shifter_request_time_;
+
+    /** @brief Debounce interval for the gear shifting bumpers. */
+    double shifter_debounce_period_;
+
+    rclcpp::Time last_button_time_;
+
+    double button_debounce_period_;
+
+    rclcpp::Time last_dpad_time_;
+
+    /** @brief Debounce interval in seconds. */
+    double dpad_debounce_period_ = 0.1;
+
+    double service_button_debounce_period_;
+
+    rclcpp::Time last_service_call_time_;
+
+    rclcpp::Time last_rumble_time_;
+
+    // ------------------------------------------------------------------------
+
+    // D-Pad controls
+    // ------------------------------------------------------------------------
+    double control_vertical_magnitude_ = 0.0;
+    double control_vertical_lower_bound_;
+    double control_vertical_upper_bound_;
+    double control_vertical_step_ = 0.01;
+
+    double control_horizontal_magnitude_ = 0.0;
+    double control_horizontal_lower_bound_;
+    double control_horizontal_upper_bound_;
+    double control_horizontal_step_ = 0.01;
+
+    std::tuple<double, double, double, double> throttle_pad_settings_;
+    std::tuple<double, double, double, double> steering_pad_settings_;
+    std::tuple<double, double, double, double> speed_pad_settings_;
+
+    void ScheduleRumble();
+
+    void ClampRange(const double& lower_bound,
+                    const double& upper_bound,
+                    double& value);
+
+    // ------------------------------------------------------------------------
+
+    // Force feedback
+    // ------------------------------------------------------------------------
+    /** @brief Shared pointer to the force feedback publisher. */
+    rclcpp::Publisher<sensor_msgs::msg::JoyFeedback>::SharedPtr
+        force_feedback_publisher_;
+
+    /**
+     * @brief Callback for the force feedback timer.
+     */
+    void FeedbackCallback();
+
+    /** @brief Whether or not the gamepad should rumble throughout the current
+     *         timer tick. */
+    bool must_rumble_ = false;
+
+    bool is_rumbling_ = false;
+
+    /** @brief Shared pointer to the force feedback timer. */
+    rclcpp::TimerBase::SharedPtr feedback_timer_;
+
+    double force_feedback_intensity_;
+
+    double force_feedback_period_;
+    // ------------------------------------------------------------------------
+
+    void PublishThrottleBrakeSteering(const double& throttle,
+                                      const double& brake,
+                                      const double& steering);
 };
 
 } // namespace ROS

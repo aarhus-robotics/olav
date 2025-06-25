@@ -15,9 +15,11 @@ message(STATUS "Building the drive-by-wire interface node ...")
 
 # > Find external packages
 # ------------------------
+find_package(ackermann_msgs REQUIRED)
 find_package(diagnostic_msgs REQUIRED)
 find_package(Modbus REQUIRED)
 find_package(nav_msgs REQUIRED)
+find_package(olav_core REQUIRED)
 find_package(olav_interfaces REQUIRED)
 find_package(rclcpp REQUIRED)
 find_package(sensor_msgs REQUIRED)
@@ -27,7 +29,13 @@ find_package(std_srvs REQUIRED)
 # -------------
 add_executable(
   ${PROJECT_NAME}_drive_by_wire_interface_node
-  feedback.cpp interface.cpp exceptions.cpp node.cpp executor.cpp setpoint.cpp)
+  control_mode.cpp
+  feedback.cpp
+  interface.cpp
+  exceptions.cpp
+  node.cpp
+  executor.cpp
+  setpoint.cpp)
 
 # > Include directories
 # ---------------------
@@ -40,13 +48,16 @@ target_include_directories(
 # ----------------------------
 ament_target_dependencies(
   ${PROJECT_NAME}_drive_by_wire_interface_node
+  ackermann_msgs
   diagnostic_msgs
   nav_msgs
+  olav_core
   olav_interfaces
   rclcpp
   sensor_msgs
   std_srvs)
-target_link_libraries(${PROJECT_NAME}_drive_by_wire_interface_node modbus)
+target_link_libraries(${PROJECT_NAME}_drive_by_wire_interface_node
+                      ${PROJECT_NAME}_core modbus)
 
 # > Define install rules
 # ----------------------

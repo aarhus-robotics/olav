@@ -61,9 +61,7 @@ def generate_launch_description():
             ("feedback/engine/speed", "sensors/powertrain/engine/speed"),
             ("feedback/odometry", "sensors/powertrain/tachometer/odometry"),
             #("signals/heartbeat", "signals/heartbeat"),
-            #("controls/throttle", "controls/throttle"),
-            #("controls/brake", "controls/brake"),
-            #("controls/steering", "controls/steering"),
+            #("controls/tbs", "controls/tbs"),
             # > Publishers
             #("signals/drive_by_wire", "signals/drive_by_wire"),
             #("signals/estop", "signals/estop"),
@@ -73,6 +71,7 @@ def generate_launch_description():
             #("/diagnostics", "/diagnostics"),
             # > Services servers
             ("ready", "drive_by_wire/ready"),
+            ("set_control_mode", "drive_by_wire/set_control_mode"),
             ("set_ignition", "drive_by_wire/set_ignition"),
             ("cycle_ignition", "drive_by_wire/cycle_ignition"),
             ("start_engine", "drive_by_wire/start_engine"),
@@ -119,123 +118,6 @@ def generate_launch_description():
         on_exit=Shutdown(),
     )
 
-    # > Control multiplexer node
-    control_multiplexer_node = Node(
-        namespace=LaunchConfiguration("namespace"),
-        name="control_multiplexer",
-        package="olav_control",
-        #prefix="konsole -e gdb -ex=r --args",
-        executable="olav_control_control_multiplexer_node",
-        arguments=[
-            "--ros-args", "--log-level",
-            LaunchConfiguration("log_level")
-        ],
-        parameters=[
-            Path(
-                get_package_share_path("olav_control") /
-                "config/parameters/control_multiplexer_node_defaults.yaml").
-            as_posix(),
-            LaunchConfiguration("parameters_overrides"),
-        ],
-        remappings=[
-            # > Subscriptions
-            ("in/throttle", "multiplexer/in/throttle"),
-            ("in/brake", "multiplexer/in/brake"),
-            ("in/steering", "multiplexer/in/steering"),
-            ("in/drive", "multiplexer/in/drive"),
-            ("in/heartbeat", "multiplexer/in/heartbeat"),
-            # > Publishers
-            ("out/throttle", "controls/throttle"),
-            ("out/brake", "controls/brake"),
-            ("out/steering", "controls/steering"),
-            ("out/speed", "controllers/speed/speed"),
-            ("out/steering_angle", "controllers/steering/angle"),
-            ("out/heartbeat", "signals/heartbeat"),
-            # > Services
-            ("set_control_mode", "multiplexer/set_control_mode"),
-            ("cycle_control_mode", "multiplexer/cycle_control_mode"),
-            # > Clients
-            #("controllers/speed/reset", "controllers/speed/reset"),
-            #("controllers/steering/reset", "controllers/steering/reset"),
-        ],
-        emulate_tty=True,
-        output={
-            "both": ["screen", "own_log"],
-        },
-        on_exit=Shutdown(),
-    )
-
-    # > Speed controller node
-    speed_controller_node = Node(
-        namespace=LaunchConfiguration("namespace"),
-        name="speed_controller",
-        package="olav_control",
-        #prefix="konsole -e gdb -ex=r --args",
-        executable="olav_control_speed_controller_node",
-        arguments=[
-            "--ros-args", "--log-level",
-            LaunchConfiguration("log_level")
-        ],
-        parameters=[
-            Path(
-                get_package_share_path("olav_control") /
-                "config/parameters/speed_controller_node_defaults.yaml").
-            as_posix(),
-            LaunchConfiguration("parameters_overrides"),
-        ],
-        remappings=[
-            # > Subscriptions
-            ("speed", "controllers/speed/speed"),
-            ("odometry", "sensors/powertrain/tachometer/odometry"),
-            # > Publishers
-            ("throttle", "controls/throttle"),
-            ("brake", "controls/brake"),
-            ("status", "controllers/speed/status"),
-            # Service servers
-            ("reset", "controllers/speed/reset"),
-        ],
-        emulate_tty=True,
-        output={
-            "both": ["screen", "own_log"],
-        },
-        on_exit=Shutdown(),
-    )
-
-    # > Steering controller node
-    steering_controller_node = Node(
-        namespace=LaunchConfiguration("namespace"),
-        name="steering_controller",
-        package="olav_control",
-        #prefix="konsole -e gdb -ex=r --args",
-        executable="olav_control_steering_controller_node",
-        arguments=[
-            "--ros-args", "--log-level",
-            LaunchConfiguration("log_level")
-        ],
-        parameters=[
-            Path(
-                get_package_share_path("olav_control") /
-                "config/parameters/steering_controller_node_defaults.yaml").
-            as_posix(),
-            LaunchConfiguration("parameters_overrides"),
-        ],
-        remappings=[
-            # > Subscriptions
-            ("setpoint", "controllers/steering/angle"),
-            ("feedback", "sensors/steering/angle"),
-            # > Publishers
-            ("output", "multiplexer/in/steering"),
-            ("status", "controllers/steering/status"),
-            # > Services
-            ("reset", "controllers/steering/reset"),
-        ],
-        emulate_tty=True,
-        output={
-            "both": ["screen", "own_log"],
-        },
-        on_exit=Shutdown(),
-    )
-
     # > Diagnostic aggregator node
     diagnostic_aggregator_node = Node(
         namespace=LaunchConfiguration("namespace"),
@@ -243,7 +125,7 @@ def generate_launch_description():
         package="diagnostic_aggregator",
         #prefix="konsole -e gdb -ex=r --args",
         executable="aggregator_node",
-        arguments=["--ros-args", "--log-level", "warn"],
+        arguments=["--ros-args", "--log-level", "info"],
         parameters=[
             Path(
                 get_package_share_path("olav_control") /
@@ -267,9 +149,6 @@ def generate_launch_description():
         # > Nodes
         drive_by_wire_interface_node,
         powertrain_interface_node,
-        control_multiplexer_node,
-        speed_controller_node,
-        steering_controller_node,
         diagnostic_aggregator_node,
     ])
 

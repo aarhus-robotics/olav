@@ -1,12 +1,36 @@
 # ----------------- #
 % <*.olavnet> System
 # ----------------- #
+$ branch: echo "main develop" | tr ' ' '\n' --- --header "The branch to checkout."
+
 # Bring the system up.
 olav system up
 
 # Bring the system down.
 olav system down
 
+# Switch system to a different branch
+olav system checkout <branch>
+
+# Update the system
+olav system update
+
+# Build the system
+olav system build
+
+# ----------------- #
+% <thor.olavnet> Git
+# ----------------- #
+$ branch: echo "main develop" | tr ' ' '\n' --- --header "The branch to checkout."
+
+# Build the current branch
+olav build
+
+# Update the current branch
+olav update
+
+# Checkout a branch
+olav checkout <branch>
 
 # -------------------- #
 % <thor.olavnet> System
@@ -54,6 +78,21 @@ ssh -qt odin.lan "olav sessions list"
 
 # Kill muxed sessions.
 ssh -qt odin.lan "olav sessions kill"
+
+
+# ----------------- #
+% <odin.olavnet> Git
+# ----------------- #
+$ branch: echo "main develop" | tr ' ' '\n' --- --header "The branch to checkout."
+
+# Build the current branch
+ssh -qt odin.lan "olav build"
+
+# Update the current branch
+ssh -qt odin.lan "olav update"
+
+# Checkout a branch
+ssh -qt odin.lan "olav checkout <branch>"
 
 
 # ------------------- #
@@ -141,13 +180,12 @@ ssh -qt odin.lan "sudo btop"
 $ odin-bag: ssh -qt odin.lan "ls -1 /home/olav/ROS/bags" --- --header "Select a bag."
 
 # Delete a bag.
-ssh -qt odin.lan "rm -f /home/olav/ERDA/<odin-bag>"
+ssh -qt odin.lan "rm -f /home/olav/ROS/bags/<odin-bag>"
 
 
 # ------------------------ #
 % <thor.olavnet> Datalogger
 # ------------------------ #
-$ erda-bag: ssh -qt odin.lan "ls -1 /home/olav/ERDA" --- --header "Select a bag."
 $ thor-bag: ls -1 /home/olav/ROS/bags 2> /dev/null --- --header "Select a bag."
 $ topics: ls -1 /home/olav/ROS/config/datalogger 2> /dev/null --- --header "Select a topics preset."
 
@@ -176,16 +214,16 @@ ranger /home/olav/ROS/bags
 #cd /home/olav/ROS/bags && mcapdec /home/olav/ROS/bags/<thor-bag> && cd -
 
 # Transfer a bag.
-rsync -aPu odin.lan:/home/olav/ROS/bags/<srv02-bag> /home/olav/ROS/bags/
+rsync -aPu odin.lan:/home/olav/ROS/bags/<odin-bag> /home/olav/ROS/bags/
 
 
 # ------------------------ #
 % <odin.olavnet> Datalogger
 # ------------------------ #
 $ remote-storage: echo "thor srv01" | tr " " "\n" --- --header "Select a remote."
-$ remote: echo "thor srv01 erda" | tr " " "\n" --- --header "Select a remote."
+$ remote: echo "thor" | tr " " "\n" --- --header "Select a remote."
 $ datalogger-presets: ssh -qt odin.lan "ls -1 /home/olav/ROS/src/aarhus-robotics/olav/olav_utilities/olav_utilities/data/datalogger/presets | sed -e 's/\..*$//'" 2> /dev/null --- --header "Select a datalogger preset."
-$ srv02-bag: ssh -qt odin.lan "ls -1 /home/olav/ROS/bags" 2> /dev/null --- --header "Select a bag."
+$ odin-bag: ssh -qt odin.lan "ls -1 /home/olav/ROS/bags" 2> /dev/null --- --header "Select a bag."
 
 # List bags.
 ssh -qt odin.lan "ls -1 /home/olav/ROS/bags"
@@ -197,7 +235,7 @@ ssh -qt odin.lan "ranger /home/olav/ROS/bags" 2> /dev/null
 ssh -qt odin.lan olav record upload all
 
 # Upload a bag.
-ssh -qt odin.lan olav record upload <srv02-bag>
+ssh -qt odin.lan olav record upload <odin-bag>
 
 # Get remaining space.
 ssh -qt odin.lan "olav record storage"

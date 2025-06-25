@@ -13,5 +13,71 @@
       limits:
         engine_speed: 5000.0
         longitudinal_speed: 8.33
+    controllers:
+      speed:
+        pid:
+          gains:
+            feedforward: 0.0
+            proportional: 0.05
+            integral: 0.00045
+            derivative: 0.0
+          setpoint:
+            ramp:
+              enabled: true
+              magnitude: 0.01
+          output:
+            change:
+              enabled: false
+              magnitude: 0.1
+          limit:
+            integral:
+              enabled: true
+              magnitude: 0.4
+          feedforward:
+            offset:
+              positive: 0.18
+              negative: 0.18
+          deadband:
+            filter:
+              enabled: true
+              thresholds:
+                lower: -0.225
+                upper: 0.225
+        brake:
+          enabled: false
+          threshold: 0.3
+          limit: 0.5
+      steering:
+        pid:
+          feedforward:
+            offset: 0.20
+          gains:
+            proportional: 2.5
+            integral: 0.05
+            derivative: 0.0
+          setpoint:
+            ramp:
+              enabled: true
+              magnitude: 0.1
+          output:
+            minimum: -1.0
+            maximum: 1.0
+            change:
+              enabled: false
+              magnitude: 0.001
+          limit:
+            integral:
+              enabled: false
+              magnitude: 0.3
+            error:
+              enable: true
+              magnitude: 0.25
+          deadband:
+            filter:
+              enabled: false
+              thresholds:
+                lower: -0.3
+                upper: 0.3
+        max_steering_angle: 30.0
     debug:
-      log_throttle: 1.0
+      use_mock_interface: false

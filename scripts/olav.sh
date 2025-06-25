@@ -24,7 +24,7 @@ function interrupt() {
 autorossource() {
     source /opt/ros/humble/setup.zsh &&
         source ${HOME}/ROS/install/setup.zsh &&
-        export ROS_LOG_DIR=\"${HOME}/ROS/log/run\" &&
+        export ROS_LOG_DIR=${HOME}/ROS/log/run &&
         export RMW_IMPLEMENTATION=rmw_cyclonedds_cpp &&
         export CYCLONEDDS_URI=file://${HOME}/ROS/config/cyclonedds/cyclonedds.xml
 
@@ -71,9 +71,16 @@ is_in_list() {
 # repository under the ROS local workspace source directory.
 ros-git-fetch() {
     timeout 10s git -C ${HOME}/ROS/src/${1} fetch
-    git -C ${HOME}/ROS/src/${1} reset --hard origin/main
+    git -C ${HOME}/ROS/src/${1} reset --hard origin/$(git -C ${HOME}/ROS/src/${1} symbolic-ref --short HEAD)
     return 0
 }
+
+ros-git-checkout() {
+    timeout 10s git -C ${HOME}/ROS/src/${1} fetch origin
+    git -C ${HOME}/ROS/src/${1} reset --hard origin/${2}
+    return 0
+}
+
 
 LIST_OF_REPOSITORIES=("aarhus-robotics/olav" "aarhus-robotics/navi")
 LIST_OF_ODIN_SESSIONS=("datalogger" "description" "drive-by-wire" "navigation" "perception" "drawbar")
@@ -221,6 +228,15 @@ if [ "${1}" = "sessions" ]; then
         exit 0
     fi
 
+#######################
+# Checkout Git branch #
+#######################
+elif [ "${1}" = "checkout" ]; then
+    prettyprint "Checking out branch \"${2}\" ..."
+    ros-git-checkout aarhus-robotics/olav ${2} | lolcat
+    exit 0
+
+
 ###################
 # Update packages #
 ###################
@@ -309,11 +325,7 @@ elif [ "${1}" = "gui" ]; then
 #############
 elif [ "${1}" = "menu" ]; then
     prettyprint "Loading navi menu ..."
-    while true; do
-        navi
-        prettyprint "\nPress any key to return to the menu."
-        read
-    done
+    navi
     exit 0
 
 elif [ "${1}" = "parameter" ]; then
@@ -382,26 +394,29 @@ elif [ "${1}" = "record" ]; then
             >/dev/null 2>&1 &
         exit 0
 
-    ###########################################
-    # > Upload a datalogger recording to ERDA #
-    ###########################################
+    ############################################################
+    # > Upload a datalogger recording to the external storage #
+    ###########################################################
     elif [ "${2}" = "upload" ]; then
-        mount ${HOME}/ERDA
 
-        ###############################################
-        # >> Upload all datalogger recordings to ERDA #
-        ###############################################
+        ###############################################################
+        # >> Upload all datalogger recordings to the external storage #
+        ###############################################################
         if [ "${3}" = "all" ]; then
+            sudo mount /dev/sda1 ${HOME}/Portable
             prettyprint "Uploading all recordings ..."
-            rsync -aPu ${HOME}/ROS/bags/** ${HOME}/ERDA/Inbox/
+            rsync -aPu ${HOME}/ROS/bags/** ${HOME}/Portable/
+            sudo umount ${HOME}/Portable
             exit 0
 
-        #####################################################
-        # >> Upload a specific datalogger recording to ERDA #
-        #####################################################
+        #####################################################################
+        # >> Upload a specific datalogger recording to the external storage #
+        #####################################################################
         else
+            sudo mount /dev/sda1 ${HOME}/Portable
             prettyprint "Uploading recording ${3} ..."
             rsync -aPu ${HOME}/ROS/bags/${3} ${HOME}/ERDA/Inbox/
+            sudo umount ${HOME}/Portable
             exit 0
         fi
 
@@ -543,23 +558,56 @@ elif [ "${1}" = "system" ]; then
         exit 1
     fi
 
+    ###########################
+    # Switch system to branch #
+    ###########################
+
+    if [ "${2}" = "checkout" ]; then
+        prettyprint "Checking out on thor.lan ..."
+        olav checkout ${3}
+
+        prettyprint "Checking out on odin.lan ..."
+        ssh -qt odin.lan "olav checkout ${3}"
+        exit 0
+    fi
+
+    #########################
+    # Build at system level #
+    #########################
+
+    if [ "${2}" = "build" ]; then
+        prettyprint "Building on thor.lan ..."
+        olav build ${3}
+
+        prettyprint "Building on odin.lan ..."
+        ssh -qt odin.lan "olav build ${3}"
+        exit 0
+    fi
+
+    ##########################
+    # Update at system level #
+    ##########################
+
+    if [ "${2}" = "update" ]; then
+        prettyprint "Updating on thor.lan ..."
+        olav update ${3}
+    
+        prettyprint "Updating on odin.lan ..."
+        ssh -qt odin.lan "olav update ${3}"
+        exit 0
+    fi
+
     #######################
     # Bring the system up #
     #######################
     if [ "${2}" = "up" ]; then
 
-        # Update the local ROS distribution
-        olav update
-        olav build
-
         # :: Start the local session
+        prettyprint "Bringing system up on thor.lan ..."
         olav sessions mux peripherals
 
-        # :: Update the main computing unit ROS distribution
-        ssh -qt odin.lan "olav update"
-        ssh -qt odin.lan "olav build"
-
         # :: Start the main computing unit sessions.
+        prettyprint "Bringing system up on odin.lan ..."
         ssh -qt odin.lan "olav sessions mux datalogger"
         ssh -qt odin.lan "olav sessions mux description"
         ssh -qt odin.lan "olav sessions mux drive-by-wire"
@@ -574,6 +622,7 @@ elif [ "${1}" = "system" ]; then
     elif [ "${2}" = "down" ]; then
 
         # :: Stop the main computing unit sessions.
+        prettyprint "Bringing system down on odin.lan ..."
         ssh -qt odin.lan "olav sessions stop datalogger"
         ssh -qt odin.lan "olav sessions stop perception"
         ssh -qt odin.lan "olav sessions stop navigation"
@@ -581,6 +630,7 @@ elif [ "${1}" = "system" ]; then
         ssh -qt odin.lan "olav sessions stop description"
 
         # :: Stop the local session
+        prettyprint "Bringing system down on thor.lan ..."
         olav sessions stop peripherals
 
         # :: Set the LiDAR sensor to STANDBY mode.

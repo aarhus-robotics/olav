@@ -1,0 +1,18 @@
+services:
+  ros:
+    command: /bin/bash
+    container_name: olav_devcontainer
+    image: ghcr.io/aarhus-robotics/olav:devel
+    user: "1000:1000"
+    stdin_open: true
+    tty: true
+    volumes:
+      #- build:/home/robot/ROS/build
+      #- install:/home/robot/ROS/install
+      - "../:/home/robot/ROS/src/aarhus-robotics/olav"
+
+#volumes:
+#  build:
+#    name: olav_devcontainer_build
+#  install:
+#    name: olav_devcontainer_install

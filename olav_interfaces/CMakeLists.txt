@@ -33,14 +33,15 @@ rosidl_generate_interfaces(
   ${PROJECT_NAME}
   # Actions
   "action/ShiftGear.action"
-  "action/SinusoidalSteering.action"
   # Messages
   "msg/DriveByWirePLCStatus.msg"
   "msg/OdometerMCUStatus.msg"
   "msg/PIDStatus.msg"
   "msg/SetpointStamped.msg"
+  "msg/ThrottleBrakeSteering.msg"
   # Services
   "srv/SetControlMode.srv"
+  "srv/SetControlOverride.srv"
   "srv/SetPIDGains.srv"
   DEPENDENCIES
   std_msgs)

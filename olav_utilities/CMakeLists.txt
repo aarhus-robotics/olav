@@ -1,3 +1,14 @@
+# cmake-format: off
+ #############################################################################
+ #                            _     _     _     _                            #
+ #                           / \   / \   / \   / \                           #
+ #                          ( O ) ( L ) ( A ) ( V )                          #
+ #                           \_/   \_/   \_/   \_/                           #
+ #                                                                           #
+ #                  OLAV: Off-Road Light Autonomous Vehicle                  #
+ #############################################################################
+# cmake-format: on
+
 cmake_minimum_required(VERSION 3.8)
 
 project(olav_utilities)
@@ -8,6 +19,8 @@ endif()
 
 find_package(ament_cmake REQUIRED)
 find_package(rclpy REQUIRED)
+
+add_subdirectory(src/heart)
 
 ament_python_install_package(${PROJECT_NAME})
 

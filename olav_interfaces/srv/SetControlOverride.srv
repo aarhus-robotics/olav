@@ -1,0 +1,41 @@
+ #############################################################################
+ #                            _     _     _     _                            #
+ #                           / \   / \   / \   / \                           #
+ #                          ( O ) ( L ) ( A ) ( V )                          #
+ #                           \_/   \_/   \_/   \_/                           #
+ #                                                                           #
+ #                  OLAV: Off-Road Light Autonomous Vehicle                  #
+ #############################################################################
+
+# A service to set the override logic for the # drive-by-wire.
+
+# Enumeration type for the override mode.
+#
+# The following types are available:
+#
+# - (-1) DISABLED
+#
+# - (+0) OVERRIDE_THROTTLE_BRAKE
+#
+# - (+1) OVERRIDE_STEERING
+
+int8 MODE_DISABLED = -1
+int8 MODE_OVERRIDE_THROTTLE_BRAKE = 0
+int8 MODE_OVERRIDE_STEERING = 1
+
+# REQUEST
+# -------
+
+# Target control mode
+int8 mode
+
+---
+
+# RESULT
+# ------
+
+# Whether or not the drive-by-wire switched to the target override mode.
+bool success
+
+# Status information or error message.
+string message

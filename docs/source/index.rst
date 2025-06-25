@@ -16,7 +16,7 @@ migration from ROS to ROS 2.
 .. toctree::
    :hidden:
 
-   pages/getting-started/index.rst
-   pages/system/index.rst
-   pages/safety/index.rst
-   pages/software/index.rst
+   pages/getting-started/index.md
+   pages/system/index.md
+   pages/safety/index.md
+   pages/software/index.md

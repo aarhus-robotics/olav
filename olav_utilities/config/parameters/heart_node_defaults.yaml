@@ -1,0 +1,4 @@
+"/**":
+  ros__parameters:
+    rate: 1.0
+    frame_id: olav

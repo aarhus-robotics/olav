@@ -1,0 +1,23 @@
+{
+    "customizations": {
+        "vscode": {
+            "extensions": [
+                "cheshirekow.cmake-format",
+                "cschlosser.doxdocgen",
+                "dnut.rewrap-revived",
+                "Gruntfuggly.todo-tree",
+                "IBM.output-colorizer",
+                "josetr.cmake-language-support-vscode",
+                "ms-python.black-formatter",
+                "ms-python.python",
+                "Ranch-Hand-Robotics.rde-ros-2",
+                "yzhang.markdown-all-in-one"
+            ]
+        }
+    },
+    "dockerComposeFile": [
+        "docker-compose.yml"
+    ],
+    "service": "ros",
+    "workspaceFolder": "/home/robot/ROS/src/aarhus-robotics/olav"
+}

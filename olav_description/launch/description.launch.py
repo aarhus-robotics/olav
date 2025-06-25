@@ -43,7 +43,7 @@ def generate_launch_description():
 
     # > Declare log level launch argument
     log_level_argument = DeclareLaunchArgument("log_level",
-                                               default_value="WARN")
+                                               default_value="INFO")
 
     # Nodes
     # -----

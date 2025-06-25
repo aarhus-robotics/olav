@@ -31,7 +31,7 @@ def generate_launch_description():
             "config/parameters/overrides_defaults.yaml").as_posix())
 
     log_level_argument = DeclareLaunchArgument("log_level",
-                                               default_value="WARN")
+                                               default_value="INFO")
 
     # Nodes
     # -----
@@ -87,19 +87,18 @@ def generate_launch_description():
             # > Subscriptions
             ("joy", "peripherals/gamepad/state"),
             # > Publishers
-            ("throttle", "multiplexer/in/throttle"),
-            ("brake", "multiplexer/in/brake"),
-            ("drive", "multiplexer/in/drive"),
-            ("heartbeat", "multiplexer/in/heartbeat"),
+            ("tbs", "controls/tbs"),
+            ("feedback", "peripherals/gamepad/force_feedback"),
             # > Service clients
             ("start_engine", "drive_by_wire/start_engine"),
             ("shift_gear_up", "drive_by_wire/shift_gear_up"),
             ("shift_gear_down", "drive_by_wire/shift_gear_down"),
             ("cycle_ignition", "drive_by_wire/cycle_ignition"),
-            ("cycle_control_mode", "multiplexer/cycle_control_mode"),
-            ("set_control_mode", "multiplexer/set_control_mode"),
+            ("set_control_mode", "drive_by_wire/set_control_mode"),
             ("emergency_stop", "drive_by_wire/emergency_stop"),
             ("ready", "drive_by_wire/ready"),
+            ("datalogger/start", "datalogger/start"),
+            ("datalogger/stop", "datalogger/stop"),
         ],
         emulate_tty=True,
         output={

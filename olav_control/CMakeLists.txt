@@ -37,9 +37,6 @@ find_package(rclpy REQUIRED)
 # --------------------
 add_subdirectory(src/core)
 add_subdirectory(src/drive_by_wire)
-add_subdirectory(src/multiplexer)
-add_subdirectory(src/speed)
-add_subdirectory(src/steering)
 
 # Install targets
 # ---------------

@@ -42,8 +42,16 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #include <boost/accumulators/statistics/rolling_mean.hpp>
 #include <boost/algorithm/clamp.hpp>
 
+#include <ackermann_msgs/msg/ackermann_drive_stamped.hpp>
 #include <diagnostic_msgs/msg/diagnostic_array.hpp>
 #include <nav_msgs/msg/odometry.hpp>
+#include <olav_core/math/cubic_spline.hpp>
+#include <olav_interfaces/msg/drive_by_wire_plc_status.hpp>
+#include <olav_interfaces/msg/pid_status.hpp>
+#include <olav_interfaces/msg/setpoint_stamped.hpp>
+#include <olav_interfaces/msg/throttle_brake_steering.hpp>
+#include <olav_interfaces/srv/set_control_mode.hpp>
+#include <olav_interfaces/srv/set_pid_gains.hpp>
 #include <rclcpp/rclcpp.hpp>
 #include <rclcpp/service.hpp>
 #include <sensor_msgs/msg/joint_state.hpp>
@@ -52,14 +60,12 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #include <std_srvs/srv/empty.hpp>
 #include <std_srvs/srv/set_bool.hpp>
 #include <std_srvs/srv/trigger.hpp>
-#include <olav_interfaces/msg/drive_by_wire_plc_status.hpp>
-#include <olav_interfaces/msg/setpoint_stamped.hpp>
-#include <olav_interfaces/srv/set_pid_gains.hpp>
 
+#include <olav_control/core/controllers/pid.hpp>
+#include <olav_control/drive_by_wire/control_mode.hpp>
 #include <olav_control/drive_by_wire/feedback.hpp>
 #include <olav_control/drive_by_wire/interface.hpp>
 #include <olav_control/drive_by_wire/setpoint.hpp>
-
 
 namespace OLAV {
 namespace ROS {
@@ -70,16 +76,30 @@ class DriveByWireNode : public rclcpp::Node {
 
   protected:
     void Configure();
+
     void GetParameters();
+
     void Initialize();
+
     void Activate();
+
     void CreateSubscriptions();
+
     void CreateTimers();
+
     void CreatePublishers();
+
     void CreateServices();
+
     void StartTimers();
 
   private:
+    rclcpp::SubscriptionOptions subscription_options_;
+
+    void CreateHeartbeatSubscription();
+
+    void DestroyHeartbeatSubscription();
+
     // Initialization
     // --------------
     void InitializeRegisters();
@@ -95,14 +115,8 @@ class DriveByWireNode : public rclcpp::Node {
     // -------------
     void HealthCheckCallback();
 
-    void ThrottleCallback(
-        olav_interfaces::msg::SetpointStamped::ConstSharedPtr throttle_message);
-
-    void BrakeCallback(
-        olav_interfaces::msg::SetpointStamped::ConstSharedPtr brake_message);
-
-    void SteeringCallback(
-        olav_interfaces::msg::SetpointStamped::ConstSharedPtr steering_message);
+    void ThrottleBrakeSteeringCallback(
+        olav_interfaces::msg::ThrottleBrakeSteering::ConstSharedPtr message);
 
     void OdometryCallback(
         const nav_msgs::msg::Odometry::ConstSharedPtr odometry_message);
@@ -186,21 +200,19 @@ class DriveByWireNode : public rclcpp::Node {
      */
     void PublishPLCStatus();
 
+    std::shared_ptr<olav_interfaces::msg::PIDStatus>
+    GetControllerStatusMessage(std::shared_ptr<PIDController> controller);
+
+    void PublishSpeedControllerStatus();
+
+    void PublishSteeringControllerStatus();
+
     // ---------
 
     // Drive-by-wire commands subscriptions
     // ------------------------------------
-    //** @brief Commanded throttle effort subscription. */
-    rclcpp::Subscription<olav_interfaces::msg::SetpointStamped>::SharedPtr
-        throttle_subscription_;
-
-    //** @brief Commanded brake effort subscription. */
-    rclcpp::Subscription<olav_interfaces::msg::SetpointStamped>::SharedPtr
-        brake_subscription_;
-
-    //** @brief Commanded steering effort subscription. */
-    rclcpp::Subscription<olav_interfaces::msg::SetpointStamped>::SharedPtr
-        steering_subscription_;
+    rclcpp::Subscription<olav_interfaces::msg::ThrottleBrakeSteering>::SharedPtr
+        throttle_brake_steering_subscription_;
 
     // Drive-by-wire services
     // ----------------------
@@ -217,6 +229,8 @@ class DriveByWireNode : public rclcpp::Node {
     void
     SetIgnition(const std::shared_ptr<std_srvs::srv::SetBool::Request> request,
                 std::shared_ptr<std_srvs::srv::SetBool::Response> response);
+
+    void WriteIgnitionState(const bool& ignition_state);
 
     /** @brief Shared pointer to the service to trigger the emergency stop.. */
     rclcpp::Service<std_srvs::srv::Trigger>::SharedPtr emergency_stop_service_;
@@ -340,6 +354,8 @@ class DriveByWireNode : public rclcpp::Node {
     rclcpp::CallbackGroup::SharedPtr subscriptions_callback_group_;
     rclcpp::CallbackGroup::SharedPtr writer_callback_group_;
     rclcpp::CallbackGroup::SharedPtr reader_callback_group_;
+    rclcpp::CallbackGroup::SharedPtr controllers_callback_group_;
+
     rclcpp::CallbackGroup::SharedPtr debug_callback_group_;
     rclcpp::CallbackGroup::SharedPtr services_callback_group_;
     // -------------
@@ -377,10 +393,18 @@ class DriveByWireNode : public rclcpp::Node {
     std::shared_ptr<DriveByWireFeedback> drive_by_wire_feedback_;
     rclcpp::Publisher<olav_interfaces::msg::SetpointStamped>::SharedPtr
         steering_angle_publisher_;
+
     rclcpp::Publisher<sensor_msgs::msg::JointState>::SharedPtr
         joint_state_publisher_;
+
     rclcpp::Publisher<olav_interfaces::msg::DriveByWirePLCStatus>::SharedPtr
         plc_status_publisher_;
+
+    rclcpp::Publisher<olav_interfaces::msg::PIDStatus>::SharedPtr
+        speed_controller_status_publisher_;
+
+    rclcpp::Publisher<olav_interfaces::msg::PIDStatus>::SharedPtr
+        steering_controller_status_publisher_;
 
     // Logging
     // -------
@@ -453,6 +477,10 @@ class DriveByWireNode : public rclcpp::Node {
     void
     GetConnectionDiagnostics(diagnostic_msgs::msg::DiagnosticArray::SharedPtr
                                  diagnostic_array_message);
+
+    void GetStateDiagnostics(diagnostic_msgs::msg::DiagnosticArray::SharedPtr
+                                 diagnostic_array_message);
+
     void GetOdometryDiagnostics(diagnostic_msgs::msg::DiagnosticArray::SharedPtr
                                     diagnostic_array_message);
     void
@@ -460,6 +488,102 @@ class DriveByWireNode : public rclcpp::Node {
                                 diagnostic_array_message);
     void GetReadyDiagnostics(diagnostic_msgs::msg::DiagnosticArray::SharedPtr
                                  diagnostic_array_message);
+
+    // Control mode
+    // ------------------------------------------------------------------------
+    rclcpp::Service<olav_interfaces::srv::SetControlMode>::SharedPtr
+        set_control_mode_service_;
+
+    /**
+     * @brief Set control mode service callback.
+     *
+     * @param request Set control mode request.
+     * @param response Set control mode response.
+     */
+    void SetControlMode(
+        const std::shared_ptr<olav_interfaces::srv::SetControlMode::Request>
+            request,
+        std::shared_ptr<olav_interfaces::srv::SetControlMode::Response>
+            response);
+
+    ControlMode active_control_mode_;
+
+    // Drive mode
+    // ------------------------------------------------------------------------
+    rclcpp::Subscription<ackermann_msgs::msg::AckermannDriveStamped>::SharedPtr
+        ackermann_drive_subscription_;
+
+    rclcpp::Time last_control_time_;
+
+    double control_timeout_ = 0.1;
+    bool has_valid_control_ = false;
+    bool HasValidControl(rclcpp::Time& time);
+    // ------------------------------------------------------------------------
+
+    // Dynamic parameters reconfiguration
+    // ------------------------------------------------------------------------
+
+    // Controllers
+    // ------------------------------------------------------------------------
+    rclcpp::TimerBase::SharedPtr controllers_timer_;
+
+    /**
+     * @brief Callback for the controllers.
+     */
+    void ControllersCallback();
+
+    mutable std::mutex controllers_mutex_;
+
+    // Speed controller
+    // ------------------------------------------------------------------------
+    std::shared_ptr<PIDController> speed_controller_;
+
+    // TODO: Move this to a static math class.
+    Eigen::RowVectorXd GetParameterVector(std::vector<double> vector);
+
+    void GetSpeedControllerParameters();
+
+    void InitializeSpeedController();
+
+    double controllers_period_;
+
+    double brake_threshold_;
+
+    std::shared_ptr<CubicSpline> speed_controller_feedforward_spline_;
+
+    // ------------------------------------------------------------------------
+
+    // Steering controller
+    // ------------------------------------------------------------------------
+    std::shared_ptr<PIDController> steering_controller_;
+
+    void GetSteeringControllerParameters();
+
+    void InitializeSteeringController();
+
+    // ------------------------------------------------------------------------
+
+    bool use_mock_interface_;
+
+    double maximum_steering_angle_;
+
+    // Runtime parameter reconfiguration
+    // ------------------------------------------------------------------------
+
+    /** @brief Callback handle for the "on set parameters" event callback. */
+    OnSetParametersCallbackHandle::SharedPtr on_set_parameters_callback_handle_;
+
+    /** @brief Callback for the "on set parameters" event. */
+    rcl_interfaces::msg::SetParametersResult
+    OnSetParametersCallback(const std::vector<rclcpp::Parameter>& parameters);
+
+    void SetSpeedControllerParameters(
+        const std::vector<rclcpp::Parameter>& parameters,
+        rcl_interfaces::msg::SetParametersResult& result);
+
+    void SetSteeringControllerParameters(
+        const std::vector<rclcpp::Parameter>& parameters,
+        rcl_interfaces::msg::SetParametersResult& result);
 };
 
 } // namespace ROS

@@ -373,11 +373,11 @@ void PIDController::Tick() {
     //        output control.
     if(use_deadband_filter_) {
         if(output_ >= deadband_lower_threshold_ && output_ < deadband_center_) {
-            output_ -= deadband_lower_threshold_;
+            output_ -= std::abs(deadband_lower_threshold_);
             is_deadbanding_ = true;
         } else if(output_ <= deadband_upper_threshold_ &&
                   output_ > deadband_center_) {
-            output_ += deadband_upper_threshold_;
+            output_ += std::abs(deadband_upper_threshold_);
             is_deadbanding_ = true;
         } else
             is_deadbanding_ = false;

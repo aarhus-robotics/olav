@@ -79,10 +79,6 @@ void GamepadInterfaceNode::GetParameters() {
         0.0,
         0.0);
 
-    declare_parameter("steering.maximum_angle", 0.524);
-    maximum_steering_angle_ =
-        get_parameter("steering.maximum_angle").as_double();
-
     declare_parameter("steering.deadzone", 0.01);
     steering_deadzone_ = get_parameter("steering.deadzone").as_double();
 
@@ -101,23 +97,49 @@ void GamepadInterfaceNode::GetParameters() {
             0.0,
             0.0);
 
-    declare_parameter("debounce.slow", 3.0);
-    slow_debounce_time_ = get_parameter("debounce.slow").as_double();
+    declare_parameter("debounce.slow", 2.0);
+    shifter_debounce_period_ = get_parameter("debounce.slow").as_double();
 
-    declare_parameter("debounce.fast", 0.1);
-    fast_debounce_time_ = get_parameter("debounce.fast").as_double();
+    declare_parameter("debounce.button", 0.15);
+    button_debounce_period_ = get_parameter("debounce.button").as_double();
+
+    declare_parameter("debounce.service_button", 0.3);
+    service_button_debounce_period_ =
+        get_parameter("debounce.service_button").as_double();
+
+    declare_parameter("debounce.starter", 3.0);
+    starter_debounce_period_ = get_parameter("debounce.starter").as_double();
 
     declare_parameter("rate", 100.0);
     rate_ = get_parameter("rate").as_double();
+
+    declare_parameter("multiplier", 10.0);
+    shift_multiplier_ = get_parameter("multiplier").as_double();
+
+    declare_parameter("feedback.intensity", 0.01);
+    force_feedback_intensity_ = get_parameter("feedback.intensity").as_double();
+
+    declare_parameter("feedback.period", 0.2);
+    force_feedback_period_ = get_parameter("feedback.period").as_double();
 }
 
 void GamepadInterfaceNode::Initialize() {
     last_ignition_request_time_ = get_clock()->now();
     last_starter_request_time_ = get_clock()->now();
     last_shifter_request_time_ = get_clock()->now();
-    last_control_mode_cycle_time_ = get_clock()->now();
-    last_control_mode_set_time_ = get_clock()->now();
-    last_ready_to_run_time_ = get_clock()->now();
+    last_dpad_time_ = get_clock()->now();
+
+    last_button_time_ = get_clock()->now();
+    last_rumble_time_ = get_clock()->now();
+    last_service_call_time_ = get_clock()->now();
+
+    throttle_pad_settings_ = std::make_tuple(-1.0, 1.0, 0.01, 5.0);
+    steering_pad_settings_ = std::make_tuple(-33.0, 33.0, 0.25, 4.0);
+    speed_pad_settings_ = std::make_tuple(0.0, 10.0, 0.5, 2.0);
+
+    control_horizontal_lower_bound_ = std::get<0>(steering_pad_settings_);
+    control_horizontal_upper_bound_ = std::get<1>(steering_pad_settings_);
+    control_horizontal_step_ = std::get<2>(steering_pad_settings_);
 }
 
 void GamepadInterfaceNode::Activate() {
@@ -150,16 +172,19 @@ void GamepadInterfaceNode::CreateClients() {
     cycle_ignition_client_ =
         create_client<std_srvs::srv::Trigger>("cycle_ignition");
 
-    cycle_control_mode_client_ =
-        create_client<std_srvs::srv::Trigger>("cycle_control_mode");
-
-    set_control_mode_client_ =
-        create_client<olav_interfaces::srv::SetControlMode>("set_control_mode");
-
     emergency_stop_client_ =
         create_client<std_srvs::srv::Trigger>("emergency_stop");
 
     ready_to_run_client_ = create_client<std_srvs::srv::Trigger>("ready");
+
+    set_control_mode_client_ =
+        create_client<olav_interfaces::srv::SetControlMode>("set_control_mode");
+
+    start_datalogger_client_ =
+        create_client<std_srvs::srv::Trigger>("datalogger/start");
+
+    stop_datalogger_client_ =
+        create_client<std_srvs::srv::Trigger>("datalogger/stop");
 }
 
 void GamepadInterfaceNode::CreateTimers() {
@@ -167,36 +192,36 @@ void GamepadInterfaceNode::CreateTimers() {
         std::chrono::duration<double>(1.0 / rate_),
         std::bind(&GamepadInterfaceNode::TimerCallback, this));
     controls_timer_->cancel();
+
+    feedback_timer_ = create_wall_timer(
+        std::chrono::duration<double>(1.0 / rate_),
+        std::bind(&GamepadInterfaceNode::FeedbackCallback, this));
+    feedback_timer_->cancel();
 }
 
 void GamepadInterfaceNode::CreatePublishers() {
-    throttle_publisher_ =
-        create_publisher<olav_interfaces::msg::SetpointStamped>(
-            "throttle",
+    tbs_publisher_ =
+        create_publisher<olav_interfaces::msg::ThrottleBrakeSteering>(
+            "tbs",
             RMW_QOS_POLICY_RELIABILITY_SYSTEM_DEFAULT);
-
-    brake_publisher_ = create_publisher<olav_interfaces::msg::SetpointStamped>(
-        "brake",
-        RMW_QOS_POLICY_RELIABILITY_SYSTEM_DEFAULT);
 
     ackermann_drive_publisher_ =
         create_publisher<ackermann_msgs::msg::AckermannDriveStamped>(
             "drive",
             RMW_QOS_POLICY_RELIABILITY_SYSTEM_DEFAULT);
 
-    heartbeat_publisher_ = create_publisher<std_msgs::msg::Header>(
-        "heartbeat",
+    force_feedback_publisher_ = create_publisher<sensor_msgs::msg::JoyFeedback>(
+        "feedback",
         RMW_QOS_POLICY_RELIABILITY_SYSTEM_DEFAULT);
 }
 
-void GamepadInterfaceNode::StartTimers() { controls_timer_->reset(); }
+void GamepadInterfaceNode::StartTimers() {
+    controls_timer_->reset();
+    feedback_timer_->reset();
+}
 
-void GamepadInterfaceNode::JoyStateCallback(
-    const sensor_msgs::msg::Joy::ConstSharedPtr joy_message) {
-    auto time = get_clock()->now();
-
-    auto throttle =
-        1.0 - (joy_message->axes[GamepadAxes::RIGHT_TRIGGER] + 1.0) / 2.0;
+void GamepadInterfaceNode::HandleTriggerRight(const double& position) {
+    auto throttle = 1.0 - (position + 1.0) / 2.0;
     if(use_throttle_curve_) {
         throttle_ = (std::abs(throttle) > throttle_deadzone_)
             ? boost::algorithm::clamp(throttle_curve_(throttle), 0.0, 1.0)
@@ -204,9 +229,10 @@ void GamepadInterfaceNode::JoyStateCallback(
     } else {
         throttle_ = throttle;
     }
+}
 
-    auto brake =
-        1.0 - (joy_message->axes[GamepadAxes::LEFT_TRIGGER] + 1.0) / 2.0;
+void GamepadInterfaceNode::HandleTriggerLeft(const double& position) {
+    auto brake = 1.0 - (position + 1.0) / 2.0;
     if(use_brake_curve_) {
         brake_ = (std::abs(brake) > brake_deadzone_)
             ? boost::algorithm::clamp(brake_curve_(brake), 0.0, 1.0)
@@ -214,8 +240,10 @@ void GamepadInterfaceNode::JoyStateCallback(
     } else {
         brake_ = brake;
     }
+}
 
-    auto steering = joy_message->axes[GamepadAxes::LEFT_STICK_HORIZONTAL];
+void GamepadInterfaceNode::HandleStickLeftHorizontal(const double& position) {
+    auto steering = position;
     if(use_steering_curve_) {
         // Notice the negative sign, as we are inverting the axis (negative
         // steering to the left).
@@ -225,205 +253,396 @@ void GamepadInterfaceNode::JoyStateCallback(
     } else {
         steering_ = -steering;
     }
+}
 
-    // ... ignition on.
-    if(joy_message->buttons[GamepadButtons::XBOX] &&
-       (time - last_ignition_request_time_).seconds() > slow_debounce_time_) {
-        RCLCPP_INFO(get_logger(), "Sending ignition state cycle request ...");
+void GamepadInterfaceNode::JoyStateCallback(
+    const sensor_msgs::msg::Joy::ConstSharedPtr joy_message) {
+    auto time = get_clock()->now();
 
-        last_ignition_request_time_ = time;
+    is_left_modifier_pressed_ =
+        bool(joy_message->buttons[GamepadButtons::LEFT_STICK]);
+    is_right_modifier_pressed_ =
+        bool(joy_message->buttons[GamepadButtons::RIGHT_STICK]);
 
-        auto request = std::make_shared<std_srvs::srv::Trigger::Request>();
-        const auto future = cycle_ignition_client_->async_send_request(
-            request,
-            std::bind(&GamepadInterfaceNode::CycleIgnitionCallback,
-                      this,
-                      std::placeholders::_1));
+    HandleTriggerRight(joy_message->axes[GamepadAxes::RIGHT_TRIGGER]);
+    HandleTriggerLeft(joy_message->axes[GamepadAxes::LEFT_TRIGGER]);
+    HandleStickLeftHorizontal(
+        joy_message->axes[GamepadAxes::LEFT_STICK_HORIZONTAL]);
+
+    if(joy_message->buttons[GamepadButtons::LEFT_BUMPER]) HandleLeftBumper();
+    if(joy_message->buttons[GamepadButtons::RIGHT_BUMPER]) HandleRightBumper();
+    if(joy_message->axes[GamepadAxes::DPAD_HORIZONTAL])
+        HandleDirectionalPadHorizontal(
+            joy_message->axes[GamepadAxes::DPAD_HORIZONTAL]);
+    if(joy_message->axes[GamepadAxes::DPAD_VERTICAL])
+        HandleDirectionalPadVertical(
+            joy_message->axes[GamepadAxes::DPAD_VERTICAL]);
+    if(joy_message->buttons[GamepadButtons::XBOX]) HandleXboxButton();
+    if(joy_message->buttons[GamepadButtons::MENU]) HandleMenuButton();
+    if(joy_message->buttons[GamepadButtons::SHARE]) HandleShareButton();
+    if(joy_message->buttons[GamepadButtons::VIEW]) HandleViewButton();
+    if(joy_message->buttons[GamepadButtons::X]) HandleXButton();
+    if(joy_message->buttons[GamepadButtons::Y]) HandleYButton();
+    if(joy_message->buttons[GamepadButtons::A]) HandleAButton();
+    if(joy_message->buttons[GamepadButtons::B]) HandleBButton();
+}
+
+bool GamepadInterfaceNode::CheckDebounce(rclcpp::Time& last_press_time,
+                                         const double& period) {
+    const auto current_time = get_clock()->now();
+    if((current_time - last_press_time).seconds() > period) {
+        last_press_time = current_time;
+        return true;
+    }
+    return false;
+}
+
+void GamepadInterfaceNode::HandleLeftBumper() {
+    if(!CheckDebounce(last_shifter_request_time_, shifter_debounce_period_))
+        return;
+
+    ScheduleRumble();
+
+    RCLCPP_INFO(get_logger(), "Sending downshift request ...");
+
+    auto request = std::make_shared<std_srvs::srv::Trigger::Request>();
+    const auto future = shift_gear_down_client_->async_send_request(
+        request,
+        std::bind(&GamepadInterfaceNode::ShiftGearDownCallback,
+                  this,
+                  std::placeholders::_1));
+}
+
+void GamepadInterfaceNode::HandleRightBumper() {
+    if(!CheckDebounce(last_shifter_request_time_, shifter_debounce_period_))
+        return;
+
+    ScheduleRumble();
+
+    RCLCPP_INFO(get_logger(), "Sending upshift request ...");
+
+    auto request = std::make_shared<std_srvs::srv::Trigger::Request>();
+    const auto future = shift_gear_up_client_->async_send_request(
+        request,
+        std::bind(&GamepadInterfaceNode::ShiftGearUpCallback,
+                  this,
+                  std::placeholders::_1));
+}
+
+void GamepadInterfaceNode::HandleDirectionalPadHorizontal(const int& position) {
+    if(!CheckDebounce(last_dpad_time_, dpad_debounce_period_)) return;
+
+    if(state_ == GamepadState::STANDBY ||
+       state_ == GamepadState::CONTROL_TRIGGER_TBS) {
+        RCLCPP_WARN(
+            get_logger(),
+            "Directional pad commands are not available outside PAD modes!");
+        return;
     }
 
-    // ... emergency.
-    if(joy_message->buttons[GamepadButtons::B]) {
-        RCLCPP_INFO(get_logger(), "Sending emergency stop request ...");
+    control_horizontal_magnitude_ += (is_right_modifier_pressed_)
+        ? shift_multiplier_ * (-position * control_horizontal_step_)
+        : -position * control_horizontal_step_;
 
-        auto request = std::make_shared<std_srvs::srv::Trigger::Request>();
-        const auto future = emergency_stop_client_->async_send_request(
-            request,
-            std::bind(&GamepadInterfaceNode::TriggerEmergencyCallback,
-                      this,
-                      std::placeholders::_1));
+    ClampRange(control_horizontal_lower_bound_,
+               control_horizontal_upper_bound_,
+               control_horizontal_magnitude_);
+
+    RCLCPP_INFO(get_logger(),
+                "New horizontal value set {%0.2f}",
+                control_horizontal_magnitude_);
+}
+
+void GamepadInterfaceNode::ClampRange(const double& lower_bound,
+                                      const double& upper_bound,
+                                      double& value) {
+    value = boost::algorithm::clamp(value, lower_bound, upper_bound);
+}
+
+void GamepadInterfaceNode::HandleDirectionalPadVertical(const int& position) {
+    if(!CheckDebounce(last_dpad_time_, dpad_debounce_period_)) return;
+
+    if(state_ == GamepadState::STANDBY ||
+       state_ == GamepadState::CONTROL_TRIGGER_TBS) {
+        RCLCPP_WARN(
+            get_logger(),
+            "Directional pad commands are not available outside PAD modes!");
+        return;
     }
 
-    // ... engine starter state.
-    if(joy_message->buttons[GamepadButtons::SHARE] &&
-       (time - last_starter_request_time_).seconds() > slow_debounce_time_) {
-        RCLCPP_INFO(get_logger(), "Sending engine start request ...");
+    control_vertical_magnitude_ += (is_right_modifier_pressed_)
+        ? shift_multiplier_ * (position * control_vertical_step_)
+        : position * control_vertical_step_;
 
-        last_starter_request_time_ = time;
+    ClampRange(control_vertical_lower_bound_,
+               control_vertical_upper_bound_,
+               control_vertical_magnitude_);
 
-        auto request = std::make_shared<std_srvs::srv::Trigger::Request>();
-        auto future = start_engine_client_->async_send_request(request);
-    }
+    RCLCPP_INFO(get_logger(),
+                "New vertical value set {%0.2f}",
+                control_vertical_magnitude_);
+}
 
-    // ... gear downshift.
-    if(joy_message->buttons[GamepadButtons::LEFT_BUMPER] &&
-       (time - last_shifter_request_time_).seconds() > slow_debounce_time_) {
-        RCLCPP_INFO(get_logger(), "Sending downshift request ...");
+void GamepadInterfaceNode::HandleMenuButton() {
+    if(!CheckDebounce(last_starter_request_time_, starter_debounce_period_))
+        return;
 
-        last_shifter_request_time_ = time;
+    ScheduleRumble();
 
-        auto request = std::make_shared<std_srvs::srv::Trigger::Request>();
-        const auto future = shift_gear_down_client_->async_send_request(
-            request,
-            std::bind(&GamepadInterfaceNode::ShiftGearDownCallback,
-                      this,
-                      std::placeholders::_1));
-    }
+    RCLCPP_INFO(get_logger(), "Sending engine start request ...");
 
-    // ... gear upshift.
-    if(joy_message->buttons[GamepadButtons::RIGHT_BUMPER] &&
-       (time - last_shifter_request_time_).seconds() > slow_debounce_time_) {
-        RCLCPP_INFO(get_logger(), "Sending upshift request ...");
+    auto request = std::make_shared<std_srvs::srv::Trigger::Request>();
+    auto future = start_engine_client_->async_send_request(request);
+}
 
-        last_shifter_request_time_ = time;
+void GamepadInterfaceNode::ZeroTrims() {
+    control_vertical_magnitude_ = 0.0;
+    control_horizontal_magnitude_ = 0.0;
+}
 
-        auto request = std::make_shared<std_srvs::srv::Trigger::Request>();
-        const auto future = shift_gear_up_client_->async_send_request(
-            request,
-            std::bind(&GamepadInterfaceNode::ShiftGearUpCallback,
-                      this,
-                      std::placeholders::_1));
-    }
+void GamepadInterfaceNode::HandleShareButton() {
+    if(!CheckDebounce(last_service_call_time_, service_button_debounce_period_))
+        return;
 
-    if(joy_message->buttons[GamepadButtons::VIEW] &&
-       (time - last_control_mode_cycle_time_).seconds() > fast_debounce_time_) {
-        RCLCPP_INFO(get_logger(), "Sending control mode cycle request ...");
+    ScheduleRumble();
 
-        last_control_mode_cycle_time_ = time;
-        auto request = std::make_shared<std_srvs::srv::Trigger::Request>();
-        const auto future = cycle_control_mode_client_->async_send_request(
-            request,
-            std::bind(&GamepadInterfaceNode::CycleControlModeCallback,
-                      this,
-                      std::placeholders::_1));
-    }
+    ZeroTrims();
 
-    if(joy_message->axes[GamepadAxes::DPAD_HORIZONTAL] == -1.0 &&
-       (time - last_control_mode_set_time_).seconds() > fast_debounce_time_) {
-        RCLCPP_INFO(get_logger(),
-                    "Sending control mode set to GAMEPAD request ...");
-
-        last_control_mode_cycle_time_ = time;
-        auto request =
-            std::make_shared<olav_interfaces::srv::SetControlMode::Request>();
-        request->mode = olav_interfaces::srv::SetControlMode::Request::GAMEPAD;
-        const auto future = set_control_mode_client_->async_send_request(
-            request,
-            std::bind(&GamepadInterfaceNode::SetControlModeCallback,
-                      this,
-                      std::placeholders::_1));
-    }
-
-    if(joy_message->axes[GamepadAxes::DPAD_HORIZONTAL] == 1.0 &&
-       (time - last_control_mode_set_time_).seconds() > fast_debounce_time_) {
-        RCLCPP_INFO(get_logger(),
-                    "Sending control mode set to AUTONOMOUS request ...");
-
-        last_control_mode_cycle_time_ = time;
+    if(is_right_modifier_pressed_) {
         auto request =
             std::make_shared<olav_interfaces::srv::SetControlMode::Request>();
         request->mode =
-            olav_interfaces::srv::SetControlMode::Request::AUTONOMOUS;
-        const auto future = set_control_mode_client_->async_send_request(
-            request,
-            std::bind(&GamepadInterfaceNode::SetControlModeCallback,
-                      this,
-                      std::placeholders::_1));
-    }
+            olav_interfaces::srv::SetControlMode::Request::MODE_DRIVE_ACKERMANN;
+        request->authority =
+            olav_interfaces::srv::SetControlMode::Request::AUTHORITHY_GAMEPAD;
+        const auto future =
+            set_control_mode_client_->async_send_request(request);
 
-    if(joy_message->axes[GamepadAxes::DPAD_VERTICAL] == -1.0 &&
-       (time - last_control_mode_set_time_).seconds() > fast_debounce_time_) {
         RCLCPP_INFO(get_logger(),
-                    "Sending control mode set to GENERIC_THROTTLE_BRAKE_STEER "
-                    "request ...");
+                    "Sending drive-by-wire set control mode request to: >> "
+                    "MODE: DRIVE_ACKERMANN <> AUTHORITY: GAMEPAD << ...");
 
-        last_control_mode_cycle_time_ = time;
-        auto request =
-            std::make_shared<olav_interfaces::srv::SetControlMode::Request>();
-        request->mode = olav_interfaces::srv::SetControlMode::Request::
-            GENERIC_THROTTLE_BRAKE_STEER;
-        const auto future = set_control_mode_client_->async_send_request(
-            request,
-            std::bind(&GamepadInterfaceNode::SetControlModeCallback,
-                      this,
-                      std::placeholders::_1));
-    }
-
-    if(joy_message->axes[GamepadAxes::DPAD_VERTICAL] == 1.0 &&
-       (time - last_control_mode_set_time_).seconds() > fast_debounce_time_) {
+        // Move this to the future function.
         RCLCPP_INFO(get_logger(),
-                    "Sending control mode set to GENERIC_SPEED_STEERING_ANGLE "
-                    "request ...");
+                    "Setting gamepad state to >> CONTROL_PAD_DRIVE <<");
 
-        last_control_mode_cycle_time_ = time;
-        auto request =
-            std::make_shared<olav_interfaces::srv::SetControlMode::Request>();
-        request->mode = olav_interfaces::srv::SetControlMode::Request::
-            GENERIC_SPEED_STEERING_ANGLE;
-        const auto future = set_control_mode_client_->async_send_request(
-            request,
-            std::bind(&GamepadInterfaceNode::SetControlModeCallback,
-                      this,
-                      std::placeholders::_1));
+        control_vertical_lower_bound_ = std::get<0>(speed_pad_settings_);
+        control_vertical_upper_bound_ = std::get<1>(speed_pad_settings_);
+        control_vertical_step_ = std::get<2>(speed_pad_settings_);
+
+        state_ = CONTROL_PAD_DRIVE;
+
+        return;
     }
 
-    if(joy_message->buttons[GamepadButtons::MENU] &&
-       (time - last_ready_to_run_time_).seconds() > slow_debounce_time_) {
-        RCLCPP_INFO(get_logger(), "Sending ready to run request ...");
+    RCLCPP_INFO(get_logger(),
+                "Sending drive-by-wire set control mode request to: >> "
+                "MODE: MODE_DRIVE_TBS <> AUTHORITY: GAMEPAD << ...");
 
-        last_ready_to_run_time_ = time;
-        auto request = std::make_shared<std_srvs::srv::Trigger::Request>();
-        const auto future = ready_to_run_client_->async_send_request(
-            request,
-            std::bind(&GamepadInterfaceNode::ReadyToRunCallback,
-                      this,
-                      std::placeholders::_1));
+    auto request =
+        std::make_shared<olav_interfaces::srv::SetControlMode::Request>();
+    request->mode =
+        olav_interfaces::srv::SetControlMode::Request::MODE_DRIVE_TBS;
+    request->authority =
+        olav_interfaces::srv::SetControlMode::Request::AUTHORITHY_GAMEPAD;
+    const auto future = set_control_mode_client_->async_send_request(request);
+
+    // Move this to the future function.
+    state_ = is_left_modifier_pressed_ ? CONTROL_PAD_TBS : CONTROL_TRIGGER_TBS;
+
+    if(is_left_modifier_pressed_) {
+        RCLCPP_INFO(get_logger(),
+                    "Setting gamepad state to >> CONTROL_PAD_TBS <<");
+
+        control_vertical_lower_bound_ = std::get<0>(throttle_pad_settings_);
+        control_vertical_upper_bound_ = std::get<1>(throttle_pad_settings_);
+        control_vertical_step_ = std::get<2>(throttle_pad_settings_);
+
+    } else {
+        RCLCPP_INFO(get_logger(),
+                    "Setting gamepad state to >> CONTROL_TRIGGER_TBS <<");
     }
 }
 
-void GamepadInterfaceNode::TimerCallback() {
-    double throttle = 0.0;
-    double brake = 0.0;
-    double steering = 0.0;
+void GamepadInterfaceNode::HandleXboxButton() {
+    if(!CheckDebounce(last_service_call_time_, service_button_debounce_period_))
+        return;
 
-    {
-        std::lock_guard<std::mutex> controls_lock(controls_mutex_);
+    RCLCPP_INFO(get_logger(), "Sending ready to run request ...");
 
-        throttle = throttle_;
-        brake = brake_;
-        steering = steering_;
+    auto request = std::make_shared<std_srvs::srv::Trigger::Request>();
+    const auto future = ready_to_run_client_->async_send_request(
+        request,
+        std::bind(&GamepadInterfaceNode::ReadyToRunCallback,
+                  this,
+                  std::placeholders::_1));
+
+    ScheduleRumble();
+}
+
+void GamepadInterfaceNode::HandleXButton() {
+    if(!CheckDebounce(last_button_time_, button_debounce_period_)) return;
+
+    RCLCPP_INFO(get_logger(), "Zeroing trims ...");
+
+    control_horizontal_magnitude_ = 0.0;
+    control_vertical_magnitude_ = 0.0;
+
+    ScheduleRumble();
+}
+
+void GamepadInterfaceNode::HandleYButton() {
+    if(!CheckDebounce(last_service_call_time_, service_button_debounce_period_))
+        return;
+
+    ScheduleRumble();
+
+    if(!is_left_modifier_pressed_) {
+        RCLCPP_INFO(get_logger(), "Sending datalogger start request ...");
+
+        auto request = std::make_shared<std_srvs::srv::Trigger::Request>();
+        const auto future =
+            start_datalogger_client_->async_send_request(request);
+        return;
     }
 
-    std_msgs::msg::Header heartbeat_message;
-    heartbeat_message.frame_id = frame_id_;
-    heartbeat_message.stamp = get_clock()->now();
-    heartbeat_publisher_->publish(heartbeat_message);
+    RCLCPP_INFO(get_logger(), "Sending datalogger stop request ...");
+    auto request = std::make_shared<std_srvs::srv::Trigger::Request>();
+    const auto future = stop_datalogger_client_->async_send_request(request);
+}
 
-    olav_interfaces::msg::SetpointStamped throttle_message;
-    throttle_message.header.frame_id = frame_id_;
-    throttle_message.setpoint = throttle;
-    throttle_publisher_->publish(throttle_message);
+void GamepadInterfaceNode::ScheduleRumble() {
+    last_rumble_time_ = get_clock()->now();
+    must_rumble_ = true;
+}
 
-    olav_interfaces::msg::SetpointStamped brake_message;
-    brake_message.header.frame_id = frame_id_;
-    brake_message.setpoint = brake;
-    brake_publisher_->publish(brake_message);
+void GamepadInterfaceNode::HandleAButton() {
+    if(!CheckDebounce(last_button_time_, button_debounce_period_)) return;
 
-    ackermann_msgs::msg::AckermannDriveStamped ackermann_drive_message;
-    ackermann_drive_message.header.frame_id = frame_id_;
-    ackermann_drive_message.header.stamp = get_clock()->now();
-    ackermann_drive_message.drive.steering_angle =
-        steering * maximum_steering_angle_;
-    ackermann_drive_publisher_->publish(ackermann_drive_message);
+    RCLCPP_INFO(get_logger(),
+                "Setting values: {%0.2f}, {%0.2f}",
+                control_horizontal_magnitude_,
+                control_vertical_magnitude_);
+
+    ScheduleRumble();
+}
+
+void GamepadInterfaceNode::HandleBButton() {
+    if(!CheckDebounce(last_service_call_time_, service_button_debounce_period_))
+        return;
+
+    RCLCPP_INFO(get_logger(), "Sending emergency stop request ...");
+
+    auto request = std::make_shared<std_srvs::srv::Trigger::Request>();
+    const auto future = emergency_stop_client_->async_send_request(
+        request,
+        std::bind(&GamepadInterfaceNode::TriggerEmergencyCallback,
+                  this,
+                  std::placeholders::_1));
+
+    ScheduleRumble();
+}
+
+void GamepadInterfaceNode::HandleViewButton() {
+    if(!CheckDebounce(last_ignition_request_time_, shifter_debounce_period_))
+        return;
+
+    ScheduleRumble();
+
+    RCLCPP_INFO(get_logger(), "Sending ignition state cycle request ...");
+
+    auto request = std::make_shared<std_srvs::srv::Trigger::Request>();
+    const auto future = cycle_ignition_client_->async_send_request(
+        request,
+        std::bind(&GamepadInterfaceNode::CycleIgnitionCallback,
+                  this,
+                  std::placeholders::_1));
+}
+
+void GamepadInterfaceNode::FeedbackCallback() {
+    // if(!must_rumble_) return;
+
+    sensor_msgs::msg::JoyFeedback message;
+
+    if((get_clock()->now() - last_rumble_time_).seconds() <
+       force_feedback_period_) {
+        message.type = sensor_msgs::msg::JoyFeedback::TYPE_RUMBLE;
+        message.intensity = force_feedback_intensity_;
+    } else {
+        message.type = sensor_msgs::msg::JoyFeedback::TYPE_RUMBLE;
+        message.intensity = 0.0;
+        must_rumble_ = false;
+    }
+
+    force_feedback_publisher_->publish(message);
+}
+
+void GamepadInterfaceNode::PublishThrottleBrakeSteering(
+    const double& throttle,
+    const double& brake,
+    const double& steering) {
+    olav_interfaces::msg::ThrottleBrakeSteering tbs_message;
+
+    tbs_message.header.frame_id = frame_id_;
+    tbs_message.header.stamp = get_clock()->now();
+
+    tbs_message.throttle = throttle;
+    tbs_message.brake = brake;
+    tbs_message.steering = steering;
+
+    tbs_publisher_->publish(tbs_message);
+}
+
+void GamepadInterfaceNode::TimerCallback() {
+    double throttle;
+    double brake;
+    double steering;
+
+    if(state_ == GamepadState::STANDBY) {
+        PublishThrottleBrakeSteering(0.0, 0.0, 0.0);
+    } else if(state_ == GamepadState::CONTROL_TRIGGER_TBS) {
+        {
+            std::lock_guard<std::mutex> controls_lock(controls_mutex_);
+
+            throttle = throttle_;
+            brake = brake_;
+            steering = steering_;
+        }
+
+        PublishThrottleBrakeSteering(throttle, brake, steering);
+
+    } else if(state_ == GamepadState::CONTROL_PAD_TBS) {
+        {
+            std::lock_guard<std::mutex> controls_lock(controls_mutex_);
+
+            throttle = (control_vertical_magnitude_ >= 0)
+                ? control_vertical_magnitude_
+                : 0.0;
+            brake = (control_vertical_magnitude_ < 0)
+                ? -control_vertical_magnitude_
+                : 0.0;
+            ;
+            steering = control_horizontal_magnitude_;
+        }
+
+        PublishThrottleBrakeSteering(throttle, brake, steering);
+
+    } else if(state_ == GamepadState::CONTROL_PAD_DRIVE) {
+        {
+            std::lock_guard<std::mutex> controls_lock(controls_mutex_);
+
+            ackermann_msgs::msg::AckermannDriveStamped ackermann_message;
+            ackermann_message.header.frame_id = frame_id_;
+            ackermann_message.header.stamp = get_clock()->now();
+            ackermann_message.drive.speed = control_vertical_magnitude_;
+            ackermann_message.drive.steering_angle =
+                control_horizontal_magnitude_;
+            ackermann_drive_publisher_->publish(ackermann_message);
+        }
+    } else {
+        // TODO: Handle error.
+        return;
+    }
 }
 
 void GamepadInterfaceNode::ShiftGearDownCallback(
@@ -450,34 +669,6 @@ void GamepadInterfaceNode::ShiftGearUpCallback(
     } else {
         RCLCPP_ERROR(get_logger(),
                      "Gear upshift request failed: %s",
-                     response->message.c_str());
-    }
-}
-
-void GamepadInterfaceNode::CycleControlModeCallback(
-    rclcpp::Client<std_srvs::srv::Trigger>::SharedFuture future) {
-    auto response = future.get();
-    if(response->success) {
-        RCLCPP_INFO(get_logger(),
-                    "Control mode cycle request successful: %s",
-                    response->message.c_str());
-    } else {
-        RCLCPP_ERROR(get_logger(),
-                     "Control mode cycle request failed: %s",
-                     response->message.c_str());
-    }
-}
-
-void GamepadInterfaceNode::SetControlModeCallback(
-    rclcpp::Client<olav_interfaces::srv::SetControlMode>::SharedFuture future) {
-    auto response = future.get();
-    if(response->success) {
-        RCLCPP_INFO(get_logger(),
-                    "Control mode set request successful: %s",
-                    response->message.c_str());
-    } else {
-        RCLCPP_ERROR(get_logger(),
-                     "Control mode set request failed: %s",
                      response->message.c_str());
     }
 }

@@ -56,7 +56,7 @@ ControlOverride::FromOverrideIdentifier(const ControlOverrideIdentifier& identif
         break;
     case ControlOverrideIdentifier::OVERRIDE_STEERING: return "override_steering"; break;
     }
-    // TODO: Add a default case that throws an exception.
+    throw std::invalid_argument("Invalid override identifier!");
 }
 
 ControlOverrideIdentifier ControlOverride::FromOverrideName(const std::string& name) {

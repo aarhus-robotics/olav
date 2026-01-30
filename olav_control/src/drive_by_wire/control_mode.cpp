@@ -64,7 +64,7 @@ ControlMode::FromModeIdentifier(const ControlModeIdentifier& identifier) {
         break;
     case ControlModeIdentifier::DRIVE_TBS: return "drive_tbs"; break;
     }
-    // TODO: Add a default case that throws an exception.
+    throw std::invalid_argument("Invalid mode identifier!");
 }
 
 ControlModeIdentifier ControlMode::FromModeName(const std::string& name) {
@@ -87,7 +87,7 @@ std::string ControlMode::FromAuthorityIdentifier(
     case ControlAuthorityIdentifier::GAMEPAD: return "gamepad"; break;
     case ControlAuthorityIdentifier::AUTONOMY: return "autonomy"; break;
     }
-    // TODO: Add a default case that throws an exception.
+    throw std::invalid_argument("Invalid control authority identifier!");
 }
 
 ControlAuthorityIdentifier

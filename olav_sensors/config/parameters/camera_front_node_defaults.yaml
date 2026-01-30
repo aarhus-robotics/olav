@@ -3,7 +3,7 @@
     camera:
       i_enable_imu: true
       i_enable_ir: true
-      i_ip: "192.168.69.8"
+      i_ip: "192.168.96.8"
       i_laser_dot_brightness: 800
       i_mx_id: "194430102108AC2E00"
       i_nn_type: "NONE"

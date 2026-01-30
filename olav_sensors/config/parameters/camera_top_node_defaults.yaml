@@ -2,7 +2,7 @@
   ros__parameters:
     camera:
       #i_enable_imu: false
-      i_ip: "192.168.69.9"
+      i_ip: "192.168.96.9"
       i_mx_id: "14442C107111D1D600"
       i_nn_type: "NONE"
       i_pipeline_type: "RGB"

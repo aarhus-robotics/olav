@@ -88,7 +88,7 @@ class ModbusInterface:
     REGISTER_FEEDBACK_SIZE = 6
 
     def __init__(self,
-                 address: str = '192.168.69.11',
+                 address: str = '192.168.96.11',
                  port: int = 502,
                  retry_delay: float = 0.5,
                  tick_rate: float = 1.0 / 0.15):

@@ -46,7 +46,7 @@ void DriveByWireNode::Configure() {
 }
 
 void DriveByWireNode::GetParameters() {
-    declare_parameter("connection.address", "192.168.69.3");
+    declare_parameter("connection.address", "192.168.96.3");
     connection_address_ = get_parameter("connection.address").as_string();
 
     declare_parameter("connection.port", 502);

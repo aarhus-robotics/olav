@@ -1,5 +1,5 @@
 "Name", "Type", "Default value", "Description"
-"connection.address", "string", "192.168.69.3","Address of the Modbus TCP server of the drive-by-wire PLC"
+"connection.address", "string", "192.168.96.3","Address of the Modbus TCP server of the drive-by-wire PLC"
 "connection.port", "int", "502", "Port of the Modbus TCP server of the drive-by-wire PLC"
 "rates.connect", "double", "0.2","Rate (expressed in Hz) at which new connections to the drive-by-wire PLC are attempted."
 "rates.writer", "double", "100.0","Rate (expressed in Hz) at which new register values are written to drive-by-wire PLC."

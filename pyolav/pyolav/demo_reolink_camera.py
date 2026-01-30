@@ -4,7 +4,7 @@
 import cv2
 
 # Open RTSP stream
-capture = cv2.VideoCapture('rtsp://admin:@192.168.69.41:554/h264Preview_01_sub')
+capture = cv2.VideoCapture('rtsp://admin:@192.168.96.41:554/h264Preview_01_sub')
 
 while (capture.isOpened()):
     ret, frame = cap.read()

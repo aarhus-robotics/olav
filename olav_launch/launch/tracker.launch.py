@@ -79,7 +79,7 @@ def generate_launch_description():
         name="object_tracker",
         package="navi_perception",
         #prefix="konsole -e gdb -ex=r --args",
-        executable="navi_perception__object_tracker_node",
+        executable="navi_perception_object_tracker_node",
         arguments=[
             "--ros-args", "--log-level",
             LaunchConfiguration("log_level")
@@ -100,12 +100,16 @@ def generate_launch_description():
             # > Services
             ("set_target", "perception/tracker/set_target"),
             # > Publishers
+            ("pose/raw", "perception/tracker/target/pose/raw"),
+            ("pose/filtered", "perception/tracker/target/pose/filtered"),
+            ("odometry/raw", "perception/tracker/target/odometry/raw"),
+            ("odometry/filtered", "perception/tracker/target/odometry/filtered"),
+            ("detection_3d", "perception/tracker/target/detection_3d"),
             ("points/fov", "perception/tracker/points/fov"),
             ("points/roi", "perception/tracker/points/roi"),
             ("points/ground", "perception/tracker/points/ground"),
             ("points/cluster", "perception/tracker/points/cluster"),
             ("points/cropbox", "perception/tracker/points/cropbox"),
-            ("detection_3d", "perception/tracker/detection_3d"),
             ("out_image", "perception/tracker/image"),
         ],
         emulate_tty=True,

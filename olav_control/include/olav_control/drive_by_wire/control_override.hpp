@@ -40,8 +40,8 @@ namespace ROS {
 
 enum class ControlOverrideIdentifier {
     DISABLED = -1,
-    OVERRIDE_THROTTLE_BRAKE = 0,
-    OVERRIDE_STEERING = 1
+    OVERRIDE_LONGITUDINAL = 0,
+    OVERRIDE_LATERAL = 1
 };
 
 class ControlOverride {

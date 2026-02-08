@@ -99,22 +99,30 @@ void DriveByWireNode::GetParameters() {
     use_mock_interface_ = get_parameter("debug.use_mock_interface").as_bool();
 
     declare_parameter("controls.differential.enable", false);
-    use_differential_control_ = get_parameter("controls.differential.enable").as_bool();
+    use_differential_control_ =
+        get_parameter("controls.differential.enable").as_bool();
 
     declare_parameter("controls.differential.steering_rate.deadband", 0.1);
-    steering_rate_deadband_ = get_parameter("controls.differential.steering_rate.deadband").as_double();
+    steering_rate_deadband_ =
+        get_parameter("controls.differential.steering_rate.deadband")
+            .as_double();
 
     declare_parameter("controls.differential.steering_rate.max", 8.0);
-    steering_rate_max_ = get_parameter("controls.differential.steering_rate.max").as_double();
+    steering_rate_max_ =
+        get_parameter("controls.differential.steering_rate.max").as_double();
 
     declare_parameter("controls.differential.acceleration.deadband", 0.05);
-    acceleration_deadband_ = get_parameter("controls.differential.acceleration.deadband").as_double();
+    acceleration_deadband_ =
+        get_parameter("controls.differential.acceleration.deadband")
+            .as_double();
 
     declare_parameter("controls.differential.acceleration.max", 1.0);
-    acceleration_max_ = get_parameter("controls.differential.acceleration.max").as_double();
+    acceleration_max_ =
+        get_parameter("controls.differential.acceleration.max").as_double();
 
     declare_parameter("controls.differential.deceleration.max", 1.0);
-    deceleration_max_ = get_parameter("controls.differential.deceleration.max").as_double();
+    deceleration_max_ =
+        get_parameter("controls.differential.deceleration.max").as_double();
 
     GetSpeedControllerParameters();
     GetSteeringControllerParameters();
@@ -311,6 +319,11 @@ void DriveByWireNode::CreateServices() {
             std::bind(&DriveByWireNode::SetControlMode, this,
                       std::placeholders::_1, std::placeholders::_2));
 
+    cycle_differential_mode_service_ = create_service<std_srvs::srv::Trigger>(
+        "cycle_differential_mode",
+        std::bind(&DriveByWireNode::CycleDifferentialMode, this,
+                  std::placeholders::_1, std::placeholders::_2));
+
     set_control_override_service_ =
         create_service<olav_interfaces::srv::SetControlOverride>(
             "set_control_override",
@@ -460,19 +473,31 @@ void DriveByWireNode::ReaderCallback() {
     }
 }
 
+void DriveByWireNode::ApplyControlEfforts(double throttle, double brake,
+                                          double steering) {
+    {
+        std::unique_lock<std::shared_mutex> setpoint_lock(setpoint_mutex_);
+        drive_by_wire_setpoint_->SetThrottle(throttle);
+        drive_by_wire_setpoint_->SetBrake(brake);
+        drive_by_wire_setpoint_->SetSteering(steering);
+    }
+}
+
 void DriveByWireNode::ControllersCallback() {
-    if (!IsHealthy()) {
+    // Pre-allocate the default efforts to be passed to the drive-by-wire.
+    double effort_throttle = 0.0;
+    double effort_brake = standby_brake_effort_;
+    double effort_steering = 0.0;
+
+    // If the drive-by-wire health check failed or the system is in standby,
+    // reset all controllers and do not update any commands.
+    if (!IsHealthy() || active_control_mode_.GetModeIdentifier() ==
+                            ControlModeIdentifier::STANDBY) {
         speed_controller_->Reset();
         steering_controller_->Reset();
+        ApplyControlEfforts(effort_throttle, effort_brake, effort_steering);
         return;
     }
-
-    /* TODO: Implement the speed controller feedforward offset.
-    // Compute the current feedforward value to be fed to the controller.
-    controller_->SetFeedforwardOffset(feedforward_offset);
-    double feedforward_offset =
-        feedforward_spline_->Evaluate(current_setpoint_);
-    */
 
     double steering_angle;
     {
@@ -481,63 +506,102 @@ void DriveByWireNode::ControllersCallback() {
             drive_by_wire_feedback_->GetSteeringActuatorPositionInDegrees();
     }
 
+    // TODO: The vehicle speed and odometry needs its own mutex.
+    speed_controller_->SetFeedback(vehicle_speed_);
+    steering_controller_->SetFeedback(steering_angle);
 
-    double speed_controller_output;
-    double steering_controller_output;
-    {
-        const std::lock_guard<std::mutex> controller_lock(controllers_mutex_);
-        // If using differential control, update the setpoints.
+    if (active_control_mode_.GetModeIdentifier() ==
+        ControlModeIdentifier::DRIVE_ACKERMANN) {
         if (use_differential_control_) {
-            speed_controller_->SetSetpoint(
-                GetDifferentialSpeedSetpoint(target_acceleration_));
-            steering_controller_->SetSetpoint(GetDifferentialSteeringSetpoint(
-                target_steering_rate_, steering_angle));
+            // If using differential controls, we look into the differential
+            // fields of the AckermannDrive message and define a setpoint to
+            // enforce the specified rates of change.
+            if (active_override_mode_.GetOverrideIdentifier() ==
+                ControlOverrideIdentifier::OVERRIDE_LATERAL) {
+                // If steering is overriden, then look for the gamepad authority
+                // instead to provide the steering setpoint.
+                steering_controller_->SetSetpoint(
+                    GetDifferentialSteeringSetpoint(
+                        setpoint_gamepad_.steering_rate, steering_angle));
+            } else {
+                steering_controller_->SetSetpoint(
+                    GetDifferentialSteeringSetpoint(
+                        setpoint_autonomy_.steering_rate, steering_angle));
+            }
+            if (active_override_mode_.GetOverrideIdentifier() ==
+                ControlOverrideIdentifier::OVERRIDE_LONGITUDINAL) {
+                // If the throttle/brake pair is overridden, then look for the
+                // gamepad authority raw throttle brake commands instead (this
+                // is delegated to a different callback).
+                speed_controller_->SetSetpoint(GetDifferentialSpeedSetpoint(
+                    setpoint_gamepad_.acceleration));
+            } else {
+                speed_controller_->SetSetpoint(GetDifferentialSpeedSetpoint(
+                    setpoint_autonomy_.acceleration));
+            }
+        } else {
+            // If we are not using differential controls, we look into the
+            // zeroth order control fields of the AckermannDrive message and
+            // pass them as controller setpoints directly on indirectly based on
+            // control authorithy.
+            if (active_override_mode_.GetOverrideIdentifier() ==
+                ControlOverrideIdentifier::OVERRIDE_LATERAL) {
+                // If steering is overriden, then look for the gamepad authority
+                // instead to provide the steering setpoint.
+                steering_controller_->SetSetpoint(
+                    setpoint_autonomy_.steering_angle);
+            } else {
+                steering_controller_->SetSetpoint(
+                    setpoint_gamepad_.steering_angle);
+            }
+            if (active_override_mode_.GetOverrideIdentifier() ==
+                ControlOverrideIdentifier::OVERRIDE_LONGITUDINAL) {
+                // If the throttle/brake pair is overridden, then look for the
+                // gamepad authority raw throttle brake commands instead (this
+                // is delegated to a different callback).
+                steering_controller_->SetSetpoint(setpoint_gamepad_.speed);
+            } else {
+                speed_controller_->SetSetpoint(setpoint_autonomy_.speed);
+            }
         }
-
-
-        // TODO: The vehicle speed and odometry needs its own mutex.
-        speed_controller_->SetFeedback(vehicle_speed_);
-        speed_controller_->Tick();
-        speed_controller_output = speed_controller_->GetOutput();
-
-        steering_controller_->SetFeedback(steering_angle);
-        steering_controller_->Tick();
-        steering_controller_output = steering_controller_->GetOutput();
+    } else if (active_control_mode_.GetModeIdentifier() ==
+                   ControlModeIdentifier::DRIVE_TBS &&
+               active_control_mode_.GetAuthorityIdentifier() ==
+                   ControlAuthorityIdentifier::GAMEPAD) {
+        // NOTE: This mode does not support autonomy, so it only parses gamepad
+        // output at this stage.
+        if (use_differential_control_) {
+            effort_throttle = setpoint_gamepad_.throttle;
+            effort_brake = setpoint_gamepad_.brake;
+            steering_controller_->SetSetpoint(GetDifferentialSteeringSetpoint(
+                setpoint_gamepad_.steering_rate, steering_angle));
+        } else {
+            effort_throttle = setpoint_gamepad_.throttle;
+            effort_brake = setpoint_gamepad_.brake;
+            steering_controller_->SetSetpoint(setpoint_gamepad_.steering_angle);
+        }
     }
 
-    {
-        std::unique_lock<std::shared_mutex> setpoint_lock(setpoint_mutex_);
+    // Move the controllers forward by one time step.
+    speed_controller_->Tick();
+    steering_controller_->Tick();
 
-        const double throttle_effort =
-            speed_controller_output > 0.0 ? speed_controller_output : 0.0;
-        const double brake_effort =
-            speed_controller_output < 0.0
-                ? std::min(brake_threshold_, std::abs(speed_controller_output))
+    // Parse the output of the controllers; in the case of the speed
+    // controllers, map the output to a throttle/brake pair.
+    GetThrottleBrakePair(speed_controller_->GetOutput(), effort_throttle,
+                         effort_brake);
+    effort_steering = steering_controller_->GetOutput();
+}
+
+void DriveByWireNode::GetThrottleBrakePair(double controller_output,
+                                           double& throttle, double& brake) {
+    throttle = controller_output > 0.0 ? controller_output : 0.0;
+    brake = controller_output < 0.0
+                ? std::min(brake_threshold_, std::abs(controller_output))
                 // TODO: This should instead be set as a minimum output of the
                 // speed controller at -brake_threshold! This check is still
                 // useful just in case ...
                 : 0.0;
-
-        drive_by_wire_setpoint_->SetThrottle(throttle_effort);
-        drive_by_wire_setpoint_->SetBrake(brake_effort);
-        drive_by_wire_setpoint_->SetSteering(steering_controller_output);
-    }
-
-    /* TODO: This goes in the DEBUG publisher callback.
-    if(publish_status_) {
-        const std::lock_guard<std::mutex> controller_lock(controllers_mutex_);
-        olav_interfaces::msg::PIDStatus pid_status_message;
-        pid_status_message.setpoint = controller_->GetSetpoint();
-        pid_status_message.feedback = controller_->GetFeedback();
-        pid_status_message.output = controller_->GetOutput();
-        pid_status_message.feedforward_term = controller_->GetFeedforwardTerm();
-        pid_status_message.proportional_term =
-            controller_->GetProportionalTerm();
-        pid_status_message.integral_term = controller_->GetIntegralTerm();
-        pid_status_message.derivative_term = controller_->GetDerivativeTerm();
-        status_publisher_->publish(pid_status_message);
-    }
-    */
 }
 
 double DriveByWireNode::GetDifferentialSteeringSetpoint(double steering_rate,
@@ -701,8 +765,8 @@ void DriveByWireNode::ConnectCallback() {
         return;
 
     if (use_mock_interface_) {
+        RCLCPP_INFO(get_logger(), "Connected via the mock interface!");
         is_connected_ = true;
-        RCLCPP_INFO(get_logger(), "CONNECTED");
         return;
     }
 
@@ -807,69 +871,45 @@ void DriveByWireNode::ThrottleBrakeSteeringCallback(
         return;
     }
 
-    if (active_control_mode_.GetModeIdentifier() ==
-        ControlModeIdentifier::DRIVE_TBS) {
-
-        {
-            std::unique_lock<std::shared_mutex> setpoint_lock(setpoint_mutex_);
-
-            drive_by_wire_setpoint_->SetBrake(message->brake);
-            drive_by_wire_setpoint_->SetThrottle(message->throttle);
-        }
-
-        // TODO: Add a check on the maximum steering angle to ensure it is
-        // within bounds.
-        {
-            std::unique_lock<std::mutex> controllers_lock(controllers_mutex_);
-
-            steering_controller_->SetSetpoint(message->steering *
-                                              maximum_steering_angle_);
-        }
-    }  // else if()
+    if (message->header.frame_id == ControlMode::FromAuthorityIdentifier(
+                                        ControlAuthorityIdentifier::GAMEPAD)) {
+        setpoint_gamepad_.throttle = message->throttle;
+        setpoint_gamepad_.brake = message->brake;
+        setpoint_gamepad_.steering_angle = message->steering;
+    }
 }
 
 void DriveByWireNode::AckermannDriveCallback(
     ackermann_msgs::msg::AckermannDriveStamped::ConstSharedPtr message) {
 
-    if (!IsHealthy()) {
+    if (!IsHealthy() ||
+        active_control_mode_.GetModeIdentifier() !=
+            ControlModeIdentifier::DRIVE_ACKERMANN ||
+        message->header.frame_id != active_control_mode_.GetAuthorityName()) {
+        // FIXME: We should probably also zero the controls?
         return;
     }
 
-    // Autonomy mode is enabled
-    if (active_control_mode_.GetModeIdentifier() ==
-            ControlModeIdentifier::DRIVE_ACKERMANN &&
-        active_control_mode_.GetAuthorityIdentifier() ==
-            ControlAuthorityIdentifier::AUTONOMY) {
-
-        // If these overrides are not active, pass the values to the controllers
-        if (!(active_override_mode_.GetOverrideIdentifier() ==
-              ControlOverrideIdentifier::OVERRIDE_THROTTLE_BRAKE)) {
-            {
-                std::unique_lock<std::mutex> controllers_lock(
-                    controllers_mutex_);
-
-                speed_controller_->SetSetpoint(message->drive.speed);
-            }
+    if (active_control_mode_.GetAuthorityIdentifier() ==
+        ControlAuthorityIdentifier::AUTONOMY) {
+        if (use_differential_control_) {
+            setpoint_autonomy_.steering_rate =
+                message->drive.steering_angle_velocity;
+            setpoint_autonomy_.acceleration = message->drive.acceleration;
+        } else {
+            setpoint_autonomy_.steering_angle = message->drive.steering_angle;
+            setpoint_autonomy_.speed = message->drive.speed;
         }
-        if (!(active_override_mode_.GetOverrideIdentifier() ==
-              ControlOverrideIdentifier::OVERRIDE_STEERING)) {
-            {
-                std::unique_lock<std::mutex> controllers_lock(
-                    controllers_mutex_);
-
-                steering_controller_->SetSetpoint(
-                    message->drive.steering_angle);
-            }
-        }
-    } else if (active_control_mode_.GetModeIdentifier() ==
-                   ControlModeIdentifier::DRIVE_ACKERMANN &&
-               !(active_control_mode_.GetAuthorityIdentifier() ==
-                 ControlAuthorityIdentifier::AUTONOMY)) {
-        {
-            std::unique_lock<std::mutex> controllers_lock(controllers_mutex_);
-
-            speed_controller_->SetSetpoint(message->drive.speed);
-            steering_controller_->SetSetpoint(message->drive.steering_angle);
+    } else if (active_control_mode_.GetAuthorityIdentifier() ==
+               ControlAuthorityIdentifier::GAMEPAD) {
+        if (use_differential_control_) {
+            setpoint_gamepad_.steering_rate =
+                message->drive.steering_angle_velocity * steering_rate_max_;
+            setpoint_gamepad_.acceleration = message->drive.acceleration;
+        } else {
+            setpoint_gamepad_.steering_angle =
+                message->drive.steering_angle * maximum_steering_angle_;
+            setpoint_gamepad_.speed = message->drive.speed;
         }
     }
 }
@@ -923,8 +963,8 @@ void DriveByWireNode::CycleIgnition(
     std::shared_ptr<std_srvs::srv::Trigger::Response> response) {
     (void)request;
 
-    // Check that the drive-by-wire and all auxiliary systems are ready before
-    // cycling ignition.
+    // Check that the drive-by-wire and all auxiliary systems are ready
+    // before cycling ignition.
     if (!is_ready_) {
         SetResponseFailError<std_srvs::srv::Trigger::Response>(
             response,
@@ -960,6 +1000,28 @@ void DriveByWireNode::CycleIgnition(
             response,
             "Could not set ignition state: " + std::string(exception.what()));
     }
+}
+
+void DriveByWireNode::CycleDifferentialMode(
+    const std::shared_ptr<std_srvs::srv::Trigger::Request> request,
+    std::shared_ptr<std_srvs::srv::Trigger::Response> response) {
+    (void)request;
+
+    // Check that the drive-by-wire and all auxiliary systems are ready
+    // before cycling ignition.
+    if (!is_ready_) {
+        SetResponseFailError<std_srvs::srv::Trigger::Response>(
+            response,
+            "The drive-by-wire is not ready to receive a cycle "
+            "differential "
+            "mode command!");
+        return;
+    };
+
+    use_differential_control_ = !use_differential_control_;
+
+    SetResponseSuccessInfo<std_srvs::srv::Trigger::Response>(
+        response, "Successfully switched the differential control mode.");
 }
 
 void DriveByWireNode::WriteIgnitionState(const bool& ignition_state) {
@@ -1002,8 +1064,8 @@ void DriveByWireNode::StartEngine(
         drive_by_wire_setpoint_->StartEngine(true);
     }
 
-    // Let the engine starter run for the defined time, notify the user every
-    // half second.
+    // Let the engine starter run for the defined time, notify the user
+    // every half second.
     auto initial_time = get_clock()->now();
     rclcpp::Duration elapsed_time(0, 0);
 
@@ -1120,16 +1182,20 @@ void DriveByWireNode::Ready(
             "accepting commands!");
         return;
     } else {
-        // Attempt to initialize the PLC registers to a set of default values.
-        try {
-            InitializeRegisters();
-        } catch (OLAV::Exceptions::DriveByWireInterfaceException& exception) {
-            SetResponseFailError<std_srvs::srv::Trigger::Response>(
-                response, "Could not initialize the PLC registers!");
-            return;
-        }
+        if (!use_mock_interface_) {
+            // Attempt to initialize the PLC registers to a set of default
+            // values.
+            try {
+                InitializeRegisters();
+            } catch (
+                OLAV::Exceptions::DriveByWireInterfaceException& exception) {
+                SetResponseFailError<std_srvs::srv::Trigger::Response>(
+                    response, "Could not initialize the PLC registers!");
+                return;
+            }
 
-        WriteIgnitionState(true);
+            WriteIgnitionState(true);
+        }
 
         is_ready_ = true;
         writer_timer_->reset();
@@ -1159,7 +1225,8 @@ void DriveByWireNode::ShiftGearUp(
         if (gear == 5) {
             SetResponseFailError<std_srvs::srv::Trigger::Response>(
                 response,
-                "Could not shift gear up: the gear selector is in the highest "
+                "Could not shift gear up: the gear selector is in the "
+                "highest "
                 "possible position.");
         } else {
             drive_by_wire_setpoint_->SetGear(gear + 1);
@@ -1183,7 +1250,8 @@ void DriveByWireNode::ShiftGearDown(
         if (gear == 1) {
             SetResponseFailError<std_srvs::srv::Trigger::Response>(
                 response,
-                "Could not shift gear down: the gear selector is in the lowest "
+                "Could not shift gear down: the gear selector is in the "
+                "lowest "
                 "possible position.");
         } else {
             drive_by_wire_setpoint_->SetGear(gear - 1);
@@ -1211,11 +1279,12 @@ void DriveByWireNode::GetEngineSpeedDiagnostics(
         has_engine_speed_ ? diagnostic_msgs::msg::DiagnosticStatus::OK
                           : diagnostic_msgs::msg::DiagnosticStatus::ERROR;
     diagnostic_status->name = "olav/drive-by-wire/engine_speed";
-    diagnostic_status->message =
-        has_engine_speed_
-            ? "System has an engine speed reading."
-            : "The system is not receiving an engine speed. Please check the "
-              "powertrain interface status and the microcontroller connection.";
+    diagnostic_status->message = has_engine_speed_
+                                     ? "System has an engine speed reading."
+                                     : "The system is not receiving an "
+                                       "engine speed. Please check the "
+                                       "powertrain interface status and "
+                                       "the microcontroller connection.";
     diagnostic_status->hardware_id = hardware_id_;
     diagnostic_array_message->status.push_back(*diagnostic_status);
 }
@@ -1681,11 +1750,13 @@ void DriveByWireNode::SetSpeedControllerParameters(
             const std::lock_guard<std::mutex> lock(controllers_mutex_);
             speed_controller_->UseDeadbandFilter(parameter.as_bool());
         } else if (parameter.get_name() ==
-                   "controllers.speed.pid.deadband.filter.thresholds.lower") {
+                   "controllers.speed.pid.deadband.filter.thresholds."
+                   "lower") {
             const std::lock_guard<std::mutex> lock(controllers_mutex_);
             speed_controller_->SetDeadbandLowerThreshold(parameter.as_double());
         } else if (parameter.get_name() ==
-                   "controllers.speed.pid.deadband.filter.thresholds.upper") {
+                   "controllers.speed.pid.deadband.filter.thresholds."
+                   "upper") {
             const std::lock_guard<std::mutex> lock(controllers_mutex_);
             speed_controller_->SetDeadbandUpperThreshold(parameter.as_double());
         } else {

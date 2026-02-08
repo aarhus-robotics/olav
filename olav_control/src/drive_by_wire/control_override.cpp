@@ -51,10 +51,10 @@ std::string
 ControlOverride::FromOverrideIdentifier(const ControlOverrideIdentifier& identifier) {
     switch(identifier) {
     case ControlOverrideIdentifier::DISABLED: return "disabled"; break;
-    case ControlOverrideIdentifier::OVERRIDE_THROTTLE_BRAKE:
-        return "override_throttle_brake";
+    case ControlOverrideIdentifier::OVERRIDE_LONGITUDINAL:
+        return "OVERRIDE_LONGITUDINAL";
         break;
-    case ControlOverrideIdentifier::OVERRIDE_STEERING: return "override_steering"; break;
+    case ControlOverrideIdentifier::OVERRIDE_LATERAL: return "override_steering"; break;
     }
     throw std::invalid_argument("Invalid override identifier!");
 }
@@ -62,10 +62,10 @@ ControlOverride::FromOverrideIdentifier(const ControlOverrideIdentifier& identif
 ControlOverrideIdentifier ControlOverride::FromOverrideName(const std::string& name) {
     if(name == "disabled") {
         return ControlOverrideIdentifier::DISABLED;
-    } else if(name == "override_throttle_brake") {
-        return ControlOverrideIdentifier::OVERRIDE_THROTTLE_BRAKE;
+    } else if(name == "OVERRIDE_LONGITUDINAL") {
+        return ControlOverrideIdentifier::OVERRIDE_LONGITUDINAL;
     } else if(name == "override_steering") {
-        return ControlOverrideIdentifier::OVERRIDE_STEERING;
+        return ControlOverrideIdentifier::OVERRIDE_LATERAL;
     } else {
         throw std::invalid_argument("Invalid control mode!");
     }

@@ -73,11 +73,27 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 namespace OLAV {
 namespace ROS {
 
+struct AutonomySetpoint {
+    double speed = 0.0;
+    double steering_angle = 0.0;
+    double acceleration = 0.0;
+    double steering_rate = 0.0;
+};
+
+struct GamepadSetpoint {
+    double throttle = 0.0;
+    double brake = 0.0;
+    double speed = 0.0;
+    double steering_angle = 0.0;
+    double acceleration = 0.0;
+    double steering_rate = 0.0;
+};
+
 class DriveByWireNode : public rclcpp::Node {
-  public:
+   public:
     DriveByWireNode();
 
-  protected:
+   protected:
     void Configure();
 
     void GetParameters();
@@ -96,7 +112,7 @@ class DriveByWireNode : public rclcpp::Node {
 
     void StartTimers();
 
-  private:
+   private:
     rclcpp::SubscriptionOptions subscription_options_;
 
     void CreateHeartbeatSubscription();
@@ -203,8 +219,8 @@ class DriveByWireNode : public rclcpp::Node {
      */
     void PublishPLCStatus();
 
-    std::shared_ptr<olav_interfaces::msg::PIDStatus>
-    GetControllerStatusMessage(std::shared_ptr<PIDController> controller);
+    std::shared_ptr<olav_interfaces::msg::PIDStatus> GetControllerStatusMessage(
+        std::shared_ptr<PIDController> controller);
 
     void PublishSpeedControllerStatus();
 
@@ -226,12 +242,20 @@ class DriveByWireNode : public rclcpp::Node {
         const std::shared_ptr<std_srvs::srv::Trigger::Request> request,
         std::shared_ptr<std_srvs::srv::Trigger::Response> response);
 
+    /** @brief Shared pointer to the service to cycle the differential mode. */
+    rclcpp::Service<std_srvs::srv::Trigger>::SharedPtr
+        cycle_differential_mode_service_;
+
+    void CycleDifferentialMode(
+        const std::shared_ptr<std_srvs::srv::Trigger::Request> request,
+        std::shared_ptr<std_srvs::srv::Trigger::Response> response);
+
     /** @brief Shared pointer to the service to set the ignition state. */
     rclcpp::Service<std_srvs::srv::SetBool>::SharedPtr set_ignition_service_;
 
-    void
-    SetIgnition(const std::shared_ptr<std_srvs::srv::SetBool::Request> request,
-                std::shared_ptr<std_srvs::srv::SetBool::Response> response);
+    void SetIgnition(
+        const std::shared_ptr<std_srvs::srv::SetBool::Request> request,
+        std::shared_ptr<std_srvs::srv::SetBool::Response> response);
 
     void WriteIgnitionState(const bool& ignition_state);
 
@@ -247,9 +271,9 @@ class DriveByWireNode : public rclcpp::Node {
     /** @brief Shared pointer to the service to start the engine. */
     rclcpp::Service<std_srvs::srv::Trigger>::SharedPtr start_engine_service_;
 
-    void
-    StartEngine(const std::shared_ptr<std_srvs::srv::Trigger::Request> request,
-                std::shared_ptr<std_srvs::srv::Trigger::Response> response);
+    void StartEngine(
+        const std::shared_ptr<std_srvs::srv::Trigger::Request> request,
+        std::shared_ptr<std_srvs::srv::Trigger::Response> response);
 
     double engine_starter_duration_;
 
@@ -371,9 +395,9 @@ class DriveByWireNode : public rclcpp::Node {
 
     // Upshift service
     // ---------------
-    void
-    ShiftGearUp(const std::shared_ptr<std_srvs::srv::Trigger::Request> request,
-                std::shared_ptr<std_srvs::srv::Trigger::Response> response);
+    void ShiftGearUp(
+        const std::shared_ptr<std_srvs::srv::Trigger::Request> request,
+        std::shared_ptr<std_srvs::srv::Trigger::Response> response);
 
     rclcpp::Service<std_srvs::srv::Trigger>::SharedPtr shift_gear_down_service_;
 
@@ -473,22 +497,22 @@ class DriveByWireNode : public rclcpp::Node {
     void GetDiagnostics(diagnostic_msgs::msg::DiagnosticArray::SharedPtr
                             diagnostic_array_message);
 
-    void
-    GetEngineSpeedDiagnostics(diagnostic_msgs::msg::DiagnosticArray::SharedPtr
-                                  diagnostic_array_message);
+    void GetEngineSpeedDiagnostics(
+        diagnostic_msgs::msg::DiagnosticArray::SharedPtr
+            diagnostic_array_message);
 
-    void
-    GetConnectionDiagnostics(diagnostic_msgs::msg::DiagnosticArray::SharedPtr
-                                 diagnostic_array_message);
+    void GetConnectionDiagnostics(
+        diagnostic_msgs::msg::DiagnosticArray::SharedPtr
+            diagnostic_array_message);
 
     void GetStateDiagnostics(diagnostic_msgs::msg::DiagnosticArray::SharedPtr
                                  diagnostic_array_message);
 
     void GetOdometryDiagnostics(diagnostic_msgs::msg::DiagnosticArray::SharedPtr
                                     diagnostic_array_message);
-    void
-    GetHeartbeatDiagnostics(diagnostic_msgs::msg::DiagnosticArray::SharedPtr
-                                diagnostic_array_message);
+    void GetHeartbeatDiagnostics(
+        diagnostic_msgs::msg::DiagnosticArray::SharedPtr
+            diagnostic_array_message);
     void GetReadyDiagnostics(diagnostic_msgs::msg::DiagnosticArray::SharedPtr
                                  diagnostic_array_message);
 
@@ -559,9 +583,19 @@ class DriveByWireNode : public rclcpp::Node {
 
     bool use_differential_control_;
 
-    double target_acceleration_;
+    double target_speed_ = 0.0;
 
-    double target_steering_rate_;
+    double target_steering_angle_ = 0.0;
+
+    double target_steering_angle_override_ = 0.0;
+
+    double target_acceleration_ = 0.0;
+
+    double target_acceleration_override_ = 0.0;
+
+    double target_steering_rate_ = 0.0;
+
+    double target_steering_rate_override_ = 0.0;
 
     double steering_rate_deadband_;
 
@@ -573,7 +607,8 @@ class DriveByWireNode : public rclcpp::Node {
 
     double deceleration_max_;
 
-    double GetDifferentialSteeringSetpoint(double steering_rate, double steering_angle);
+    double GetDifferentialSteeringSetpoint(double steering_rate,
+                                           double steering_angle);
 
     double GetDifferentialSpeedSetpoint(double acceleration);
 
@@ -619,8 +654,8 @@ class DriveByWireNode : public rclcpp::Node {
     OnSetParametersCallbackHandle::SharedPtr on_set_parameters_callback_handle_;
 
     /** @brief Callback for the "on set parameters" event. */
-    rcl_interfaces::msg::SetParametersResult
-    OnSetParametersCallback(const std::vector<rclcpp::Parameter>& parameters);
+    rcl_interfaces::msg::SetParametersResult OnSetParametersCallback(
+        const std::vector<rclcpp::Parameter>& parameters);
 
     void SetSpeedControllerParameters(
         const std::vector<rclcpp::Parameter>& parameters,
@@ -629,7 +664,17 @@ class DriveByWireNode : public rclcpp::Node {
     void SetSteeringControllerParameters(
         const std::vector<rclcpp::Parameter>& parameters,
         rcl_interfaces::msg::SetParametersResult& result);
-};
 
-} // namespace ROS
-} // namespace OLAV
+    AutonomySetpoint setpoint_autonomy_;
+
+    GamepadSetpoint setpoint_gamepad_;
+
+    double standby_brake_effort_ = 0.3;
+
+    void ApplyControlEfforts(double throttle, double brake, double steering);
+
+    void GetThrottleBrakePair(double controller_output, double& throttle,
+                              double& brake);
+};
+}  // namespace ROS
+}  // namespace OLAV

@@ -36,8 +36,8 @@ namespace OLAV {
 namespace ROS {
 
 void LowPassFilter::SetSmoothingConstant(const double& smoothing_constant) {
-    assert(("Smoothing constant must lie in the interval (0.0, 1.0]).",
-            smoothing_constant > 0.0 || smoothing_constant <= 1.0));
+    assert((smoothing_constant > 0.0 || smoothing_constant <= 1.0) &&
+           "Smoothing constant must lie in the interval (0.0, 1.0]).");
 
     smoothing_constant_ = smoothing_constant;
 }

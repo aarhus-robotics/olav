@@ -80,14 +80,14 @@ double OneEuroFilter::GetSmoothingConstant(const double& cutoff_frequency) {
 }
 
 void OneEuroFilter::SetSamplingFrequency(const double& sampling_frequency) {
-    assert(("Sampling frequency must be greater than or equal to zero.",
-            sampling_frequency >= 0.0));
+    assert(sampling_frequency >= 0.0 &&
+           "Sampling frequency must be greater than or equal to zero.");
     sampling_frequency_ = sampling_frequency;
 }
 
 void OneEuroFilter::SetCutoffFrequency(const double& cutoff_frequency) {
-    assert(("Cutoff frequency must be greater than or equal to zero.",
-            cutoff_frequency >= 0.0));
+    assert(cutoff_frequency >= 0.0 &&
+           "Cutoff frequency must be greater than or equal to zero.");
 
     cutoff_frequency_ = cutoff_frequency;
 }
@@ -95,8 +95,8 @@ void OneEuroFilter::SetCutoffFrequency(const double& cutoff_frequency) {
 void OneEuroFilter::SetDerivativeCutoffFrequency(
     const double& derivative_cutoff_frequency) {
     assert(
-        ("Derivative cutoff frequency must be greater than or equal to zero.",
-         derivative_cutoff_frequency >= 0.0));
+        derivative_cutoff_frequency >= 0.0 &&
+        "Derivative cutoff frequency must be greater than or equal to zero.");
 
     derivative_cutoff_frequency_ = derivative_cutoff_frequency;
 }

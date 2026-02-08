@@ -414,7 +414,7 @@ void GamepadInterfaceNode::HandleShareButton() {
         request->mode =
             olav_interfaces::srv::SetControlMode::Request::MODE_DRIVE_ACKERMANN;
         request->authority =
-            olav_interfaces::srv::SetControlMode::Request::AUTHORITHY_GAMEPAD;
+            olav_interfaces::srv::SetControlMode::Request::AUTHORITY_GAMEPAD;
         const auto future =
             set_control_mode_client_->async_send_request(request);
 
@@ -444,7 +444,7 @@ void GamepadInterfaceNode::HandleShareButton() {
     request->mode =
         olav_interfaces::srv::SetControlMode::Request::MODE_DRIVE_TBS;
     request->authority =
-        olav_interfaces::srv::SetControlMode::Request::AUTHORITHY_GAMEPAD;
+        olav_interfaces::srv::SetControlMode::Request::AUTHORITY_GAMEPAD;
     const auto future = set_control_mode_client_->async_send_request(request);
 
     // Move this to the future function.

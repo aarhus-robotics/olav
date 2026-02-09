@@ -83,7 +83,7 @@ ros-git-checkout() {
 
 
 LIST_OF_REPOSITORIES=("aarhus-robotics/olav" "aarhus-robotics/navi")
-LIST_OF_ODIN_SESSIONS=("datalogger" "description" "drive-by-wire" "navigation" "perception" "drawbar")
+LIST_OF_ODIN_SESSIONS=("datalogger" "description" "drive-by-wire" "navigation" "perception" "drawbar", "autonomy-msdwa", "autonomy-tracker")
 LIST_OF_THOR_SESSIONS=("peripherals")
 
 #####################################

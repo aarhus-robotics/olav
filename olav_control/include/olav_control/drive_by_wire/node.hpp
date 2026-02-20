@@ -564,8 +564,10 @@ class DriveByWireNode : public rclcpp::Node {
 
     rclcpp::Time last_control_time_;
 
-    double control_timeout_ = 0.1;
+    double control_timeout_;
+
     bool has_valid_control_ = false;
+    
     bool HasValidControl(rclcpp::Time& time);
     // ------------------------------------------------------------------------
 

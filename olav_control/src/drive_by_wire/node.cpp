@@ -84,6 +84,9 @@ void DriveByWireNode::GetParameters() {
     engine_speed_threshold_ =
         get_parameter("starter.check.threshold").as_double();
 
+    declare_parameter("safety.control.timeout", 1.0);
+    control_timeout_ = get_parameter("safety.control.timeout").as_double();
+
     declare_parameter("safety.limits.engine_speed", 5000.0);
     maximum_engine_speed_ =
         get_parameter("safety.limits.engine_speed").as_double();
@@ -882,6 +885,8 @@ void DriveByWireNode::ThrottleBrakeSteeringCallback(
         setpoint_gamepad_.brake = message->brake;
         setpoint_gamepad_.steering_angle = message->steering;
     }
+
+    last_control_time_ = get_clock()->now();
 }
 
 void DriveByWireNode::AckermannDriveCallback(
@@ -917,6 +922,8 @@ void DriveByWireNode::AckermannDriveCallback(
             setpoint_gamepad_.speed = message->drive.speed;
         }
     }
+
+    last_control_time_ = get_clock()->now();
 }
 
 void DriveByWireNode::EngineSpeedCallback(

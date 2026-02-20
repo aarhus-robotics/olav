@@ -10,9 +10,14 @@
       debug: 1.0
       health_check: 1.0
     safety:
+      control:
+        timeout: 1.0
       limits:
         engine_speed: 5000.0
         longitudinal_speed: 8.33
+    controls:
+      steering_angle:
+        max: 33.0
     controllers:
       speed:
         pid:

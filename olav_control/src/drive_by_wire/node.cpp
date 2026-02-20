@@ -98,6 +98,10 @@ void DriveByWireNode::GetParameters() {
     declare_parameter("debug.use_mock_interface", false);
     use_mock_interface_ = get_parameter("debug.use_mock_interface").as_bool();
 
+    declare_parameter("controls.steering_angle.max", 33.0);
+    steering_angle_max_ =
+        get_parameter("controls.steering_angle.max").as_double();
+
     declare_parameter("controls.differential.enable", false);
     use_differential_control_ =
         get_parameter("controls.differential.enable").as_bool();
@@ -578,7 +582,8 @@ void DriveByWireNode::ControllersCallback() {
         } else {
             effort_throttle = setpoint_gamepad_.throttle;
             effort_brake = setpoint_gamepad_.brake;
-            steering_controller_->SetSetpoint(setpoint_gamepad_.steering_angle);
+            steering_controller_->SetSetpoint(setpoint_gamepad_.steering_angle *
+                                              steering_angle_max_);
         }
     }
 

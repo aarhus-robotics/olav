@@ -585,6 +585,8 @@ class DriveByWireNode : public rclcpp::Node {
 
     double target_speed_ = 0.0;
 
+    double steering_angle_max_ = 0.0;
+
     double target_steering_angle_ = 0.0;
 
     double target_steering_angle_override_ = 0.0;

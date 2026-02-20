@@ -596,9 +596,21 @@ void DriveByWireNode::ControllersCallback() {
 
     // Parse the output of the controllers; in the case of the speed
     // controllers, map the output to a throttle/brake pair.
-    GetThrottleBrakePair(speed_controller_->GetOutput(), effort_throttle,
-                         effort_brake);
+    if (active_control_mode_.GetModeIdentifier() ==
+        ControlModeIdentifier::DRIVE_ACKERMANN) {
+
+        GetThrottleBrakePair(speed_controller_->GetOutput(), effort_throttle,
+                             effort_brake);
+    }
     effort_steering = steering_controller_->GetOutput();
+
+    // Update the drive-by-wire effort setpoints
+    {
+        std::unique_lock<std::shared_mutex> setpoint_lock(setpoint_mutex_);
+        drive_by_wire_setpoint_->SetThrottle(effort_throttle);
+        drive_by_wire_setpoint_->SetBrake(effort_brake);
+        drive_by_wire_setpoint_->SetSteering(effort_steering);
+    }
 }
 
 void DriveByWireNode::GetThrottleBrakePair(double controller_output,

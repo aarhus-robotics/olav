@@ -862,11 +862,17 @@ void DriveByWireNode::HealthCheckCallback() {
     if (active_control_mode_.GetModeIdentifier() ==
             ControlModeIdentifier::DRIVE_ACKERMANN &&
         active_control_mode_.GetAuthorityIdentifier() ==
-            ControlAuthorityIdentifier::AUTONOMY)
+            ControlAuthorityIdentifier::AUTONOMY) {
         has_heartbeat_ = (current_time - last_heartbeat_time_).seconds() >=
                                  health_check_period_
                              ? false
                              : true;
+    } else {
+        // If we are not in a mode that requires a heartbeat check, we mock the
+        // heartbeat directly from the drive-by-wire. Note that this will show a
+        // heartbeat signal in the diagnostics even without an actual origin.
+        has_heartbeat_ = true;
+    }
 
     if (!HasValidControl(current_time)) {
         {

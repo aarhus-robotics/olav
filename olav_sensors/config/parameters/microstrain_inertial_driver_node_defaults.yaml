@@ -16,7 +16,7 @@
     raw_file_enable: False
     raw_file_include_support_data: False
     raw_file_directory: "/home/olav/ROS/data/mips/"
-    timestamp_source: 2
+    timestamp_source: 0
     tf_mode: 2
     frame_id: "gnss_ins_link"
     mount_frame_id: "base_link"
@@ -70,11 +70,11 @@
     filter_vel_in_vehicle_frame: True
     filter_auto_init: True
     filter_reset_after_config: True
-    filter_declination_source: 2
+    filter_declination_source: 1
     filter_declination: 0.23
     filter_use_compensated_accel: False
     filter_adaptive_level: 2
-    filter_adaptive_time_limit_ms: 7000
+    filter_adaptive_time_limit_ms: 15000
     filter_enable_external_gps_time_update: False
     filter_external_gps_time_topic: "/external_gps_time"
     gps_leap_seconds: 18.0
@@ -128,11 +128,11 @@
     pressure_low_pass_filter_auto: False
     pressure_low_pass_filter_frequency: 1
     imu_data_raw_rate: 0
-    imu_data_rate: 100
+    imu_data_rate: 200
     imu_mag_data_rate: 0
     imu_pressure_data_rate: 0
     imu_wheel_speed_data_rate: 0
-    gnss1_llh_position_data_rate: 1
+    gnss1_llh_position_data_rate: 2
     gnss1_velocity_data_rate: 0
     gnss1_velocity_ecef_data_rate: 0
     gnss1_odometry_earth_data_rate: 0
@@ -143,12 +143,12 @@
     gnss2_odometry_earth_data_rate: 0
     gnss2_time_data_rate: 0
     filter_human_readable_status_data_rate: 1
-    filter_imu_data_rate: 100
-    filter_llh_position_data_rate: 1
+    filter_imu_data_rate: 200
+    filter_llh_position_data_rate: 200
     filter_velocity_data_rate: 0
     filter_velocity_ecef_data_rate: 0
     filter_odometry_earth_data_rate: 0
-    filter_odometry_map_data_rate: 100
+    filter_odometry_map_data_rate: 200
     filter_dual_antenna_heading_data_rate: 0
     mip_sensor_overrange_status_data_rate: 0
     mip_gnss1_fix_info_data_rate: 0

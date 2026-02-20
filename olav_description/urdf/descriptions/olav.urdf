@@ -240,16 +240,24 @@
            type="fixed">
         <parent link="gnss_ins_link" />
         <child link="gnss_ins_antenna_1_link" />
+        <origin xyz="+0.6038 +0.3876 +0.451"
+                rpy="+0.0 +0.0 +0.0" />
+        <!-- LEGACY TRANSFORM
         <origin xyz="+0.6038 +0.4229 +0.451"
                 rpy="+0.0 +0.0 +0.0" />
+        -->
     </joint>
     <!-- "GNSS_INS_LINK" TO "GNSS_INS_ANTENNA_2_LINK" -->
     <joint name="gnss_ins_to_gnss_ins_antenna_2_fixed"
            type="fixed">
         <parent link="gnss_ins_link" />
         <child link="gnss_ins_antenna_2_link" />
+        <origin xyz="+0.6038 -0.6924 +0.451"
+                rpy="+0.0 +0.0 +0.0" />
+        <!-- LEGACY TRANSFORM
         <origin xyz="+0.6038 -0.7043 +0.451"
                 rpy="+0.0 +0.0 +0.0" />
+        -->
     </joint>
     <!-- OUSTER OS-1 LIDAR -->
     <link name="lidar_link">
@@ -334,6 +342,10 @@
         <parent link="base_link" />
         <child link="camera_top_link" />
         <origin xyz="+1.1898 -0.1231 +0.5781"
-                rpy="+0.0000 +0.00872665 +0.0000" />
+                rpy="+3.14159 +0.0087 +0.0000" />
+        <!-- LEGACY TRANSFORM
+        <origin xyz="+1.1898 -0.1231 +0.5781"
+                rpy="+0.0000 +0.0087 +0.0000" />
+        -->
     </joint>
 </robot>
